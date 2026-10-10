@@ -148,6 +148,7 @@ interface SourceTiming {
   videoStartExpr: string; // videoStartSec as an exact ffmpeg expression (start_pts * time_base)
   audioStartSec: number;
   cfr: boolean; // r_frame_rate == avg_frame_rate
+  tbSec?: number; // video stream time base (seconds per tick)
 }
 
 interface SegmentPlan {
@@ -255,11 +256,26 @@ function movingInput(src: Source, srcIn: Frames, frames: Frames, fps: number): M
   if (k0 > 0) args.push('-ss', (t.videoStartSec - t.fmtStartSec + k0 / fps).toFixed(6));
   args.push('-i', src.path);
   const filters = [`setpts=PTS-round(${t.videoStartExpr}/TB)`];
-  const sameRate = t.cfr && src.probe.fps !== undefined && Math.abs(src.probe.fps - fps) < 1e-3;
-  if (!sameRate) filters.push(`fps=${fpsExpr(fps)}:start_time=${gridSec(k0, fps)}`);
-  // Frame k sits at k/fps; half-frame margins make the cut immune to timestamp jitter.
-  filters.push(`trim=start=${gridSec(srcIn - 0.5, fps)}:end=${gridSec(srcIn + frames - 0.5, fps)}`, 'setpts=PTS-STARTPTS');
+  if (!sameRate(src, fps)) filters.push(`fps=${fpsExpr(fps)}:start_time=${gridSec(k0, fps)}`);
+  // Frame k sits at k/fps; half-frame margins make the cut immune to timestamp jitter. trim rounds its
+  // bounds to the stream time base, so on a 1/fps base (AVI, fps filter) the margins vanish: trim in AVTB.
+  const [num, den = '1'] = fpsExpr(fps).split('/');
+  filters.push('settb=AVTB', `trim=start=${gridSec(srcIn - 0.5, fps)}:end=${gridSec(srcIn + frames - 0.5, fps)}`, 'setpts=PTS-STARTPTS', `settb=${den}/${num}`);
   return { args, filters, decodeSec: (pre + frames) / fps + (k0 > 0 ? GOP_SLACK_SEC : 0) };
+}
+
+function sameRate(src: Source, fps: number): boolean {
+  return src.timing.cfr && src.probe.fps !== undefined && Math.abs(src.probe.fps - fps) < 1e-3;
+}
+
+/**
+ * Before trim ran in AVTB, a time base under 2 ticks per frame rounded the half-frame margins away
+ * unless half a frame is a whole number of microseconds (25/50 fps): such segments may be off by a frame.
+ */
+function coarseTrimKey(src: Source, fps: number): { trim?: 2 } {
+  const tb = sameRate(src, fps) ? src.timing.tbSec : 1 / fps;
+  if (tb === undefined || tb * fps <= 0.5 || Number.isInteger(5e5 / fps)) return {};
+  return { trim: 2 };
 }
 
 // ---------- clip video (speed, push-in) ----------
@@ -528,6 +544,7 @@ function timingOf(data: FfprobeOut): SourceTiming {
     videoStartExpr,
     audioStartSec: num(a?.start_time) ?? fmtStartSec,
     cfr: !!v?.r_frame_rate && v.r_frame_rate === v.avg_frame_rate,
+    ...(tb && Number(tb[2]) > 0 ? { tbSec: Number(tb[1]) / Number(tb[2]) } : {}),
   };
 }
 
@@ -1728,6 +1745,7 @@ export function planTimeline(p: Project, sources: Map<string, Source>, encoderId
       w: p.meta.width, h: p.meta.height, fps, handlesBefore: trimStart, handlesAfter: trimEnd,
       // only when set, so realtime clips keep their existing cache keys
       ...retimeKey(clip, src),
+      ...(src.kind === 'still' ? {} : coarseTrimKey(src, fps)),
     });
     return { clip, index: i, src, key, srcIn: clip.in + trimStart, k0: trimStart, frames, trimStart, trimEnd };
   });

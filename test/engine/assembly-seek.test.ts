@@ -87,6 +87,36 @@ describe('seeking segment/dissolve encodes (deep in-points)', () => {
   }, 180_000);
 });
 
+describe('frame-exact cuts on a 1/fps time base at 30 fps', () => {
+  // AE's Lossless AVI has time base 1/fps; the fps filter outputs 1/fps too. Half a frame at 30 fps is
+  // not a whole number of microseconds, so trim used to round its margins away (last frame lost, or
+  // the body shifted one frame early).
+  it('keeps every frame and the exact in-point', async () => {
+    const avi = join(dir, 'ae_lossless.avi');
+    const mp4 = join(dir, 'src25.mp4');
+    await ff(['-f', 'lavfi', '-i', 'testsrc2=size=320x180:rate=30', '-t', '6', '-c:v', 'rawvideo', '-pix_fmt', 'bgr24', avi]);
+    await ff(['-f', 'lavfi', '-i', 'testsrc2=size=320x180:rate=25', '-t', '6', '-c:v', 'libx264', '-preset', 'ultrafast', mp4]);
+    const p = await createProject(join(dir, 'tb30'), { name: 'tb30', width: 320, height: 180, fps: 30 });
+    await addFileAsset(p, avi, { id: 'avi', probe: (f) => probe(env.tools, f, { fps: 30 }) });
+    await addFileAsset(p, mp4, { id: 'mp4', probe: (f) => probe(env.tools, f, { fps: 30 }) });
+    p.timeline.video = [
+      { id: 'whole', src: 'avi', in: 0, dur: 180 },
+      { id: 'mid', src: 'avi', in: 10, dur: 20 },
+      { id: 'conv', src: 'mp4', in: 7, dur: 20 },
+    ];
+    p.timeline.audio.useClipAudio = false;
+    await new Assembler({ tools: env.tools, env, ae, concurrency: 1 }).build(p, { skipQc: true, skipDeliver: true });
+    const entries = await cacheEntries(p);
+    for (const [clipId, file, srcIn, n] of [['whole', avi, 0, 180], ['mid', avi, 10, 20], ['conv', mp4, 7, 20]] as const) {
+      const ref = join(dir, `ref_${clipId}.mov`);
+      await ff(['-i', file, '-vf', fromStart(30, srcIn, n), '-frames:v', String(n), ...PRORES, ref]);
+      const want = await digest(ref);
+      expect(want).toHaveLength(n);
+      expect(await digest(join(p.dir, 'cache', 'segments', entries.find((e) => e.clipId === clipId)!.file)), clipId).toEqual(want);
+    }
+  }, 120_000);
+});
+
 describe('A/V origin', () => {
   // Flash on video frame 30 and a beep at the same presentation time; the video stream starts
   // 0.4 s after the audio (container start), so the beep sits at 0.4 + 30/25 = 1.6 s.

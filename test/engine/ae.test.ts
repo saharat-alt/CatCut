@@ -33,7 +33,7 @@ async function setup() {
 }
 
 /** Backend whose fake AfterFX answers list/fingerprint and whose fake aerender writes `frames` frames. */
-async function renderSetup(opts: { comp?: string; durationFrames?: number; displayStartFrame?: number; aerender?: (args: string[]) => { exitCode: number; stdout: string } } = {}) {
+async function renderSetup(opts: { comp?: string; durationFrames?: number; displayStartFrame?: number; aerender?: (args: string[]) => { exitCode: number; stdout: string; write?: boolean } } = {}) {
   const dir = await mkdtemp(join(os.tmpdir(), 'editmcp-ae-render-'));
   dirs.push(dir);
   const aep = join(dir, 'โปรเจกต์.aep');
@@ -52,11 +52,11 @@ async function renderSetup(opts: { comp?: string; durationFrames?: number; displ
     if (bin === 'aerender.exe') {
       const r = opts.aerender?.(args) ?? { exitCode: 0, stdout: 'PROGRESS: Frame Rate: 25\nPROGRESS: Duration: 0:00:00:10' };
       const out = args[args.indexOf('-output') + 1]!;
-      if (r.exitCode === 0) {
+      if (r.exitCode === 0 && r.write !== false) {
         await writeFile(out, args[args.indexOf('-OMtemplate') + 1]!);
         written.set(out, Number(args[args.indexOf('-e') + 1]) - Number(args[args.indexOf('-s') + 1]) + 1);
       }
-      return { ...r, stderr: '' };
+      return { exitCode: r.exitCode, stdout: r.stdout, stderr: '' };
     }
     if (bin === 'ffprobe') return { exitCode: 0, stdout: String(written.get(args[args.length - 1]!) ?? 0), stderr: '' };
     if (bin === 'ffmpeg') {
@@ -206,6 +206,16 @@ describe('AE renders through the backend (mock processes only)', () => {
     expect(r.usedFallback).toBe(true);
     expect(callsOf(spawn, 'aerender.exe').map((a) => a[a.indexOf('-OMtemplate') + 1])).toEqual(['EDITMCP ProRes 422 HQ', 'Lossless']);
     expect(callsOf(spawn, 'ffmpeg')[0]).toEqual(expect.arrayContaining(['-colorspace', 'bt709']));
+  });
+  it('falls back when aerender reports the missing template but exits 0 without output (AE 2026)', async () => {
+    const { dir, aep, name, spawn, backend } = await renderSetup({
+      aerender: (args) => args.includes('EDITMCP ProRes 422 HQ')
+        ? { exitCode: 0, stdout: 'PROGRESS: Launching After Effects...\naerender ERROR: No output module template was found with the given name.', write: false }
+        : { exitCode: 0, stdout: '' },
+    });
+    const r = await backend.render({ aep, comp: name, outPath: join(dir, 'a.mov') });
+    expect(r.usedFallback).toBe(true);
+    expect(callsOf(spawn, 'aerender.exe').map((a) => a[a.indexOf('-OMtemplate') + 1])).toEqual(['EDITMCP ProRes 422 HQ', 'Lossless']);
   });
   it('does not fall back when names merely contain "missing"/"not"/"invalid"', async () => {
     const comp = 'template missing not invalid';
