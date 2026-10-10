@@ -15,52 +15,11 @@ import { openReview } from '../review/server.js';
 import { readReviewSession, submitReview, versionPlan } from '../review/session.js';
 import { compsNeedingRender, isAeComp, requireFfmpeg, requireProject, type AppState, type JobContext } from './state.js';
 
-// ---------- result plumbing ----------
+// ---------- result plumbing (shared: tooldef.ts) ----------
 
-export interface ToolResult {
-  content: Array<{ type: 'text'; text: string }>;
-  isError?: boolean;
-  [key: string]: unknown;
-}
-
-/** Throw to return a structured failure (data is merged into the JSON body). */
-class ToolError extends Error {
-  constructor(message: string, public readonly data: Record<string, unknown> = {}) {
-    super(message);
-  }
-}
-
-export interface ToolDef {
-  name: string;
-  description: string;
-  input: z.ZodRawShape;
-  // `never` lets each tool keep its precise inferred arg type without a cast at definition time.
-  handler: (args: never, state: AppState) => Promise<unknown>;
-}
-
-function tool<S extends z.ZodRawShape>(def: {
-  name: string;
-  description: string;
-  input: S;
-  handler: (args: z.infer<z.ZodObject<S>>, state: AppState) => Promise<unknown>;
-}): ToolDef {
-  return def as ToolDef;
-}
-
-function json(data: unknown): string {
-  return JSON.stringify(data, (_k, v) => (v instanceof Map ? Object.fromEntries(v) : v), 2);
-}
-
-function ok(data: unknown): ToolResult {
-  return { content: [{ type: 'text', text: json(data) }] };
-}
-
-function fail(err: unknown): ToolResult {
-  const body = err instanceof ToolError
-    ? { ok: false, error: err.message, ...err.data }
-    : { ok: false, error: err instanceof Error ? err.message : String(err) };
-  return { isError: true, content: [{ type: 'text', text: json(body) }] };
-}
+import { fail, ok, tool, ToolError, type ToolDef, type ToolResult } from './tooldef.js';
+import { EXTRA_TOOLS } from './tools-extra.js';
+export type { ToolDef, ToolResult } from './tooldef.js';
 
 /** Tools that change the project while a build/deliver/review job may be using it. */
 const MUTATING = new Set(['project_new', 'project_open', 'asset_add', 'timeline_set', 'timeline_edit', 'audio_add', 'ae_edit', 'import_premiere_xml', 'timeline_restore']);
@@ -72,11 +31,11 @@ const WRITES_PROJECT = new Set([
 
 export async function runTool(t: ToolDef, args: unknown, state: AppState): Promise<ToolResult> {
   try {
-    if (MUTATING.has(t.name)) {
+    if (MUTATING.has(t.name) || t.mutating) {
       const running = activeJob(state, PROJECT_JOBS);
       if (running) throw new ToolError(`wait for ${running.name} before editing the project`, { jobId: running.id });
     }
-    if (WRITES_PROJECT.has(t.name) && state.project) assertWritable(state.project.dir, 'project folder');
+    if ((WRITES_PROJECT.has(t.name) || t.writesProject) && state.project) assertWritable(state.project.dir, 'project folder');
     return ok(await t.handler(args as never, state));
   } catch (err) {
     if (err instanceof ProjectConflictError || (err instanceof Error && err.name === 'ProjectConflictError')) return fail(await onConflict(state, err));
@@ -597,7 +556,7 @@ const COMPAT_NOTES: readonly string[] = [
 
 // ---------- tools ----------
 
-export const TOOLS: readonly ToolDef[] = [
+const CORE_TOOLS: readonly ToolDef[] = [
   tool({
     name: 'project_new',
     description: 'สร้างโปรเจกต์ใหม่ในโฟลเดอร์ (project.json) · Create a project: dir, name, fps=25, 1920x1080',
@@ -1082,3 +1041,5 @@ export const TOOLS: readonly ToolDef[] = [
     },
   }),
 ];
+
+export const TOOLS: readonly ToolDef[] = [...CORE_TOOLS, ...EXTRA_TOOLS];

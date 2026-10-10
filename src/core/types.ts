@@ -67,6 +67,63 @@ export interface Clip {
   dur: Frames; // timeline duration
   scale?: number; // percent, default 100 (uniform, centered)
   marker?: string; // marker name placed at clip start
+  slot?: string; // board slot id this clip realises (see Board)
+  speed?: ClipSpeed; // retime; absent = 100% realtime
+  pushIn?: number; // percent of slow zoom over the clip (e.g. 8 = 100%→108%), for near-static footage
+}
+
+/** Retime. Source frames consumed = round(dur * rate) for constant speed; ramps ease between rates. */
+export interface ClipSpeed {
+  rate: number; // 0.5 = 50% slow motion, 2 = 200%
+  /** optional ramp: start at `from` rate and ease to `rate` over `rampFrames` timeline frames at the clip start */
+  rampFrom?: number;
+  rampFrames?: Frames;
+  interpolation?: 'nearest' | 'blend' | 'motion'; // motion = optical-flow style (minterpolate); default blend for rate<1
+}
+
+// ---------- board (storyboard / brief) ----------
+
+export interface BoardSlot {
+  id: string; // "01", "28r" ...
+  order: number;
+  chapter?: string;
+  boardStartFrame?: Frames; // where the board places this slot on the timeline
+  boardDurFrames?: Frames;
+  sourceHint?: string; // file / folder named on the board
+  sourceTc?: string; // source timecode written on the board (e.g. "0.03")
+  onScreenText?: string; // exact text the board shows
+  notes?: string;
+  thumb?: string; // path to the board thumbnail image for this slot
+  status?: 'ok' | 'mockup' | 'substitute' | 'missing';
+}
+
+export interface Board {
+  source: string; // path of the board file (PDF/CSV/JSON) it came from
+  importedAt: string;
+  targetFrames?: Frames; // total target duration (e.g. 3:00)
+  chapters?: Array<{ name: string; startFrame?: Frames; durFrames?: Frames }>;
+  slots: BoardSlot[];
+  warnings?: string[]; // contradictions found during import
+}
+
+// ---------- user rules ----------
+
+/** Things the user said once that must hold on every build (checked by lint, shown to agents). */
+export interface Constraint {
+  id: string;
+  text: string; // the rule in the user's words, e.g. "ใช้เฉพาะ element ในบอร์ด"
+  scope?: string; // optional: a slot id, asset id, effect match name or 'all'
+  check?: 'board-only' | 'no-cover-photo' | 'logo-static' | 'no-repeat-gimmick' | 'manual';
+  createdAt: string;
+}
+
+export interface StyleRules {
+  cornerRadiusPct?: number; // radius as % of the shorter card side; "มนก็มนให้หมด"
+  safeMarginPct?: number; // default 5
+  palette?: string[]; // hex colours
+  joins?: Array<{ from: string; to: string; dissolve: Frames }>; // edge-type join policy, e.g. {from:'card', to:'footage', dissolve:10}
+  thai?: { minCapHeightPct?: number; minWeight?: number; lowerVowelClearancePx?: number; animateBy?: 'line' | 'word' | 'char' };
+  maxStaticSec?: number; // advisory: footage nearly static longer than this gets a push-in suggestion
 }
 
 export interface Cut {
@@ -114,7 +171,18 @@ export interface DeliverySettings {
 }
 
 export interface QcIssue {
-  kind: 'black' | 'freeze' | 'silence' | 'loudness' | 'truepeak' | 'frames' | 'spec' | 'gap';
+  kind:
+    | 'black' | 'freeze' | 'silence' | 'loudness' | 'truepeak' | 'frames' | 'spec' | 'gap'
+    | 'flash' // a shot shorter than N frames (neighbouring source shot leaking in)
+    | 'cutcross' // a clip crosses a shot change in its source
+    | 'repeat' // adjacent clips reuse overlapping source ranges
+    | 'duplicate' // duplicated-frame cadence (stutter) inside a clip
+    | 'lowmotion' // nearly static for long (advisory)
+    | 'board' // deviates from the board (missing slot, order, timing drift, extra element)
+    | 'style' // violates StyleRules / Constraint
+    | 'thai' // Thai typography lint
+    | 'comp' // AE comp lint (animation ends early, layer ends before comp out ...)
+    | 'disk';
   severity: 'error' | 'warn';
   startFrame?: Frames;
   endFrame?: Frames;
@@ -171,6 +239,9 @@ export interface Project {
   timeline: Timeline;
   delivery: DeliverySettings;
   versions: Version[];
+  board?: Board;
+  constraints?: Constraint[];
+  styleRules?: StyleRules;
 }
 
 // ---------- delivery presets ----------
@@ -208,7 +279,7 @@ export interface BuildStats {
   dissolvesRendered: number;
   compsRendered: number;
   compsReused: number;
-  timingsMs: Record<string, number>; // 'probe' | 'segments' | 'dissolves' | 'concat' | 'audio' | 'mux' | 'qc' | 'deliver' | 'total'
+  timingsMs: Record<string, number>; // 'probe' | 'segments' | 'dissolves' | 'audio' | 'mux' | 'qc' | 'deliver' | 'total'
 }
 
 export interface Progress {
@@ -364,6 +435,33 @@ export interface AeBackend {
   render(req: RenderRequest): Promise<RenderResult>;
   previewFrame(aep: string, comp: string, frame: Frames, outPng: string): Promise<string>;
   version(): Promise<string>;
+  // Optional analysis commands (headless runner + mock implement them).
+  scanTemplate?(aep: string): Promise<TemplateScan>;
+  lintComp?(aep: string, comp: string): Promise<CompLint>;
+  listFonts?(aep: string): Promise<string[]>; // font PostScript/family names used by text layers
+  purgeCaches?(): Promise<void>;
+}
+
+export interface TemplateComp {
+  name: string;
+  durationFrames: Frames;
+  width: number;
+  height: number;
+  placeholders: Array<{ layer: string; kind: 'footage' | 'image' | 'text' | 'precomp'; source?: string; moving: boolean /* precomp follows its window; false = luma/track matte window, clip stays still */ }>;
+  expressionLocked: string[]; // "Layer > property" paths driven by expressions (e.g. Controls layer)
+  fonts: string[];
+  textAnimators: Array<{ layer: string; basedOn: 'characters' | 'words' | 'lines' | 'other' }>;
+}
+
+export interface TemplateScan {
+  aep: string;
+  comps: TemplateComp[];
+  warnings: string[];
+}
+
+export interface CompLint {
+  comp: string;
+  issues: Array<{ kind: 'animation-ends-early' | 'layer-ends-early' | 'background-ends-early' | 'thai-animator' | 'thai-size' | 'style'; layer?: string; frame?: Frames; message: string }>;
 }
 
 // ---------- xmeml (FCP7 XML) ----------
