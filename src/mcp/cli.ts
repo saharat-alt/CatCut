@@ -55,7 +55,7 @@ function printDoctor(d: Record<string, unknown>): void {
   const tools = d['tools'] as Record<string, string | undefined>;
   const enc = d['encoders'] as Record<string, boolean>;
   const ram = d['ram'] as { totalGb: number; freeGb: number; low: boolean };
-  out(`EDITMCP doctor ${d['ok'] ? 'OK' : 'PROBLEMS'}`);
+  out(`CatCut doctor ${d['ok'] ? 'OK' : 'PROBLEMS'}`);
   out('');
   out('tools');
   for (const k of ['ffmpeg', 'ffprobe', 'afterfx', 'aerender', 'aeVersionDir', 'premiereExe', 'mediaEncoderExe']) out(`  ${k.padEnd(16)} ${tools[k] ?? '-'}`);
