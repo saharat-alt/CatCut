@@ -1,0 +1,1067 @@
+/**
+ * FCP7 XML (xmeml v5) writer + reader — the Premiere hand-tweak loop.
+ *
+ * Layout (details in docs/xmeml-notes.md): every audio lane is a Premiere "exploded" stereo pair
+ * (two tracks, premiereTrackType="Stereo", left clipitem sourcetrack 1 + right sourcetrack 2, linked):
+ *   V1 = the cut · A1/A2 = clip audio linked to V1 · A3/A4 = vo · A5/A6 = music · A7/A8 = sfx ·
+ *   A9+ = named overflow pairs ("VO 2", "SFX 2"…) when clips of one role overlap.
+ * Dissolve N at cut C covers [C-a, C+b), a = floor(N/2): the transitionitem has exactly that
+ * start/end, touching clip edges are written as -1 (FCP7 convention) and in/out are extended by
+ * the halves. Clip ids travel in <name> (Premiere preserves it), file ids derive from asset ids.
+ */
+import path from 'node:path';
+import { XMLParser } from 'fast-xml-parser';
+import { averageRate, clipInterpolation, clipSourceNeeds, speedCurve } from '../core/project.js';
+import { splitDissolve } from '../core/timecode.js';
+function el(t, ...kids) {
+    return { t, k: kids.filter((k) => k !== false && k !== null && k !== undefined) };
+}
+function ela(t, a, ...kids) {
+    const n = el(t, ...kids);
+    n.a = a;
+    return n;
+}
+const ESC = { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&apos;' };
+const esc = (s) => s.replace(/[&<>"']/g, (c) => ESC[c] ?? c);
+function fmtNum(v) {
+    return Number.isInteger(v) ? String(v) : v.toFixed(6).replace(/0+$/, '').replace(/\.$/, '');
+}
+const fmtKid = (k) => (typeof k === 'number' ? fmtNum(k) : esc(k));
+function render(n, depth, out) {
+    const pad = '  '.repeat(depth);
+    const attrs = n.a ? Object.entries(n.a).map(([k, v]) => ` ${k}="${esc(v)}"`).join('') : '';
+    if (n.k.length === 0) {
+        out.push(`${pad}<${n.t}${attrs}/>`);
+        return;
+    }
+    if (n.k.every((k) => typeof k !== 'object')) {
+        out.push(`${pad}<${n.t}${attrs}>${n.k.map((k) => fmtKid(k)).join('')}</${n.t}>`);
+        return;
+    }
+    out.push(`${pad}<${n.t}${attrs}>`);
+    for (const k of n.k) {
+        if (typeof k === 'object')
+            render(k, depth + 1, out);
+        else
+            out.push(`${pad}  ${fmtKid(k)}`);
+    }
+    out.push(`${pad}</${n.t}>`);
+}
+// ---------- rates, paths, asset helpers ----------
+function rateOf(fps) {
+    const timebase = Math.round(fps);
+    return { timebase, ntsc: Math.abs(fps - timebase) > 0.001 }; // 23.976 / 29.97 / 59.94
+}
+function fpsOf(timebase, ntsc) {
+    return ntsc ? Math.round((timebase * 1000) / 1001 * 1000) / 1000 : timebase;
+}
+const rateNode = (timebase, ntsc) => el('rate', el('timebase', timebase), el('ntsc', ntsc ? 'TRUE' : 'FALSE'));
+function baseName(p) {
+    const s = p.replace(/[\\/]+$/, '');
+    const i = Math.max(s.lastIndexOf('/'), s.lastIndexOf('\\'));
+    return i >= 0 ? s.slice(i + 1) : s;
+}
+/**
+ * Absolute path -> Premiere's own form `file://localhost/D%3a/…` (UNC: `file://server/share/…`).
+ * Every segment is percent-encoded UTF-8, so Thai survives.
+ */
+export function pathToUrl(abs) {
+    const s = abs.normalize('NFC').replace(/\\/g, '/');
+    const enc = (segs) => segs.map((x) => encodeURIComponent(x)).join('/');
+    const unc = /^\/\/([^/]+)\/(.*)$/.exec(s);
+    if (unc)
+        return `file://${unc[1]}/${enc((unc[2] ?? '').split('/'))}`;
+    const drv = /^([A-Za-z]):(?:\/(.*))?$/.exec(s);
+    if (drv)
+        return `file://localhost/${drv[1]}%3a/${enc((drv[2] ?? '').split('/'))}`;
+    return `file://localhost${enc((s.startsWith('/') ? s : `/${s}`).split('/'))}`;
+}
+function decodeSafe(s) {
+    try {
+        return decodeURIComponent(s);
+    }
+    catch {
+        return s;
+    }
+}
+/** `file:///D:/…`, `file://localhost/D%3a/…` (Premiere), `file://server/share/…` -> absolute path (Windows separators where it is a Windows path). */
+export function pathFromUrl(url) {
+    const m = /^file:\/\/([^/]*)(\/.*)?$/i.exec(url.trim());
+    if (!m)
+        return decodeSafe(url.trim()).normalize('NFC');
+    const host = m[1] ?? '';
+    const rest = decodeSafe(m[2] ?? '/').normalize('NFC');
+    if (host && host.toLowerCase() !== 'localhost')
+        return `\\\\${host}${rest.replace(/\//g, '\\')}`;
+    if (/^\/[A-Za-z]:(\/|$)/.test(rest))
+        return rest.slice(1).replace(/\//g, '\\');
+    return rest;
+}
+/** Case-insensitive, separator-insensitive key for comparing paths. */
+function pathKey(p) {
+    let s = p.normalize('NFC').trim();
+    if (/^[A-Za-z]:[\\/]/.test(s) || s.startsWith('\\\\') || s.startsWith('//'))
+        s = path.win32.normalize(s).replace(/[\\/]+$/, '');
+    return s.toLowerCase();
+}
+const defaultResolvePath = (a) => (a.kind === 'aecomp' ? a.render?.path : a.path);
+const assetHasVideo = (a) => (a.probe ? a.probe.hasVideo : a.kind !== 'audio');
+const assetHasAudio = (a) => (a.probe ? a.probe.hasAudio : a.kind === 'camera' || a.kind === 'audio');
+const assetChannels = (a) => (a.probe?.channels === 1 ? 1 : 2);
+const DB_EPS = 0.005;
+const round = (v, digits) => Math.round(v * 10 ** digits) / 10 ** digits;
+/** Track names written as MZ.TrackName; the reader prefers them over track positions. */
+const ROLE_TRACK_NAME = { vo: 'VO', music: 'Music', sfx: 'SFX' };
+const CLIP_AUDIO_TRACK_NAME = 'Clip Audio';
+/** Premiere's exploded stereo track: two xmeml tracks, left (index 0) and right (index 1). */
+function stereoTrack(items, side, name) {
+    return ela('track', { currentExplodedTrackIndex: String(side), totalExplodedTrackCount: '2', premiereTrackType: 'Stereo', 'MZ.TrackName': name }, ...items, el('enabled', 'TRUE'), el('locked', 'FALSE'), el('outputchannelindex', side + 1));
+}
+/** First-fit lanes: overlapping clips of one role go to extra tracks instead of colliding. */
+function placeLanes(items) {
+    const lanes = [];
+    for (const it of [...items].sort((x, y) => x.at - y.at)) {
+        let lane = lanes.find((l) => {
+            const last = l[l.length - 1];
+            return last !== undefined && last.at + last.dur <= it.at;
+        });
+        if (!lane) {
+            lane = [];
+            lanes.push(lane);
+        }
+        lane.push(it);
+    }
+    return lanes;
+}
+/**
+ * Basic Motion scale. A push-in becomes two scale keyframes, base at the first body frame and
+ * base * (1 + pushIn%) at the last one (`when` in the clipitem's in/out space); handles hold the end values.
+ */
+function motionFilter(scale, push) {
+    const base = scale ?? 100;
+    if (base === 100 && !push)
+        return undefined;
+    const kfs = push
+        ? [el('keyframe', el('when', push.from), el('value', base)), el('keyframe', el('when', push.to), el('value', round(base * (1 + push.pct / 100), 6)))]
+        : [];
+    return el('filter', el('effect', el('name', 'Basic Motion'), el('effectid', 'basic'), el('effectcategory', 'motion'), el('effecttype', 'motion'), el('mediatype', 'video'), el('parameter', el('parameterid', 'scale'), el('name', 'Scale'), el('valuemin', 0), el('valuemax', 1000), el('value', base), ...kfs)));
+}
+/**
+ * Constant speed written for a clip, in percent (4 decimals): its rate, or a ramp's average rate
+ * (source span / dur; FCP7 constant speed cannot ramp). Undefined = realtime, or a still (speed is a no-op).
+ */
+function speedPctOf(c, a) {
+    if (a.kind === 'still' || !speedCurve(c))
+        return undefined;
+    const pct = round(averageRate(c) * 100, 4);
+    return pct === 100 ? undefined : pct;
+}
+/** FCP7 constant-speed Time Remap filter (Premiere's export shape: variablespeed 0 + speed %). */
+function timeRemapFilter(pct, blend, mediatype) {
+    const prm = (id, value, min, max) => el('parameter', el('parameterid', id), el('name', id), min !== undefined && el('valuemin', min), max !== undefined && el('valuemax', max), el('value', value));
+    return el('filter', el('effect', el('name', 'Time Remap'), el('effectid', 'timeremap'), el('effectcategory', 'motion'), el('effecttype', 'motion'), el('mediatype', mediatype), prm('variablespeed', 0, 0, 1), prm('speed', pct, -100000, 100000), prm('reverse', 'FALSE'), prm('frameblending', blend ? 'TRUE' : 'FALSE')));
+}
+/** What the XML cannot carry exactly (speed ramps, optical-flow interpolation, muted slow-mo audio). */
+export function xmemlExportWarnings(p) {
+    const out = [];
+    for (const c of p.timeline.video) {
+        const a = p.assets[c.src];
+        const curve = speedCurve(c);
+        if (!a || !curve || a.kind === 'still')
+            continue;
+        const pct = round(averageRate(c) * 100, 4);
+        if (curve.R > 0)
+            out.push(`clip '${c.id}': speed ramp ${round(curve.r0 * 100, 2)}%→${round(curve.r1 * 100, 2)}% exported as constant ${pct}% (average); rebuild the ramp with Time Remapping in Premiere if needed`);
+        const interp = clipInterpolation(c);
+        if (interp === 'motion')
+            out.push(`clip '${c.id}': motion interpolation exported as frame blending (choose Optical Flow in Premiere)`);
+    }
+    return out;
+}
+/** Audio Levels filter: linear gain, fades as keyframes in source frames (same space as in/out). */
+function levelsFilter(c, xmlIn, xmlOut) {
+    const gain = c.gainDb ?? 0;
+    const dur = xmlOut - xmlIn;
+    const fi = Math.min(Math.max(0, c.fadeIn ?? 0), dur);
+    const fo = Math.min(Math.max(0, c.fadeOut ?? 0), dur - fi);
+    if (gain === 0 && fi <= 0 && fo <= 0)
+        return undefined;
+    const g = round(10 ** (gain / 20), 6);
+    const kfs = [];
+    const kf = (when, v) => {
+        const prev = kfs[kfs.length - 1];
+        if (prev && prev.k[0].k[0] === when)
+            kfs.pop();
+        kfs.push(el('keyframe', el('when', when), el('value', v)));
+    };
+    if (fi > 0 || fo > 0) {
+        kf(xmlIn, fi > 0 ? 0 : g);
+        if (fi > 0)
+            kf(xmlIn + fi, g);
+        if (fo > 0)
+            kf(xmlOut - fo, g);
+        kf(xmlOut, fo > 0 ? 0 : g);
+    }
+    return el('filter', el('effect', el('name', 'Audio Levels'), el('effectid', 'audiolevels'), el('effectcategory', 'audiolevels'), el('effecttype', 'audiolevels'), el('mediatype', 'audio'), el('parameter', el('parameterid', 'level'), el('name', 'Level'), el('valuemin', 0), el('valuemax', 3.98109), el('value', g), ...kfs)));
+}
+function transitionNode(rate, start, end, audio) {
+    return el('transitionitem', rate, el('start', start), el('end', end), el('alignment', 'center'), el('effect', el('name', audio ? 'Cross Fade (+3dB)' : 'Cross Dissolve'), el('effectid', audio ? 'KGAudioTransCrossFade3dB' : 'Cross Dissolve'), el('effectcategory', 'Dissolve'), el('effecttype', 'transition'), el('mediatype', audio ? 'audio' : 'video'), !audio && el('wipecode', 0), !audio && el('wipeaccuracy', 100), !audio && el('startratio', 0), !audio && el('endratio', 1), !audio && el('reverse', 'FALSE')));
+}
+const linkNode = (ref, mediatype, trackindex, clipindex) => el('link', el('linkclipref', ref), el('mediatype', mediatype), el('trackindex', trackindex), el('clipindex', clipindex), mediatype === 'audio' && el('groupindex', 1));
+export function writeXmeml(p, opts) {
+    const fps = p.meta.fps > 0 ? p.meta.fps : 25;
+    const { timebase, ntsc } = rateOf(fps);
+    const rate = () => rateNode(timebase, ntsc);
+    const W = p.meta.width;
+    const H = p.meta.height;
+    const tl = p.timeline;
+    const clips = tl.video;
+    const n = clips.length;
+    const resolvePath = opts.resolvePath ?? defaultResolvePath;
+    const useClipAudio = tl.audio.useClipAudio !== false;
+    const assetOf = (id, who) => {
+        const a = p.assets[id];
+        if (!a)
+            throw new Error(`xmeml: ${who} refers to unknown asset '${id}'`);
+        return a;
+    };
+    // --- timeline positions and dissolve halves
+    const starts = [];
+    let total = 0;
+    for (const c of clips) {
+        if (!(c.dur > 0))
+            throw new Error(`xmeml: clip '${c.id}' has non-positive duration`);
+        starts.push(total);
+        total += c.dur;
+    }
+    const index = new Map(clips.map((c, i) => [c.id, i]));
+    const dissolveAfter = clips.map(() => 0);
+    for (const cut of tl.cuts) {
+        const i = index.get(cut.after);
+        if (i === undefined || i >= n - 1 || !(cut.dissolve > 0))
+            continue;
+        dissolveAfter[i] = Math.round(cut.dissolve);
+    }
+    const dAfter = (i) => dissolveAfter[i] ?? 0;
+    const aPrev = clips.map((_, i) => (i > 0 ? splitDissolve(dAfter(i - 1)).a : 0)); // handle this clip needs before its head
+    const bNext = clips.map((_, i) => (i < n - 1 ? splitDissolve(dAfter(i)).b : 0)); // handle this clip needs after its tail
+    const startOf = (i) => starts[i] ?? 0;
+    const ap = (i) => aPrev[i] ?? 0;
+    const bn = (i) => bNext[i] ?? 0;
+    // --- stable xml ids
+    const used = new Set();
+    const xmlId = (prefix, raw) => {
+        const base = `${prefix}-${raw.normalize('NFC').replace(/[^A-Za-z0-9_.-]/g, '_') || 'x'}`;
+        let id = base;
+        for (let k = 2; used.has(id); k++)
+            id = `${base}-${k}`;
+        used.add(id);
+        return id;
+    };
+    const vId = clips.map((c) => xmlId('clipitem', c.id));
+    // Clip audio is a stereo pair on A1/A2 (a mono source feeds both sides from its channel 1).
+    const audioLanesOf = clips.map((c) => {
+        if (!useClipAudio)
+            return [];
+        return assetHasAudio(assetOf(c.src, `clip '${c.id}'`)) ? [0, 1] : [];
+    });
+    const lanesOf = (i) => audioLanesOf[i] ?? [];
+    const aId = clips.map((c, i) => lanesOf(i).map((L) => xmlId('clipitem', `${c.id}-a${L + 1}`)));
+    // --- source frames each asset must cover (keeps <duration> >= every out; stills included)
+    const needed = new Map();
+    const need = (assetId, out) => {
+        needed.set(assetId, Math.max(needed.get(assetId) ?? 0, out));
+    };
+    // --- video in/out per clip (stills may shift `in` so a preceding dissolve never asks for in < 0).
+    // A retimed clip's in/out are in its retimed frame space (source frame / rate), so out - in still
+    // equals end - start; the Time Remap filter carries the rate.
+    const vIn = [];
+    const vOut = [];
+    const speedPct = [];
+    clips.forEach((c, i) => {
+        const a = assetOf(c.src, `clip '${c.id}'`);
+        const pct = speedPctOf(c, a);
+        const r = pct === undefined ? 1 : pct / 100;
+        let xIn = (pct === undefined ? c.in : Math.round(c.in / r)) - ap(i);
+        if (xIn < 0 && a.kind === 'still')
+            xIn = 0;
+        if (xIn < 0)
+            throw new Error(`xmeml: clip '${c.id}' needs ${ap(i)} handle frame(s) before in=${c.in} for the dissolve`);
+        const xOut = xIn + ap(i) + c.dur + bn(i);
+        vIn.push(xIn);
+        vOut.push(xOut);
+        speedPct.push(pct);
+        need(c.src, pct === undefined ? xOut : Math.max(c.in + clipSourceNeeds(c, ap(i), bn(i)).end, Math.ceil(xOut * r)));
+    });
+    /** clipitem <duration>: the file's, in the clip's (retimed) frame space */
+    const itemDuration = (i, a, assetId) => {
+        const pct = speedPct[i];
+        return pct === undefined ? fileDuration(a, assetId) : Math.ceil((fileDuration(a, assetId) * 100) / pct);
+    };
+    const remapFor = (i, c, mediatype) => {
+        const pct = speedPct[i];
+        return pct === undefined ? undefined : timeRemapFilter(pct, clipInterpolation(c) !== 'nearest', mediatype);
+    };
+    // --- vo / music / sfx placement
+    const resolveAudio = (c) => {
+        const a = assetOf(c.src, `audio clip '${c.id}'`);
+        const inF = c.in ?? 0;
+        let dur = c.dur;
+        if (dur === undefined) {
+            const src = a.probe?.durationFrames;
+            dur = src !== undefined ? Math.min(src - inF, total - c.at) : total - c.at;
+        }
+        if (!(dur > 0))
+            throw new Error(`xmeml: audio clip '${c.id}' has non-positive duration`);
+        need(c.src, inF + dur);
+        return { clip: c, at: c.at, in: inF, dur };
+    };
+    const roles = [
+        ['vo', tl.audio.vo ?? []],
+        ['music', tl.audio.music ?? []],
+        ['sfx', tl.audio.sfx ?? []],
+    ];
+    // One stereo pair per lane: vo, music, sfx always (fixed positions), then named overflow lanes.
+    const mainLanes = [];
+    const extraLanes = [];
+    for (const [role, list] of roles) {
+        const [first, ...rest] = placeLanes(list.map(resolveAudio));
+        mainLanes.push({ name: ROLE_TRACK_NAME[role] ?? role, lane: first ?? [] });
+        rest.forEach((lane, k) => extraLanes.push({ name: `${ROLE_TRACK_NAME[role] ?? role} ${k + 2}`, lane }));
+    }
+    const roleLanes = [...mainLanes, ...extraLanes];
+    const audioItemId = new Map();
+    for (const { lane } of roleLanes)
+        for (const pa of lane)
+            audioItemId.set(pa.clip, [xmlId('clipitem', pa.clip.id), xmlId('clipitem', `${pa.clip.id}-r`)]);
+    // --- file elements: full definition on first use, id reference afterwards
+    const fileIds = new Map();
+    const fileDefined = new Set();
+    const fileDuration = (a, assetId) => Math.max(a.probe?.durationFrames ?? 0, needed.get(assetId) ?? 0);
+    const fileRef = (assetId) => {
+        const a = assetOf(assetId, 'file reference');
+        let id = fileIds.get(assetId);
+        if (id === undefined) {
+            id = xmlId('file', assetId);
+            fileIds.set(assetId, id);
+        }
+        if (fileDefined.has(assetId))
+            return ela('file', { id });
+        fileDefined.add(assetId);
+        const fpath = resolvePath(a);
+        if (!fpath)
+            throw new Error(`xmeml: asset '${assetId}' has no file path yet (aecomp not rendered? build first or pass resolvePath)`);
+        const probe = a.probe;
+        const media = [];
+        if (assetHasVideo(a)) {
+            const fr = rateOf(probe?.fps ?? fps);
+            media.push(el('video', el('samplecharacteristics', rateNode(fr.timebase, fr.ntsc), el('width', probe?.width ?? W), el('height', probe?.height ?? H), el('anamorphic', 'FALSE'), el('pixelaspectratio', 'square'), el('fielddominance', 'none'))));
+        }
+        if (assetHasAudio(a)) {
+            media.push(el('audio', el('samplecharacteristics', el('depth', 16), el('samplerate', probe?.sampleRate ?? 48000)), el('channelcount', assetChannels(a))));
+        }
+        return ela('file', { id }, el('name', baseName(fpath)), el('pathurl', pathToUrl(fpath)), rate(), el('duration', fileDuration(a, assetId)), el('media', ...media));
+    };
+    // --- clip audio lanes A1/A2: clipindex bookkeeping, then nodes
+    const laneIndex = clips.map(() => [0, 0]);
+    const laneCount = [0, 0];
+    clips.forEach((_, i) => {
+        for (const L of lanesOf(i)) {
+            laneCount[L] = (laneCount[L] ?? 0) + 1;
+            const li = laneIndex[i];
+            if (li)
+                li[L] = laneCount[L] ?? 0;
+        }
+    });
+    const onLane = (i, L) => lanesOf(i).includes(L);
+    const linksFor = (i) => {
+        if (lanesOf(i).length === 0)
+            return [];
+        const out = [linkNode(vId[i] ?? '', 'video', 1, i + 1)];
+        for (const L of lanesOf(i))
+            out.push(linkNode(aId[i]?.[L] ?? '', 'audio', L + 1, laneIndex[i]?.[L] ?? 0));
+        return out;
+    };
+    const vItems = [];
+    const clipAudioItems = [[], []];
+    clips.forEach((c, i) => {
+        const a = assetOf(c.src, `clip '${c.id}'`);
+        const start = startOf(i);
+        vItems.push(ela('clipitem', { id: vId[i] ?? '' }, el('name', c.id), el('enabled', 'TRUE'), el('duration', itemDuration(i, a, c.src)), rate(), el('start', ap(i) > 0 ? -1 : start), el('end', bn(i) > 0 ? -1 : start + c.dur), el('in', vIn[i] ?? 0), el('out', vOut[i] ?? 0), el('pixelaspectratio', 'square'), el('anamorphic', 'FALSE'), el('alphatype', 'none'), fileRef(c.src), remapFor(i, c, 'video'), motionFilter(c.scale, c.pushIn ? { pct: c.pushIn, from: (vIn[i] ?? 0) + ap(i), to: (vIn[i] ?? 0) + ap(i) + Math.max(1, c.dur - 1) } : undefined), ...linksFor(i)));
+        if (i < n - 1 && dAfter(i) > 0) {
+            const cutAt = start + c.dur;
+            const { a: da, b: db } = splitDissolve(dAfter(i));
+            vItems.push(transitionNode(rate(), cutAt - da, cutAt + db, false));
+        }
+        for (const L of lanesOf(i)) {
+            // audio cross fade only where both neighbours have audio on this lane; otherwise a hard cut at C
+            const xfPrev = i > 0 && onLane(i - 1, L) && dAfter(i - 1) > 0;
+            const xfNext = i < n - 1 && onLane(i + 1, L) && dAfter(i) > 0;
+            const hp = xfPrev ? ap(i) : 0;
+            const hn = xfNext ? bn(i) : 0;
+            const xIn = (vIn[i] ?? 0) + ap(i) - hp;
+            const lane = clipAudioItems[L];
+            if (!lane)
+                continue;
+            lane.push(ela('clipitem', { id: aId[i]?.[L] ?? '', premiereChannelType: 'stereo' }, el('name', c.id), el('enabled', 'TRUE'), el('duration', itemDuration(i, a, c.src)), rate(), el('start', hp > 0 ? -1 : start), el('end', hn > 0 ? -1 : start + c.dur), el('in', xIn), el('out', xIn + hp + c.dur + hn), fileRef(c.src), el('sourcetrack', el('mediatype', 'audio'), el('trackindex', assetChannels(a) === 1 ? 1 : L + 1)), remapFor(i, c, 'audio'), ...linksFor(i)));
+            if (xfNext) {
+                const cutAt = start + c.dur;
+                const { a: da, b: db } = splitDissolve(dAfter(i));
+                lane.push(transitionNode(rate(), cutAt - da, cutAt + db, true));
+            }
+        }
+    });
+    // --- vo / music / sfx nodes: each clip is a left/right clipitem pair (sourcetrack 1/2) linked to each other.
+    // Lane j sits on audio tracks 3+2j (left) and 4+2j (right); clipindex counts clipitems on the track.
+    const audioItem = (pa, side, laneNo, k) => {
+        const a = assetOf(pa.clip.src, `audio clip '${pa.clip.id}'`);
+        const xOut = pa.in + pa.dur;
+        const [left, right] = audioItemId.get(pa.clip) ?? ['', ''];
+        return ela('clipitem', { id: side === 0 ? left : right, premiereChannelType: 'stereo' }, el('name', pa.clip.id), el('enabled', 'TRUE'), el('duration', fileDuration(a, pa.clip.src)), rate(), el('start', pa.at), el('end', pa.at + pa.dur), el('in', pa.in), el('out', xOut), fileRef(pa.clip.src), el('sourcetrack', el('mediatype', 'audio'), el('trackindex', side === 1 && assetChannels(a) === 2 ? 2 : 1)), levelsFilter(pa.clip, pa.in, xOut), linkNode(left, 'audio', 3 + 2 * laneNo, k + 1), linkNode(right, 'audio', 4 + 2 * laneNo, k + 1));
+    };
+    const audioTracks = [
+        stereoTrack(clipAudioItems[0] ?? [], 0, CLIP_AUDIO_TRACK_NAME),
+        stereoTrack(clipAudioItems[1] ?? [], 1, CLIP_AUDIO_TRACK_NAME),
+        ...roleLanes.flatMap(({ name, lane }, j) => [
+            stereoTrack(lane.map((pa, k) => audioItem(pa, 0, j, k)), 0, name),
+            stereoTrack(lane.map((pa, k) => audioItem(pa, 1, j, k)), 1, name),
+        ]),
+    ];
+    // --- sequence markers at clip starts
+    const markers = clips.flatMap((c, i) => c.marker ? [el('marker', el('name', c.marker), el('comment', ''), el('in', startOf(i)), el('out', -1))] : []);
+    const seq = ela('sequence', { id: 'sequence-1' }, el('name', opts.sequenceName), el('duration', total), rate(), el('timecode', rate(), el('string', '00:00:00:00'), el('frame', 0), el('displayformat', 'NDF')), el('in', -1), el('out', -1), el('media', el('video', el('format', el('samplecharacteristics', rate(), el('width', W), el('height', H), el('anamorphic', 'FALSE'), el('pixelaspectratio', 'square'), el('fielddominance', 'none'), el('colordepth', 24))), el('track', ...vItems, el('enabled', 'TRUE'), el('locked', 'FALSE'))), el('audio', el('numOutputChannels', 2), el('format', el('samplecharacteristics', el('depth', 16), el('samplerate', 48000))), ...audioTracks)), ...markers);
+    const out = ['<?xml version="1.0" encoding="UTF-8"?>', '<!DOCTYPE xmeml>'];
+    render(ela('xmeml', { version: '5' }, seq), 0, out);
+    return `${out.join('\n')}\n`;
+}
+const ATTR = ':@';
+function tagOf(n) {
+    for (const k of Object.keys(n))
+        if (k !== ATTR)
+            return k;
+    return '';
+}
+function kidsOf(n) {
+    const v = n[tagOf(n)];
+    return Array.isArray(v) ? v : [];
+}
+function attrOf(n, name) {
+    const a = n[ATTR];
+    const v = a?.[`@_${name}`];
+    return v === undefined || v === null ? undefined : String(v);
+}
+function textOf(n) {
+    return kidsOf(n)
+        .map((k) => ('#text' in k ? String(k['#text']) : ''))
+        .join('')
+        .trim();
+}
+const child = (n, name) => kidsOf(n).find((k) => tagOf(k) === name);
+const children = (n, name) => kidsOf(n).filter((k) => tagOf(k) === name);
+function childText(n, name) {
+    const c = child(n, name);
+    return c ? textOf(c) : undefined;
+}
+function childNum(n, name) {
+    const t = childText(n, name);
+    if (t === undefined || t === '')
+        return undefined;
+    const v = Number(t);
+    return Number.isFinite(v) ? v : undefined;
+}
+function descend(n, ...names) {
+    let cur = n;
+    for (const name of names) {
+        if (!cur)
+            return undefined;
+        cur = child(cur, name);
+    }
+    return cur;
+}
+function walk(n, fn) {
+    for (const k of kidsOf(n)) {
+        if ('#text' in k)
+            continue;
+        fn(k);
+        walk(k, fn);
+    }
+}
+function findFirst(n, tag) {
+    for (const k of kidsOf(n)) {
+        if ('#text' in k)
+            continue;
+        if (tagOf(k) === tag)
+            return k;
+        const hit = findFirst(k, tag);
+        if (hit)
+            return hit;
+    }
+    return undefined;
+}
+/** Items of one track in order, with FCP7 -1 edges resolved against the neighbouring transition. */
+function readItems(track, label, fps, fileOf, warn) {
+    const items = [];
+    for (const k of kidsOf(track)) {
+        const t = tagOf(k);
+        if (t === 'clipitem') {
+            const name = childText(k, 'name') ?? '';
+            let inF = childNum(k, 'in') ?? 0;
+            let outF = childNum(k, 'out') ?? -1;
+            const r = child(k, 'rate');
+            const tb = r ? childNum(r, 'timebase') : undefined;
+            if (r && tb) {
+                const clipFps = fpsOf(tb, (childText(r, 'ntsc') ?? 'FALSE').toUpperCase() === 'TRUE');
+                if (Math.abs(clipFps - fps) > 0.01) {
+                    warn(`${label}: '${name}' runs at ${clipFps} fps; in/out rescaled to sequence ${fps} fps`);
+                    inF = Math.round((inF * fps) / clipFps);
+                    if (outF >= 0)
+                        outF = Math.round((outF * fps) / clipFps);
+                }
+            }
+            if ((childText(k, 'enabled') ?? 'TRUE').toUpperCase() === 'FALSE')
+                warn(`${label}: '${name}' is disabled in the XML but kept`);
+            const fileNode = child(k, 'file');
+            const nested = child(k, 'sequence');
+            items.push({
+                kind: 'clip',
+                node: k,
+                name,
+                start: childNum(k, 'start') ?? 0,
+                end: childNum(k, 'end') ?? -1,
+                in: inF,
+                out: outF,
+                file: fileNode ? fileOf(fileNode) : undefined,
+                nestedSequence: nested ? childText(nested, 'name') ?? 'nested sequence' : undefined,
+                alignment: '',
+            });
+        }
+        else if (t === 'transitionitem') {
+            const eff = child(k, 'effect');
+            const name = (eff && childText(eff, 'name')) ?? 'transition';
+            const start = childNum(k, 'start') ?? -1;
+            const end = childNum(k, 'end') ?? -1;
+            if (start < 0 || end <= start) {
+                warn(`${label}: transition '${name}' has no usable start/end; ignored`);
+                continue;
+            }
+            items.push({ kind: 'trans', node: k, name, start, end, in: 0, out: 0, alignment: (childText(k, 'alignment') ?? 'center').toLowerCase() });
+        }
+    }
+    items.forEach((it, i) => {
+        if (it.kind !== 'clip')
+            return;
+        const prev = items[i - 1];
+        const next = items[i + 1];
+        if (it.start < 0) {
+            if (prev?.kind === 'trans')
+                it.start = prev.start;
+            else {
+                warn(`${label}: '${it.name}' has start=-1 without a preceding transition`);
+                it.start = prev ? prev.end : 0;
+            }
+        }
+        if (it.end < 0) {
+            if (next?.kind === 'trans')
+                it.end = next.end;
+            else {
+                warn(`${label}: '${it.name}' has end=-1 without a following transition`);
+                it.end = it.start + Math.max(0, it.out - it.in);
+            }
+        }
+        if (it.out < 0)
+            it.out = it.in + (it.end - it.start);
+        if (it.out - it.in !== it.end - it.start && !readTimeRemap(it.node))
+            warn(`${label}: '${it.name}' source span (${it.out - it.in}) != timeline span (${it.end - it.start}) without a Time Remap filter; speed change ignored`);
+    });
+    return items;
+}
+/** Where the model's cut sits inside a transition: centered → start + floor(N/2); start/end aligned → that edge. */
+function cutOf(t, label, warn) {
+    const n = t.end - t.start;
+    if (t.alignment.startsWith('start')) {
+        warn(`${label}: transition '${t.name}' is ${t.alignment}-aligned; it will be re-centered on the next export`);
+        return t.start;
+    }
+    if (t.alignment.startsWith('end')) {
+        warn(`${label}: transition '${t.name}' is ${t.alignment}-aligned; it will be re-centered on the next export`);
+        return t.end;
+    }
+    return t.start + splitDissolve(n).a;
+}
+/** Time Remap filter of a clipitem (undefined when absent or 100% forward). */
+function readTimeRemap(clipNode) {
+    for (const f of children(clipNode, 'filter')) {
+        for (const e of children(f, 'effect')) {
+            if (childText(e, 'effectid') !== 'timeremap' && childText(e, 'name') !== 'Time Remap')
+                continue;
+            const prm = (id) => children(e, 'parameter').find((x) => childText(x, 'parameterid') === id);
+            const flag = (id) => {
+                const n = prm(id);
+                const v = (n && childText(n, 'value'))?.toUpperCase();
+                return v === 'TRUE' || v === '1';
+            };
+            const sp = prm('speed');
+            const pct = sp ? childNum(sp, 'value') : undefined;
+            if (pct === undefined || !(Math.abs(pct) > 0))
+                return undefined;
+            const r = { pct: Math.abs(pct), variable: flag('variablespeed'), reverse: flag('reverse') || pct < 0, blend: flag('frameblending') };
+            return r.pct === 100 && !r.variable && !r.reverse ? undefined : r;
+        }
+    }
+    return undefined;
+}
+/**
+ * Basic Motion scale. Animated scale is read as a push-in: the zoom rate between the first and last
+ * keyframe, extended over the clip body [bodyIn, bodyIn + dur - 1] (exact for what writeXmeml writes,
+ * an approximation otherwise, with a warning).
+ */
+function readMotion(clipNode, name, bodyIn, dur, warn) {
+    for (const f of children(clipNode, 'filter')) {
+        for (const e of children(f, 'effect')) {
+            if (childText(e, 'effectid') !== 'basic' && childText(e, 'name') !== 'Basic Motion')
+                continue;
+            for (const prm of children(e, 'parameter')) {
+                if (childText(prm, 'parameterid') !== 'scale')
+                    continue;
+                const kfs = children(prm, 'keyframe')
+                    .map((k) => ({ when: childNum(k, 'when'), value: childNum(k, 'value') }))
+                    .filter((k) => k.when !== undefined && k.value !== undefined)
+                    .sort((x, y) => x.when - y.when);
+                const first = kfs[0];
+                const last = kfs[kfs.length - 1];
+                if (!first || !last || kfs.length < 2 || last.when <= first.when || first.value <= 0) {
+                    if (kfs.length > 0)
+                        warn(`V1: '${name}' has animated scale; first keyframe used`);
+                    const v = first?.value ?? childNum(prm, 'value');
+                    return v === undefined ? {} : { scale: round(v, 4) };
+                }
+                if (last.value <= first.value) {
+                    warn(`V1: '${name}' scale animates down (pull-out) or not at all; first keyframe used, no push-in`);
+                    return { scale: round(first.value, 4) };
+                }
+                const perFrame = (last.value / first.value - 1) / (last.when - first.when);
+                const span = Math.max(1, dur - 1);
+                const scale = round(first.value * (1 + perFrame * (bodyIn - first.when)), 4);
+                const pushIn = round(((perFrame * span) / (1 + perFrame * (bodyIn - first.when))) * 100, 3);
+                const exact = kfs.length === 2 && first.when === bodyIn && last.when === bodyIn + span;
+                if (!exact)
+                    warn(`V1: '${name}' animated scale read as push-in ${pushIn}% from ${scale}% (approximation of ${kfs.length} keyframes)`);
+                return { scale, pushIn };
+            }
+        }
+    }
+    return {};
+}
+/** Constant source rate of a project clip as writeXmeml writes it (percent, 4 decimals). */
+const writtenPct = (c) => round(averageRate(c) * 100, 4);
+function readLevels(clipNode, xmlIn, xmlOut) {
+    const res = {};
+    for (const f of children(clipNode, 'filter')) {
+        for (const e of children(f, 'effect')) {
+            if (childText(e, 'effectid') !== 'audiolevels' && childText(e, 'name') !== 'Audio Levels')
+                continue;
+            const prm = children(e, 'parameter').find((x) => childText(x, 'parameterid') === 'level');
+            if (!prm)
+                continue;
+            const kfs = children(prm, 'keyframe')
+                .map((k) => ({ when: childNum(k, 'when'), value: childNum(k, 'value') }))
+                .filter((k) => k.when !== undefined && k.value !== undefined)
+                .sort((x, y) => x.when - y.when);
+            const g = kfs.length > 0 ? Math.max(...kfs.map((k) => k.value)) : childNum(prm, 'value') ?? 1;
+            const db = g > 0 ? round(20 * Math.log10(g), 2) : -60;
+            if (Math.abs(db) >= DB_EPS)
+                res.gainDb = db;
+            const first = kfs[0];
+            const second = kfs[1];
+            const last = kfs[kfs.length - 1];
+            const beforeLast = kfs[kfs.length - 2];
+            if (first && second && first.value === 0 && first.when <= xmlIn && second.when > first.when)
+                res.fadeIn = second.when - first.when;
+            if (last && beforeLast && last.value === 0 && last.when >= xmlOut && last.when > beforeLast.when)
+                res.fadeOut = last.when - beforeLast.when;
+            return res;
+        }
+    }
+    return res;
+}
+function roleFromName(name) {
+    if (!name)
+        return undefined;
+    const n = name.normalize('NFC');
+    if (/clip audio|camera|\bsync\b|เสียงกล้อง/i.test(n))
+        return 'clip';
+    if (/\b(vo|v\.o\.|voice(?:over)?|narrat\w*|dialog\w*)\b|พากย์|บรรยาย|เสียงพูด/i.test(n))
+        return 'vo';
+    if (/\b(music|mx|bgm|score|song)\b|เพลง|ดนตรี/i.test(n))
+        return 'music';
+    if (/\b(sfx|fx|effects?|foley)\b|เอฟเฟกต์|เสียงประกอบ/i.test(n))
+        return 'sfx';
+    return undefined;
+}
+/**
+ * Role of every audio track. A recognisable track name (MZ.TrackName / <name>) wins. Otherwise the
+ * position: with Premiere's exploded-track attributes, logical (stereo-pair) tracks 1..4 are clip audio,
+ * vo, music, sfx; without them the legacy single-track layout A1/A2 clip audio, A3 vo, A4 music, A5 sfx.
+ */
+function audioTrackRoles(tracks) {
+    const num = (t, a) => {
+        const v = t ? attrOf(t, a) : undefined;
+        return v === undefined ? undefined : Number(v);
+    };
+    const exploded = tracks.some((t) => attrOf(t, 'premiereTrackType') !== undefined || attrOf(t, 'totalExplodedTrackCount') !== undefined);
+    const byPos = exploded ? ['clip', 'vo', 'music', 'sfx'] : ['clip', 'clip', 'vo', 'music', 'sfx'];
+    const out = [];
+    for (let i = 0, logical = 0; i < tracks.length; logical++) {
+        let size = 1;
+        const total = num(tracks[i], 'totalExplodedTrackCount') ?? 1;
+        if (exploded && total > 1 && (num(tracks[i], 'currentExplodedTrackIndex') ?? 0) === 0) {
+            // a following track without exploded attributes is taken as the missing side
+            while (size < total && i + size < tracks.length) {
+                const cur = num(tracks[i + size], 'currentExplodedTrackIndex');
+                if (cur !== undefined && (cur !== size || num(tracks[i + size], 'totalExplodedTrackCount') !== total))
+                    break;
+                size++;
+            }
+        }
+        for (let k = 0; k < size; k++) {
+            const t = tracks[i + k];
+            const nm = attrOf(t, 'MZ.TrackName') ?? childText(t, 'name');
+            const fromName = roleFromName(nm);
+            out.push({ role: fromName ?? byPos[logical], why: fromName ? `name '${nm}'` : nm ? `unrecognised name '${nm}'` : 'no track name' });
+        }
+        i += size;
+    }
+    return out;
+}
+/**
+ * Stereo (or wider) audio arrives as one clipitem per channel, linked only to each other, with the
+ * same file and the same start/end/in/out. Keep the one on the lowest track; return the others.
+ */
+function mergeStereoPairs(trackItems, layout, warn) {
+    const all = [];
+    const byId = new Map();
+    trackItems.forEach((items, ti) => {
+        for (const it of items) {
+            if (it.kind !== 'clip')
+                continue;
+            const links = children(it.node, 'link');
+            if (links.some((l) => childText(l, 'mediatype') === 'video'))
+                continue;
+            const id = attrOf(it.node, 'id');
+            if (!id)
+                continue;
+            const refs = [...new Set(links.map((l) => childText(l, 'linkclipref') ?? '').filter((r) => r !== '' && r !== id))];
+            const a = { it, ti, id, refs };
+            all.push(a);
+            byId.set(id, a);
+        }
+    });
+    const sameFile = (x, y) => x === y || (!!x && !!y && (x.id === y.id || (!!x.pathurl && x.pathurl === y.pathurl)));
+    const dropped = new Set();
+    const seen = new Set();
+    for (const a of all) {
+        if (seen.has(a) || a.refs.length === 0)
+            continue;
+        seen.add(a);
+        const partners = a.refs.map((r) => byId.get(r));
+        if (partners.some((g) => g === undefined))
+            continue;
+        const group = partners;
+        for (const g of group)
+            seen.add(g);
+        const members = new Set([a.id, ...a.refs]);
+        const closed = group.every((g) => g.refs.every((r) => members.has(r)));
+        const sameSpan = group.every((g) => sameFile(g.it.file, a.it.file) && g.it.start === a.it.start && g.it.end === a.it.end && g.it.in === a.it.in && g.it.out === a.it.out);
+        if (!closed || !sameSpan) {
+            warn(`A${a.ti + 1}: linked audio '${a.it.name}' and its partner(s) differ in file/position/links; kept as separate clips`);
+            continue;
+        }
+        const role = layout[a.ti]?.role;
+        for (const g of group) {
+            dropped.add(g.it);
+            const other = layout[g.ti]?.role;
+            if (other !== role)
+                warn(`A${a.ti + 1}/A${g.ti + 1}: stereo pair '${a.it.name}' spans tracks read as ${role ?? 'extra'} and ${other ?? 'extra'}; treated as ${role === 'vo' || role === 'music' ? role : 'sfx'} (ambiguous)`);
+        }
+    }
+    return dropped;
+}
+export function readXmeml(xml, p, opts = {}) {
+    const warnings = [];
+    const warn = (s) => {
+        warnings.push(s);
+    };
+    const parser = new XMLParser({
+        preserveOrder: true,
+        ignoreAttributes: false,
+        attributeNamePrefix: '@_',
+        parseTagValue: false,
+        parseAttributeValue: false,
+        trimValues: true,
+        ignoreDeclaration: true,
+        ignorePiTags: true,
+    });
+    let doc;
+    try {
+        doc = parser.parse(xml);
+    }
+    catch (e) {
+        throw new Error(`xmeml: cannot parse XML: ${e.message}`);
+    }
+    const root = { root: Array.isArray(doc) ? doc : [] };
+    const seq = findFirst(root, 'sequence');
+    if (!seq)
+        throw new Error('xmeml: no <sequence> element found');
+    // --- every <file> anywhere, merged by id (first full definition wins, id-only refs resolve to it)
+    const filesById = new Map();
+    const filesByNode = new WeakMap();
+    let anon = 0;
+    walk(root, (node) => {
+        if (tagOf(node) !== 'file')
+            return;
+        const id = attrOf(node, 'id') ?? `anon-${++anon}`;
+        let rec = filesById.get(id);
+        if (!rec) {
+            rec = { id };
+            filesById.set(id, rec);
+        }
+        rec.name ??= childText(node, 'name');
+        rec.pathurl ??= childText(node, 'pathurl');
+        const sc = descend(node, 'media', 'video', 'samplecharacteristics');
+        if (sc) {
+            rec.width ??= childNum(sc, 'width');
+            rec.height ??= childNum(sc, 'height');
+        }
+        filesByNode.set(node, rec);
+    });
+    const fileOf = (node) => filesByNode.get(node) ?? (attrOf(node, 'id') ? filesById.get(attrOf(node, 'id') ?? '') : undefined);
+    // --- sequence rate / size
+    const fmtChars = descend(seq, 'media', 'video', 'format', 'samplecharacteristics');
+    const rateSrc = child(seq, 'rate') ?? (fmtChars ? child(fmtChars, 'rate') : undefined);
+    let fps = p?.meta.fps ?? 25;
+    if (rateSrc) {
+        const tb = childNum(rateSrc, 'timebase');
+        if (tb)
+            fps = fpsOf(tb, (childText(rateSrc, 'ntsc') ?? 'FALSE').toUpperCase() === 'TRUE');
+    }
+    const firstVideoFile = [...filesById.values()].find((f) => f.width !== undefined && f.height !== undefined);
+    const width = (fmtChars && childNum(fmtChars, 'width')) ?? firstVideoFile?.width ?? p?.meta.width ?? 1920;
+    const height = (fmtChars && childNum(fmtChars, 'height')) ?? firstVideoFile?.height ?? p?.meta.height ?? 1080;
+    // --- asset mapping
+    const assetByPath = new Map();
+    if (p) {
+        for (const a of Object.values(p.assets)) {
+            const fp = defaultResolvePath(a);
+            if (fp)
+                assetByPath.set(pathKey(fp), a.id);
+        }
+    }
+    const unresolvedPaths = [];
+    const unresolved = (s) => {
+        if (!unresolvedPaths.includes(s))
+            unresolvedPaths.push(s);
+        return s;
+    };
+    const srcFor = (it, label) => {
+        if (it.nestedSequence !== undefined) {
+            warn(`${label}: '${it.name}' is a nested sequence; source left as its name`);
+            return unresolved(it.nestedSequence);
+        }
+        if (!it.file) {
+            warn(`${label}: '${it.name}' has no <file>; source left as the clip name`);
+            return unresolved(it.name || '?');
+        }
+        if (!it.file.pathurl) {
+            warn(`${label}: '${it.name}' file has no pathurl (offline?)`);
+            return unresolved(it.file.name ?? it.file.id);
+        }
+        const abs = pathFromUrl(it.file.pathurl);
+        return opts.resolveAsset?.(abs) ?? assetByPath.get(pathKey(abs)) ?? unresolved(abs);
+    };
+    const uniqueId = (pool, name, fallback) => {
+        const base = name.trim() || fallback;
+        let id = base;
+        for (let k = 2; pool.has(id); k++)
+            id = `${base}_${k}`;
+        pool.add(id);
+        return id;
+    };
+    // --- video: V1 only
+    const videoNode = descend(seq, 'media', 'video');
+    const vTracks = videoNode ? children(videoNode, 'track') : [];
+    vTracks.slice(1).forEach((trk, i) => {
+        const count = children(trk, 'clipitem').length;
+        if (count > 0)
+            warn(`V${i + 2}: ${count} clip(s) ignored (model has one video track)`);
+    });
+    const v1 = vTracks[0];
+    const items = v1 ? readItems(v1, 'V1', fps, fileOf, warn) : [];
+    const video = [];
+    const cuts = [];
+    const spans = [];
+    const pendingMarkers = [];
+    const videoIds = new Set();
+    let lastIdx = -1;
+    let lastEnd;
+    items.forEach((it, i) => {
+        if (it.kind !== 'clip')
+            return;
+        const prev = items[i - 1];
+        const before = items[i - 2];
+        const next = items[i + 1];
+        const after = items[i + 2];
+        const prevT = prev?.kind === 'trans' && before?.kind === 'clip' ? prev : undefined;
+        const nextT = next?.kind === 'trans' && after?.kind === 'clip' ? next : undefined;
+        if (prev?.kind === 'trans' && !prevT)
+            warn(`V1: transition '${prev.name}' before '${it.name}' has no clip on its other side; folded into the clip`);
+        if (next?.kind === 'trans' && !nextT)
+            warn(`V1: transition '${next.name}' after '${it.name}' has no clip on its other side; folded into the clip`);
+        if (prevT && !/dissolve/i.test(prevT.name))
+            warn(`V1: transition '${prevT.name}' treated as a cross dissolve`);
+        const cPrev = prevT ? cutOf(prevT, 'V1', warn) : it.start;
+        const cNext = nextT ? cutOf(nextT, 'V1', warn) : it.end;
+        const dur = cNext - cPrev;
+        if (dur <= 0) {
+            warn(`V1: '${it.name}' has no frames left outside its transitions; skipped`);
+            return;
+        }
+        if (lastEnd !== undefined && cPrev !== lastEnd)
+            warn(`V1: ${cPrev - lastEnd} frame gap/overlap before '${it.name}' dropped (model has no gaps)`);
+        const clip = { id: uniqueId(videoIds, it.name, `v${video.length + 1}`), src: srcFor(it, 'V1'), in: it.in + (cPrev - it.start), dur };
+        // A still with no head handle is clamped to XML in=0; remove that synthetic source offset on import.
+        if (p?.assets[clip.src]?.kind === 'still' && it.in === 0)
+            clip.in = 0;
+        const bodyIn = it.in + (cPrev - it.start); // first body frame in the clipitem's in/out space
+        const old = p?.timeline.video.find((c) => c.id === clip.id && c.src === clip.src);
+        const remap = readTimeRemap(it.node);
+        if (remap && p?.assets[clip.src]?.kind !== 'still') {
+            const r = remap.pct / 100;
+            if (remap.variable)
+                warn(`V1: '${it.name}' uses variable speed (time remapping); read as constant ${remap.pct}%`);
+            if (remap.reverse)
+                warn(`V1: '${it.name}' plays in reverse; reverse ignored (forward ${remap.pct}%)`);
+            const retimedUnits = it.out - it.in === it.end - it.start;
+            if (!retimedUnits && Math.abs(it.out - it.in - (it.end - it.start) * r) > 1)
+                warn(`V1: '${it.name}' in/out span ${it.out - it.in} matches neither the timeline span nor speed ${remap.pct}%; read as retimed frames`);
+            // in/out are in retimed frames (out - in == end - start): source frame = retimed frame * rate
+            clip.in = retimedUnits || Math.abs(it.out - it.in - (it.end - it.start) * r) > 1 ? Math.round(bodyIn * r) : it.in + Math.round((cPrev - it.start) * r);
+            clip.speed = { rate: round(r, 6), interpolation: remap.blend ? 'blend' : 'nearest' };
+            // our own export of an unchanged clip: keep the exact model (ramp, interpolation, odd in-points)
+            if (old?.speed && writtenPct(old) === round(remap.pct, 4) && (clipInterpolation(old) !== 'nearest') === remap.blend) {
+                if (speedCurve(old)?.R)
+                    warn(`V1: '${it.name}' speed ramp kept from the project (the XML carries its ${remap.pct}% average)`);
+                clip.speed = structuredClone(old.speed);
+                if (retimedUnits && Math.round(old.in / r) === bodyIn)
+                    clip.in = old.in;
+            }
+        }
+        const motion = readMotion(it.node, it.name, bodyIn, dur, warn);
+        if (motion.scale !== undefined && motion.scale !== 100)
+            clip.scale = motion.scale;
+        if (motion.pushIn !== undefined && motion.pushIn > 0) {
+            clip.pushIn = old?.pushIn !== undefined && Math.abs(old.pushIn - motion.pushIn) < 0.01 ? old.pushIn : motion.pushIn;
+            if (clip.pushIn > 100) {
+                warn(`V1: '${it.name}' push-in ${clip.pushIn}% exceeds 100%; clamped`);
+                clip.pushIn = 100;
+            }
+        }
+        const lastClip = video[video.length - 1];
+        if (lastClip) {
+            const adjacent = prevT !== undefined && before === items[lastIdx];
+            if (prevT && !adjacent)
+                warn(`V1: dissolve before '${it.name}' dropped because its other clip was skipped`);
+            cuts.push({ after: lastClip.id, dissolve: adjacent && prevT ? prevT.end - prevT.start : 0 });
+        }
+        for (const m of children(it.node, 'marker')) {
+            const name = childText(m, 'name') || childText(m, 'comment') || '';
+            const mIn = childNum(m, 'in');
+            if (name && mIn !== undefined)
+                pendingMarkers.push({ name, at: it.start + (mIn - it.in), from: 'clip marker' });
+        }
+        video.push(clip);
+        spans.push({ clip, xStart: cPrev, xEnd: cNext });
+        lastIdx = i;
+        lastEnd = cNext;
+    });
+    // --- markers: sequence markers first, then clip markers; exact clip start wins, else snap to the containing clip
+    for (const m of children(seq, 'marker')) {
+        const name = childText(m, 'name') || childText(m, 'comment') || '';
+        const at = childNum(m, 'in');
+        if (name && at !== undefined)
+            pendingMarkers.unshift({ name, at, from: 'sequence marker' });
+    }
+    for (const m of pendingMarkers) {
+        const exact = spans.find((s) => s.xStart === m.at);
+        const target = exact ?? spans.find((s) => m.at >= s.xStart && m.at < s.xEnd);
+        if (!target) {
+            warn(`marker '${m.name}' at ${m.at} is outside every clip; dropped`);
+            continue;
+        }
+        if (target.clip.marker !== undefined) {
+            warn(`marker '${m.name}' at ${m.at} dropped: clip '${target.clip.id}' already has marker '${target.clip.marker}'`);
+            continue;
+        }
+        if (!exact)
+            warn(`${m.from} '${m.name}' at ${m.at} snapped to start of clip '${target.clip.id}' (${target.xStart})`);
+        target.clip.marker = m.name;
+    }
+    // --- audio: linked clip audio is implied by the video; roles from track names, else from the layout
+    const audioNode = descend(seq, 'media', 'audio');
+    const aTracks = audioNode ? children(audioNode, 'track') : [];
+    const vo = [];
+    const music = [];
+    const sfx = [];
+    const audioIds = new Set();
+    let linkedClipAudio = 0;
+    const layout = audioTrackRoles(aTracks);
+    const trackItems = aTracks.map((trk, ti) => readItems(trk, `A${ti + 1}`, fps, fileOf, warn));
+    const dropped = mergeStereoPairs(trackItems, layout, warn);
+    aTracks.forEach((_trk, ti) => {
+        const idx = ti + 1;
+        const label = `A${idx}`;
+        const { role: placed, why } = layout[ti] ?? { role: undefined, why: 'position' };
+        const role = placed === 'vo' || placed === 'music' ? placed : 'sfx';
+        const list = role === 'vo' ? vo : role === 'music' ? music : sfx;
+        const tItems = trackItems[ti] ?? [];
+        tItems.forEach((it, k) => {
+            if (it.kind !== 'clip')
+                return;
+            if (children(it.node, 'link').some((l) => childText(l, 'mediatype') === 'video')) {
+                linkedClipAudio++;
+                return;
+            }
+            if (dropped.has(it))
+                return;
+            if (placed === 'clip')
+                warn(`${label}: '${it.name}' is not on a vo/music/sfx track; treated as sfx`);
+            else if (placed === undefined)
+                warn(`${label}: '${it.name}' is on an extra track without a recognisable name (${why}); treated as sfx (ambiguous)`);
+            const prev = tItems[k - 1];
+            const next = tItems[k + 1];
+            const prevT = prev?.kind === 'trans' && tItems[k - 2]?.kind === 'clip' ? prev : undefined;
+            const nextT = next?.kind === 'trans' && tItems[k + 2]?.kind === 'clip' ? next : undefined;
+            const ac = { id: uniqueId(audioIds, it.name, `${role}${list.length + 1}`), src: srcFor(it, label), at: it.start, dur: it.end - it.start };
+            if (it.in > 0)
+                ac.in = it.in;
+            const lv = readLevels(it.node, it.in, it.out);
+            if (lv.gainDb !== undefined)
+                ac.gainDb = lv.gainDb;
+            const fadeIn = lv.fadeIn ?? (prevT ? prevT.end - prevT.start : undefined);
+            const fadeOut = lv.fadeOut ?? (nextT ? nextT.end - nextT.start : undefined);
+            if (fadeIn !== undefined && fadeIn > 0)
+                ac.fadeIn = fadeIn;
+            if (fadeOut !== undefined && fadeOut > 0)
+                ac.fadeOut = fadeOut;
+            list.push(ac);
+        });
+    });
+    const byAt = (x, y) => x.at - y.at;
+    const audio = { vo: vo.sort(byAt), music: music.sort(byAt), sfx: sfx.sort(byAt) };
+    if (linkedClipAudio === 0 && p && video.some((c) => (p.assets[c.src] ? assetHasAudio(p.assets[c.src]) : false)))
+        audio.useClipAudio = false;
+    if (p?.timeline.audio.duck)
+        audio.duck = { ...p.timeline.audio.duck };
+    const timeline = { video, cuts, audio };
+    return { fps, width, height, timeline, unresolvedPaths, warnings };
+}
+//# sourceMappingURL=xmeml.js.map

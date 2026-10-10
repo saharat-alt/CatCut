@@ -4,7 +4,32 @@
 
 **CatCut** (ชื่อโค้ดเดิม EDITMCP) คือ MCP server สำหรับตัดต่อวิดีโอแบบ headless: แก้ comp ใน After Effects โดยไม่เปิดหน้าโปรแกรม (`AfterFX -m -noui`), render ด้วย `aerender`, แล้วให้ `ffmpeg` ประกอบเป็น master ProRes 422 HQ จาก "ท่อน" ที่ cache ไว้ — แก้จุดเดียว render ใหม่แค่จุดนั้น ส่วนที่ไม่เปลี่ยนไม่ถูก encode ซ้ำ จึง export เร็วและคุณภาพเท่า export ตรงจาก AE จากนั้นทำ QC (เฟรม, ภาพดำ/ค้าง, เสียงเงียบ, loudness), สร้าง deliverable ตาม preset (YouTube, Facebook, แนวตั้ง, XDCAM HD422 ออกอากาศ, ProRes) และส่งออก/รับกลับ FCP7 XML เพื่อไปขยับไทม์มิ่งเองใน Premiere ได้ ใช้ได้ทั้งกับ Claude Code และ Codex ทุกค่าเวลาเป็น **เฟรม** ไม่ใช่วินาที และ**ไม่เขียนทับไฟล์เดิม**เด็ดขาด (ทุก build ได้เวอร์ชันใหม่)
 
-## ติดตั้ง / Install
+## ติดตั้งแบบ plugin (ง่ายสุด) / Install as a Claude Code plugin
+
+ในเซสชัน Claude Code:
+
+```
+/plugin marketplace add thefogusz/CatCut
+/plugin install catcut@catcut
+```
+
+หรือใน terminal: `claude plugin install catcut --marketplace thefogusz/CatCut`
+
+จากนั้นเรียกใช้:
+
+| คำสั่ง | ทำอะไร |
+|---|---|
+| `/catcut:new` | เริ่มงานจากบรีฟ/บอร์ด + ฟุตเทจ |
+| `/catcut:build` | build เฉพาะที่เปลี่ยน + QC |
+| `/catcut:review` | เปิดหน้ารีวิว วงปากกาสีสั่งแก้ |
+| `/catcut:fix` | แก้ตามโน้ต (เสนอแผนก่อน) |
+| `/catcut:check` | เทียบบอร์ด + หาเฟรมหลุด/กระตุก |
+| `/catcut:deliver` | ส่งงาน YouTube/ทีวี/Master หรือ XML ไป Premiere |
+| `@agent-catcut:editor` | ให้ agent CatCut รับงานไปทำทั้งหมด |
+
+ต้องมี Node ≥ 22 และ ffmpeg ในเครื่อง (After Effects ถ้าจะใช้ comp)
+
+## ติดตั้งจากซอร์ส / Install from source
 
 ต้องมี Node ≥ 22, ffmpeg/ffprobe (winget `Gyan.FFmpeg` หรือกำหนด `EDITMCP_FFMPEG=<bin folder>`) และ After Effects (ถ้าจะใช้ `ae_*`)
 

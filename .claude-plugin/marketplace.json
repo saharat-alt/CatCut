@@ -1,0 +1,12 @@
+{
+  "name": "catcut",
+  "owner": { "name": "thefogusz" },
+  "description": "CatCut video editing plugin",
+  "plugins": [
+    {
+      "name": "catcut",
+      "source": "./",
+      "description": "CatCut — headless video editing: After Effects + ffmpeg, review with coloured pens, FCP7 XML for Premiere"
+    }
+  ]
+}

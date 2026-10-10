@@ -1,0 +1,72 @@
+/**
+ * CatCut (EDITMCP) stdio server. `createServer()` is exported for tests (InMemoryTransport);
+ * running this file directly (`tsx src/mcp/server.ts` / `node dist/mcp/server.js`) serves on stdio.
+ */
+import { resolve } from 'node:path';
+import { fileURLToPath } from 'node:url';
+import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
+import { StdioServerTransport } from '@modelcontextprotocol/sdk/server/stdio.js';
+import { createAppState } from './state.js';
+import { runTool, TOOLS } from './tools.js';
+const SERVER_INFO = { name: 'catcut', version: '0.1.0' };
+const INSTRUCTIONS = [
+    'CatCut 🐾: headless video editing (After Effects headless + aerender + ffmpeg). ทุกเวลาเป็นเฟรมที่ fps ของโปรเจกต์ (ไม่ใช่วินาที).',
+    'Flow: doctor → project_new/project_open → asset_add → timeline_set (or timeline_edit / audio_add) → build (returns job id; poll job_status) → deliver → export_premiere_xml.',
+    'Premiere loop: export_premiere_xml → edit in Premiere → File > Export > Final Cut Pro XML → import_premiere_xml (dry run: show the summary to the user) → import_premiere_xml {apply: true} (backs up the timeline; undo with timeline_restore) → build.',
+    'ae_* tools run as jobs: if the result has pending:true, poll job_status. If a tool says the project was changed elsewhere, it has been reloaded: re-issue the edit.',
+    'Review: review_open → job_status URL → user selects shots/ranges and annotates → review_notes. Propose edits from submitted notes before applying them.',
+    'Builds are incremental: unchanged segments are never re-encoded; outputs are never overwritten (new version each build).',
+].join('\n');
+export async function createServer(state) {
+    const st = state ?? (await createAppState());
+    const server = new McpServer(SERVER_INFO, { instructions: INSTRUCTIONS });
+    for (const t of TOOLS) {
+        server.registerTool(t.name, { description: t.description, inputSchema: t.input }, (args) => runTool(t, args, st));
+    }
+    const onclose = server.server.onclose;
+    server.server.onclose = () => {
+        onclose?.();
+        for (const review of st.reviews?.values() ?? [])
+            void review.close();
+        st.reviews?.clear();
+    };
+    return server;
+}
+/** Serve on stdio. Logs go to stderr only (stdout is the protocol channel). */
+export async function serveStdio(opts = {}) {
+    const state = await createAppState();
+    if (opts.projectDir) {
+        // A bad path must not stop the server: the agent can project_open later.
+        try {
+            state.project = await state.api.project.loadProject(opts.projectDir);
+        }
+        catch (err) {
+            state.problems.push(`project not opened: ${err instanceof Error ? err.message : String(err)}`);
+        }
+    }
+    const server = await createServer(state);
+    await server.connect(new StdioServerTransport());
+    const note = state.problems.length ? ` (problems: ${state.problems.join('; ')})` : '';
+    process.stderr.write(`catcut ${SERVER_INFO.version} ready on stdio${note}\n`);
+}
+/** True when this module is the process entry point (works for both tsx and compiled dist). */
+export function isMain(metaUrl) {
+    const entry = process.argv[1];
+    if (!entry)
+        return false;
+    try {
+        const a = resolve(fileURLToPath(metaUrl));
+        const b = resolve(entry);
+        return process.platform === 'win32' ? a.toLowerCase() === b.toLowerCase() : a === b;
+    }
+    catch {
+        return false;
+    }
+}
+if (isMain(import.meta.url)) {
+    serveStdio().catch((err) => {
+        process.stderr.write(`catcut failed to start: ${err instanceof Error ? err.stack ?? err.message : String(err)}\n`);
+        process.exit(1);
+    });
+}
+//# sourceMappingURL=server.js.map

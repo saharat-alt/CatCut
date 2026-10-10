@@ -1,0 +1,15 @@
+{
+  "name": "catcut",
+  "version": "0.2.0",
+  "description": "CatCut — ตัดต่อวิดีโอโดยไม่ต้องเปิดโปรแกรม Adobe (After Effects headless + ffmpeg, FCP7 XML ไป Premiere) · Headless video editing",
+  "author": { "name": "thefogusz" },
+  "repository": "https://github.com/thefogusz/CatCut",
+  "license": "MIT",
+  "keywords": ["video", "editing", "after-effects", "premiere", "ffmpeg", "mcp"],
+  "mcpServers": {
+    "catcut": {
+      "command": "node",
+      "args": ["${CLAUDE_PLUGIN_ROOT}/dist/mcp/cli.js", "serve"]
+    }
+  }
+}
