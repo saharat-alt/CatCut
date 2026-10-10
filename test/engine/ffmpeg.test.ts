@@ -37,6 +37,7 @@ describe('real ffmpeg integration (synthetic media + mocked Adobe)', () => {
     p.timeline.video = [{ id: 'one', src: 'cam', in: 0, dur: 25 }];
     const assembler = new Assembler({ tools: env.tools, env: { ...env, encoders: { ...env.encoders, h264_nvenc: false, h264_qsv: false } }, ae: { kind: 'mock' } as AeBackend });
     const master = await assembler.build(p, { skipQc: true, skipDeliver: true });
+    expect(master.version.reviewPlan).toMatchObject({ fps: 25, frames: 25, shots: [{ id: 'one', start: 0, dur: 25 }] });
     const outputs = await assembler.deliver(p, master.version.id, Object.keys(PRESETS));
     const expected = { h264: 'h264', hevc: 'hevc', prores_422hq: 'prores', prores_4444: 'prores', xdcam_hd422: 'mpeg2video', dnxhr_hqx: 'dnxhd' };
     for (const [target, output] of Object.entries(outputs)) {
@@ -47,8 +48,11 @@ describe('real ffmpeg integration (synthetic media + mocked Adobe)', () => {
       if (target === 'th_tv') expect(data.streams[0].field_order).toBe('tt');
       await execa(env.tools.ffmpeg, ['-v', 'error', '-nostdin', '-i', output, '-map', '0:v', '-map', '0:a', '-f', 'null', '-'], { windowsHide: true, timeout: 60_000 });
     }
+    p.meta.height = 181; // review an old version after the project format/timeline has changed
+    p.timeline.video[0]!.dur = 10;
     const proxy = await assembler.reviewProxy(p, master.version.id);
-    expect((await probe(env.tools, proxy)).videoCodec).toBe('h264');
+    expect((await probe(env.tools, proxy))).toMatchObject({ videoCodec: 'h264', height: 180, durationFrames: 25 });
+    expect((await loadProject(p.dir)).versions[0]!.reviewPlan?.shots[0]?.dur).toBe(25);
   });
 
   it('cuts the same project frames as fps conversion followed by trim', async () => {

@@ -25,6 +25,7 @@ import type {
 } from '../core/types.js';
 import { hashFile, hashJson, hashString } from '../core/hash.js';
 import {
+  captureReviewPlan,
   clipStartFrames,
   nextVersionId,
   planHash,
@@ -622,6 +623,7 @@ export class Assembler {
       createdAt: new Date().toISOString(),
       planHash: planHash(p),
       master,
+      reviewPlan: captureReviewPlan(p),
       deliverables: {},
       stats,
     };
@@ -1073,10 +1075,12 @@ export class Assembler {
     const tmp = tmpFile(paths.tmp, '.mp4');
     const gpu = this.env.encoders.h264_nvenc;
     const vcodec = gpu ? ['-c:v', 'h264_nvenc', '-preset', 'p4', '-rc', 'vbr', '-cq', '26', '-b:v', '0'] : ['-c:v', 'libx264', '-preset', 'veryfast', '-crf', '23'];
-    const h = Math.min(540, p.meta.height);
+    const fps = version.reviewPlan?.fps ?? p.meta.fps;
+    const frames = version.reviewPlan?.frames ?? timelineFrames(p);
+    const h = Math.max(2, Math.floor(Math.min(540, version.reviewPlan?.height ?? p.meta.height) / 2) * 2);
     await this.encode(
-      [...FF_BASE, '-y', '-i', version.master, '-map', '0:v:0', '-map', '0:a:0?', '-vf', `scale=-2:${h}:flags=bicubic,setsar=1`, ...vcodec, '-pix_fmt', 'yuv420p', '-g', String(Math.round(p.meta.fps) * 2), '-c:a', 'aac', '-b:a', '128k', '-ar', '48000', '-ac', '2', '-movflags', '+faststart', tmp],
-      vcodec, ['-c:v', 'libx264', '-preset', 'veryfast', '-crf', '23'], encodeTimeout(timelineFrames(p), p.meta.fps), opts.signal,
+      [...FF_BASE, '-y', '-i', version.master, '-map', '0:v:0', '-map', '0:a:0?', '-vf', `scale=-2:${h}:flags=bicubic,setsar=1`, ...vcodec, '-pix_fmt', 'yuv420p', '-g', String(Math.round(fps) * 2), '-c:a', 'aac', '-b:a', '128k', '-ar', '48000', '-ac', '2', '-movflags', '+faststart', tmp],
+      vcodec, ['-c:v', 'libx264', '-preset', 'veryfast', '-crf', '23'], encodeTimeout(frames, fps), opts.signal,
     );
     await moveInto(tmp, final);
     version.reviewProxy = final;

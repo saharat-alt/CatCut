@@ -139,9 +139,29 @@ export interface Version {
   planHash: string; // hash of timeline+assets used
   master: string; // ProRes MOV path
   reviewProxy?: string;
+  reviewPlan?: ReviewPlan; // immutable shot map of this build, independent of later timeline edits
   deliverables: Record<string, string>; // target id -> path
   qc?: QcReport;
   stats: BuildStats;
+}
+
+export interface ReviewShot {
+  id: string;
+  src: string;
+  start: Frames;
+  in: Frames;
+  dur: Frames;
+  marker?: string;
+  comp?: string;
+}
+
+export interface ReviewPlan {
+  fps: number;
+  width: number;
+  height: number;
+  frames: Frames;
+  shots: ReviewShot[];
+  cuts?: Cut[]; // transition context for annotations near a cut
 }
 
 export interface Project {

@@ -11,6 +11,7 @@ import type {
   Frames,
   ProbeInfo,
   Project,
+  ReviewPlan,
   Timeline,
 } from './types.js';
 import { hashFile, hashJson, hashString } from './hash.js';
@@ -383,6 +384,18 @@ export function validateTimeline(p: Project): string[] {
 
 export function timelineFrames(p: Project): Frames {
   return (p.timeline?.video ?? []).reduce((sum, c) => sum + (isFrames(c.dur) && c.dur > 0 ? c.dur : 0), 0);
+}
+
+export function captureReviewPlan(p: Project): ReviewPlan {
+  const starts = clipStartFrames(p);
+  return {
+    fps: p.meta.fps, width: p.meta.width, height: p.meta.height, frames: timelineFrames(p),
+    cuts: structuredClone(p.timeline.cuts),
+    shots: p.timeline.video.map(c => {
+      const asset = p.assets[c.src];
+      return { ...c, start: starts.get(c.id) ?? 0, ...(asset?.kind === 'aecomp' ? { comp: asset.comp } : {}) };
+    }),
+  };
 }
 
 export function clipStartFrames(p: Project): Map<string, Frames> {
