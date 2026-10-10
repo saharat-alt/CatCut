@@ -60,6 +60,7 @@ export async function openReview(p: Project, v: Version): Promise<ReviewServer> 
   const assets = new Map<string, { body: Buffer; type: string }>();
   for (const [route, file, type] of [
     ['', 'index.html', 'text/html'], ['app.js', 'app.js', 'text/javascript'], ['style.css', 'style.css', 'text/css'],
+    ['fonts/NotoSansThai.ttf', 'fonts/NotoSansThai.ttf', 'font/ttf'],
   ]) assets.set(route!, { body: await readFile(new URL(`../../web/review/${file}`, import.meta.url)), type: type! });
   let origin = '';
   const server = createServer((req, res) => {
@@ -67,7 +68,7 @@ export async function openReview(p: Project, v: Version): Promise<ReviewServer> 
     res.setHeader('X-Content-Type-Options', 'nosniff');
     res.setHeader('X-Frame-Options', 'DENY');
     res.setHeader('Referrer-Policy', 'no-referrer');
-    res.setHeader('Content-Security-Policy', "default-src 'none'; script-src 'self'; style-src 'self'; media-src 'self'; img-src 'self'; connect-src 'self'; frame-ancestors 'none'; base-uri 'none'; form-action 'none'");
+    res.setHeader('Content-Security-Policy', "default-src 'none'; script-src 'self'; style-src 'self'; font-src 'self'; media-src 'self'; img-src 'self'; connect-src 'self'; frame-ancestors 'none'; base-uri 'none'; form-action 'none'");
     void (async () => {
       if (req.headers.host !== new URL(origin).host) throw new ReviewError('Invalid host', 403);
       const url = new URL(req.url ?? '/', origin);
@@ -91,7 +92,7 @@ export async function openReview(p: Project, v: Version): Promise<ReviewServer> 
       }
       const asset = assets.get(route);
       if (!asset) throw new ReviewError('Not found', 404);
-      res.writeHead(200, { 'Content-Type': asset.type + '; charset=utf-8' });
+      res.writeHead(200, { 'Content-Type': asset.type + (asset.type.startsWith('font/') ? '' : '; charset=utf-8') });
       res.end(req.method === 'HEAD' ? undefined : asset.body);
     })().catch(error => {
       if (res.headersSent) { res.destroy(); return; }

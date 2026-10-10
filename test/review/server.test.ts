@@ -80,7 +80,12 @@ describe('local review', () => {
     expect((await readReviewSession(p, v)).revision).toBe(0);
     const page = await fetch(url);
     expect(page.headers.get('content-security-policy')).toContain("script-src 'self'");
+    expect(page.headers.get('content-security-policy')).toContain("font-src 'self'");
     expect(page.headers.get('x-content-type-options')).toBe('nosniff');
+    const font = await fetch(url + 'fonts/NotoSansThai.ttf');
+    expect(font.headers.get('content-type')).toBe('font/ttf');
+    expect(new Uint8Array(await font.arrayBuffer()).slice(0, 4)).toEqual(new Uint8Array([0, 1, 0, 0]));
+    expect((await fetch(url + 'fonts/OFL.txt')).status).toBe(404);
   });
   it('refuses mismatched legacy versions and reopens saved sessions', async () => {
     const { p, v, server } = await fixture();

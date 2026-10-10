@@ -2,7 +2,6 @@
 const $ = id => document.getElementById(id);
 const video = $('video');
 const svg = $('drawing');
-const colors = { cut: '#ff8f89', timing: '#f1cc70', text: '#8cbff4', color: '#91d3aa', audio: '#d5aff1' };
 const labels = { cut: 'ตัดออก', timing: 'ไทม์มิ่ง', text: 'ข้อความ', color: 'สี / แสง', audio: 'เสียง' };
 let data, session, frame = 0, selection = { in: 0, out: 1 }, strokes = [], editingId;
 let reverseTimer, drawingStroke, drawingPointer, conflicted = false, failed = false, saves = Promise.resolve();
@@ -81,7 +80,6 @@ function setPen(active) {
 }
 function renderStrokes() {
   $('strokes').replaceChildren();
-  svg.style.setProperty('--pen-color', colors[intent()]);
   for (const stroke of strokes) {
     const line = document.createElementNS('http://www.w3.org/2000/svg', 'polyline');
     line.setAttribute('points', stroke.points.map(([x, y]) => `${x * 1000},${y * 1000}`).join(' '));

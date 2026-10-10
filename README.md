@@ -131,6 +131,8 @@ AE fingerprint ติดตาม property/keyframe/expression, precomp, proxy �
 
 Server เปิดเฉพาะ `127.0.0.1` ใช้ URL เฉพาะเซสชัน ไม่ส่งวิดีโอออกนอกเครื่อง หลายหน้าต่างบันทึกโน้ตใช้ revision และ lock ป้องกันทับกัน; ถ้าโปรเซส crash ระหว่างบันทึกจนค้าง `session.lock` ให้ปิดทุกโปรเซสรีวิวของโปรเจกต์ก่อนลบ lock นี้ โน้ตและสำเนาที่ส่งยังอยู่
 
+หน้ารีวิวใช้ Noto Sans Thai ที่เก็บในโปรเจกต์ ไม่เรียกบริการฟอนต์ภายนอก; ฟอนต์จาก Google Fonts ภายใต้ SIL Open Font License ดู `web/review/fonts/OFL.txt`
+
 ลองด้วยสื่อสังเคราะห์ (ไม่แตะงานผลิต): `npm run build` แล้ว `node tests/review_demo.mjs` จะสร้างโปรเจกต์ใหม่ใต้ `tmp/review-demo/` และแสดง URL; Ctrl+C เพื่อปิด server
 
 เฟสนี้วงเป็นเส้นอิสระและจับคู่กับช็อต/comp ตามเฟรม บริเวณ dissolve มีภาพจากสองช็อต ต้องดูบริบท transition ในแผนประกอบ; การ hit-test layer ใน AE, voice note และเทียบก่อน/หลังยังเป็นเฟสถัดไป
