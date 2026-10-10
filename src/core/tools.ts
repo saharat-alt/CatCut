@@ -76,11 +76,11 @@ export function discoverTools(): ToolPaths {
 }
 
 export async function probeEncoders(ffmpeg: string): Promise<Encoders & { version?: string }> {
-  const { stdout } = await execa(ffmpeg, ['-hide_banner', '-encoders'], { reject: false, windowsHide: true });
+  const { stdout } = await execa(ffmpeg, ['-hide_banner', '-encoders'], { reject: false, windowsHide: true, timeout: 30_000 });
   const has = (name: string) => new RegExp(`^\\s*[A-Z.]{6}\\s+${name}\\s`, 'm').test(stdout);
   let version: string | undefined;
   try {
-    const v = await execa(ffmpeg, ['-version'], { reject: false, windowsHide: true });
+    const v = await execa(ffmpeg, ['-version'], { reject: false, windowsHide: true, timeout: 30_000 });
     version = v.stdout.split(/\r?\n/)[0]?.replace(/^ffmpeg version\s+/, '');
   } catch { /* ignore */ }
   return {
