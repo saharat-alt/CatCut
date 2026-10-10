@@ -1,0 +1,30 @@
+{
+  "name": "editmcp",
+  "version": "0.1.0",
+  "description": "Headless video editing MCP: After Effects (no UI) + aerender + ffmpeg, FCP7 XML for Premiere",
+  "type": "module",
+  "license": "MIT",
+  "bin": { "editmcp": "./dist/mcp/cli.js" },
+  "main": "./dist/mcp/server.js",
+  "engines": { "node": ">=22" },
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "dev": "tsx src/mcp/server.ts",
+    "doctor": "tsx src/mcp/cli.ts doctor"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.12.0",
+    "execa": "^9.5.2",
+    "fast-xml-parser": "^5.0.9",
+    "zod": "^3.24.4"
+  },
+  "devDependencies": {
+    "@types/node": "^22.15.3",
+    "tsx": "^4.19.4",
+    "typescript": "^5.8.3",
+    "vitest": "^3.1.3"
+  }
+}
