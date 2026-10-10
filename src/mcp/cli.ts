@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /**
- * editmcp CLI: doctor | serve [projectDir] | build <projectDir> [--force] [--force-assets id,id] [--skip-qc] [--skip-deliver]
+ * catcut CLI (alias: editmcp): doctor | serve [projectDir] | build <projectDir> [--force] [--force-assets id,id] [--skip-qc] [--skip-deliver]
  *              | deliver <projectDir> <version> <targets...> | xml-export <projectDir> [--version v001]
  *              | xml-import <projectDir> <xml> [--apply]
  */
@@ -9,7 +9,7 @@ import { isMain, serveStdio } from './server.js';
 import { createAppState, type AppState } from './state.js';
 import { callTool, toolResultData, type ToolResult } from './tools.js';
 
-const USAGE = `editmcp — headless video editing MCP (After Effects headless + aerender + ffmpeg)
+const USAGE = `CatCut 🐾 — headless video editing MCP (After Effects headless + aerender + ffmpeg)
 
   editmcp doctor                                   ตรวจเครื่องมือ / check tools, encoders, RAM, compat notes
   editmcp serve [projectDir]                       MCP stdio server (ใช้กับ Claude Code / Codex)

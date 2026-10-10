@@ -1,5 +1,5 @@
 /**
- * EDITMCP stdio server. `createServer()` is exported for tests (InMemoryTransport);
+ * CatCut (EDITMCP) stdio server. `createServer()` is exported for tests (InMemoryTransport);
  * running this file directly (`tsx src/mcp/server.ts` / `node dist/mcp/server.js`) serves on stdio.
  */
 import { resolve } from 'node:path';
@@ -9,10 +9,10 @@ import { StdioServerTransport } from '@modelcontextprotocol/sdk/server/stdio.js'
 import { createAppState, type AppState } from './state.js';
 import { runTool, TOOLS } from './tools.js';
 
-const SERVER_INFO = { name: 'editmcp', version: '0.1.0' } as const;
+const SERVER_INFO = { name: 'catcut', version: '0.1.0' } as const;
 
 const INSTRUCTIONS = [
-  'EDITMCP: headless video editing (After Effects headless + aerender + ffmpeg). ทุกเวลาเป็นเฟรมที่ fps ของโปรเจกต์ (ไม่ใช่วินาที).',
+  'CatCut 🐾: headless video editing (After Effects headless + aerender + ffmpeg). ทุกเวลาเป็นเฟรมที่ fps ของโปรเจกต์ (ไม่ใช่วินาที).',
   'Flow: doctor → project_new/project_open → asset_add → timeline_set (or timeline_edit / audio_add) → build (returns job id; poll job_status) → deliver → export_premiere_xml.',
   'Premiere loop: export_premiere_xml → edit in Premiere → File > Export > Final Cut Pro XML → import_premiere_xml (dry run: show the summary to the user) → import_premiere_xml {apply: true} (backs up the timeline; undo with timeline_restore) → build.',
   'ae_* tools run as jobs: if the result has pending:true, poll job_status. If a tool says the project was changed elsewhere, it has been reloaded: re-issue the edit.',
@@ -49,7 +49,7 @@ export async function serveStdio(opts: { projectDir?: string } = {}): Promise<vo
   const server = await createServer(state);
   await server.connect(new StdioServerTransport());
   const note = state.problems.length ? ` (problems: ${state.problems.join('; ')})` : '';
-  process.stderr.write(`editmcp ${SERVER_INFO.version} ready on stdio${note}\n`);
+  process.stderr.write(`catcut ${SERVER_INFO.version} ready on stdio${note}\n`);
 }
 
 /** True when this module is the process entry point (works for both tsx and compiled dist). */
@@ -67,7 +67,7 @@ export function isMain(metaUrl: string): boolean {
 
 if (isMain(import.meta.url)) {
   serveStdio().catch((err: unknown) => {
-    process.stderr.write(`editmcp failed to start: ${err instanceof Error ? err.stack ?? err.message : String(err)}\n`);
+    process.stderr.write(`catcut failed to start: ${err instanceof Error ? err.stack ?? err.message : String(err)}\n`);
     process.exit(1);
   });
 }

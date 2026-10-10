@@ -593,3 +593,52 @@ describe('saveProject concurrency', () => {
     }
   });
 });
+
+describe('validateTimeline with speed', () => {
+  const check = (mutate: (t: Timeline) => void): string[] => {
+    const p = fixtureProject();
+    const t = okTimeline();
+    mutate(t);
+    setTimeline(p, t);
+    return validateTimeline(p);
+  };
+
+  it('counts consumed source frames: round(dur * rate), ramps by their eased span', () => {
+    expect(check((t) => { t.video[1] = { id: 's2', src: 'A', in: 20, dur: 40, speed: { rate: 2 } }; })).toEqual([]);
+    const errs = check((t) => { t.video[1] = { id: 's2', src: 'A', in: 20, dur: 50, speed: { rate: 2 } }; });
+    expect(errs).toEqual([expect.stringMatching(/clip\[s2\]: in \+ source span \(20\+100 = 120 .*speed 200%\) exceeds source length 100/)]);
+    // slow motion uses fewer source frames than realtime would
+    expect(check((t) => { t.video[1] = { id: 's2', src: 'A', in: 60, dur: 70, speed: { rate: 0.5 } }; })).toEqual([]);
+    // ramp 50% -> 100% over 20 frames then 10 frames realtime: 15 + 10 = 25 source frames
+    expect(check((t) => { t.video[1] = { id: 's2', src: 'A', in: 75, dur: 30, speed: { rate: 1, rampFrom: 0.5, rampFrames: 20 } }; })).toEqual([]);
+    expect(check((t) => { t.video[1] = { id: 's2', src: 'A', in: 76, dur: 30, speed: { rate: 1, rampFrom: 0.5, rampFrames: 20 } }; }))
+      .toEqual([expect.stringMatching(/s2.*76\+25 = 101.*50%→100%\/20f/)]);
+  });
+
+  it('dissolve handles go through the speed curve on both sides', () => {
+    // s1 -> s2 dissolve 10: s2 must show a = 5 frames before its in; at 50% that is 3 source frames
+    expect(check((t) => { t.video[1] = { id: 's2', src: 'A', in: 3, dur: 50, speed: { rate: 0.5 } }; })).toEqual([]);
+    expect(check((t) => { t.video[1] = { id: 's2', src: 'A', in: 2, dur: 50, speed: { rate: 0.5 } }; }))
+      .toEqual([expect.stringMatching(/needs 5 handle frame\(s\) before 's2' in = 3 source frame\(s\) at speed 50%, clip has 2/)]);
+    // s2 -> s3 dissolve 10: s2 shows b = 5 frames past its out at 200% = 10 more source frames
+    const withTail = (dur: number) => (t: Timeline) => {
+      t.video[1] = { id: 's2', src: 'A', in: 20, dur, speed: { rate: 2 } };
+      t.cuts = [{ after: 's1', dissolve: 0 }, { after: 's2', dissolve: 10 }];
+    };
+    expect(check(withTail(35))).toEqual([]);
+    expect(check(withTail(36))).toEqual([expect.stringMatching(/needs 5 handle frame\(s\) after 's2' out = source frames up to 101 at speed 200%/)]);
+  });
+
+  it('rejects malformed speed and push-in values', () => {
+    const errs = check((t) => {
+      t.video[1] = { id: 's2', src: 'A', in: 20, dur: 10, speed: { rate: 0, rampFrom: 0.5 }, pushIn: 150 };
+    });
+    expect(errs).toEqual(expect.arrayContaining([
+      expect.stringContaining('speed.rate must be between 0.05 and 20'),
+      expect.stringContaining('speed ramp needs both rampFrom and rampFrames'),
+      expect.stringContaining('pushIn must be a percent between 0 and 100'),
+    ]));
+    expect(check((t) => { t.video[1] = { id: 's2', src: 'A', in: 20, dur: 10, speed: { rate: 1, interpolation: 'warp' as 'blend' } }; }))
+      .toEqual([expect.stringContaining('speed.interpolation must be nearest | blend | motion')]);
+  });
+});

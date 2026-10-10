@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { XMLParser } from 'fast-xml-parser';
 import type { Project, Timeline } from '../../src/core/types.js';
-import { pathFromUrl, pathToUrl, readXmeml, writeXmeml } from '../../src/io/xmeml.js';
+import { pathFromUrl, pathToUrl, readXmeml, writeXmeml, xmemlExportWarnings } from '../../src/io/xmeml.js';
 
 function makeProject(timeline: Timeline): Project {
   return {
@@ -634,5 +634,104 @@ describe('stereo audio', () => {
     const xml = writeXmeml(q, { sequenceName: 'pairs' });
     expect((xml.match(/<clipitem id="clipitem-m1(-r)?"/g) ?? []).length).toBe(2);
     expect(readXmeml(xml, q).timeline.audio).toEqual(t.audio);
+  });
+});
+describe('speed and push-in', () => {
+  function speedTimeline(): Timeline {
+    return {
+      video: [
+        { id: 'slow', src: 'cam', in: 10, dur: 100, speed: { rate: 0.5 } },
+        { id: 'fast', src: 'cam', in: 301, dur: 40, speed: { rate: 2, interpolation: 'nearest' }, pushIn: 8, scale: 110 },
+        { id: 'ramp', src: 'cam', in: 500, dur: 60, speed: { rate: 1, rampFrom: 0.5, rampFrames: 20, interpolation: 'blend' } },
+        { id: 'push', src: 'title', in: 20, dur: 50, pushIn: 12.5 },
+      ],
+      cuts: [
+        { after: 'slow', dissolve: 10 },
+        { after: 'fast', dissolve: 0 },
+        { after: 'ramp', dissolve: 6 },
+      ],
+      audio: { vo: [], music: [], sfx: [] },
+    };
+  }
+  const parser = new XMLParser({ ignoreAttributes: false, attributeNamePrefix: '@_', parseTagValue: false });
+  function videoItems(xml: string): Array<Record<string, unknown>> {
+    const doc = parser.parse(xml) as { xmeml: { sequence: { media: { video: { track: { clipitem: Array<Record<string, unknown>> } } } } } };
+    return doc.xmeml.sequence.media.video.track.clipitem;
+  }
+  const effects = (item: Record<string, unknown>): Array<Record<string, unknown>> => {
+    const f = item['filter'];
+    return (Array.isArray(f) ? f : f ? [f] : []).map((x) => (x as { effect: Record<string, unknown> }).effect);
+  };
+  const param = (eff: Record<string, unknown>, id: string): Record<string, unknown> | undefined => {
+    const ps = eff['parameter'];
+    return (Array.isArray(ps) ? ps : [ps]).find((x) => (x as Record<string, unknown>)['parameterid'] === id) as Record<string, unknown> | undefined;
+  };
+
+  it('writes constant speed as a Time Remap filter with in/out in retimed frames', () => {
+    const p = makeProject(speedTimeline());
+    const xml = writeXmeml(p, { sequenceName: 'speed' });
+    const [slow, fast, ramp] = videoItems(xml);
+    // slow: 50%, source in 10 -> retimed 20; tail handle b = 5 for the 10-frame dissolve
+    expect(slow).toMatchObject({ in: '20', out: '125', start: '0', end: '-1' });
+    const remap = effects(slow!).find((e) => e['effectid'] === 'timeremap')!;
+    expect(param(remap, 'speed')?.['value']).toBe('50');
+    expect(param(remap, 'variablespeed')?.['value']).toBe('0');
+    expect(param(remap, 'frameblending')?.['value']).toBe('TRUE'); // default interpolation for slow motion = blend
+    // fast: 200%, source 301 -> retimed round(150.5) = 151; head handle a = 5
+    expect(fast).toMatchObject({ in: '146', out: '191' });
+    expect(param(effects(fast!).find((e) => e['effectid'] === 'timeremap')!, 'frameblending')?.['value']).toBe('FALSE');
+    // the ramp is written as its average rate (source span / dur)
+    const rampPct = Number(param(effects(ramp!).find((e) => e['effectid'] === 'timeremap')!, 'speed')?.['value']);
+    expect(rampPct).toBeCloseTo((100 * (20 * 0.75 + 40)) / 60, 3);
+    expect(xmemlExportWarnings(p)).toEqual([expect.stringContaining("clip 'ramp': speed ramp 50%→100% exported as constant")]);
+    // linked clip audio carries the same retime
+    expect(xml.match(/<effectid>timeremap<\/effectid>/g)?.length).toBe(3 * 3); // video + two audio channels per retimed clip
+  });
+
+  it('writes push-in as Basic Motion scale keyframes over the clip body, on top of Clip.scale', () => {
+    const xml = writeXmeml(makeProject(speedTimeline()), { sequenceName: 'push' });
+    const items = videoItems(xml);
+    const fast = items[1]!;
+    const scale = param(effects(fast).find((e) => e['effectid'] === 'basic')!, 'scale')!;
+    expect(scale['value']).toBe('110');
+    expect(scale['keyframe']).toEqual([{ when: '151', value: '110' }, { when: '190', value: '118.8' }]);
+    const push = items[3]!; // title: realtime, head handle a = 3 -> body starts at in 20
+    expect(param(effects(push).find((e) => e['effectid'] === 'basic')!, 'scale')!['keyframe']).toEqual([{ when: '20', value: '100' }, { when: '69', value: '112.5' }]);
+  });
+
+  it('round-trips speed (constant, ramp, interpolation, odd in-points) and push-in exactly against the project', () => {
+    const p = makeProject(speedTimeline());
+    const r = readXmeml(writeXmeml(p, { sequenceName: 'rt' }), p);
+    expect(r.timeline).toEqual(speedTimeline());
+    expect(r.warnings).toEqual([expect.stringContaining("'ramp' speed ramp kept from the project")]);
+  });
+
+  it('reads speed and push-in from a foreign file (no project): constant rate, interpolation from frame blending, ramp as average', () => {
+    const p = makeProject(speedTimeline());
+    const r = readXmeml(writeXmeml(p, { sequenceName: 'rt' }), undefined, { resolveAsset: (abs) => (abs.endsWith('.mp4') ? 'cam' : 'title') });
+    const [slow, fast, ramp, push] = r.timeline.video;
+    expect(slow).toEqual({ id: 'slow', src: 'cam', in: 10, dur: 100, speed: { rate: 0.5, interpolation: 'blend' } });
+    expect(fast).toEqual({ id: 'fast', src: 'cam', in: 302, dur: 40, speed: { rate: 2, interpolation: 'nearest' }, scale: 110, pushIn: 8 }); // 301 -> 150.5 -> 151 -> 302
+    expect(ramp!.speed!.rate).toBeCloseTo(55 / 60, 4);
+    expect(ramp!.speed!.rampFrom).toBeUndefined();
+    expect(push).toEqual({ id: 'push', src: 'title', in: 20, dur: 50, pushIn: 12.5 });
+    expect(r.timeline.cuts).toEqual(speedTimeline().cuts);
+  });
+
+  it('warns on variable speed, reverse and hand-moved scale keyframes', () => {
+    const t: Timeline = { video: [{ id: 'a', src: 'cam', in: 100, dur: 50, speed: { rate: 0.5 }, pushIn: 10 }], cuts: [], audio: { vo: [], music: [], sfx: [] } };
+    const xml = writeXmeml(makeProject(t), { sequenceName: 'w' })
+      .replace(/(<parameterid>variablespeed<\/parameterid>[\s\S]*?<value>)0(<\/value>)/, '$11$2')
+      .replace(/(<parameterid>reverse<\/parameterid>[\s\S]*?<value>)FALSE(<\/value>)/, '$1TRUE$2')
+      .replace('<when>249</when>', '<when>224</when>'); // keyframe moved to the middle: same zoom reached halfway
+    const r = readXmeml(xml);
+    const clip = r.timeline.video[0]!;
+    expect(clip.speed).toEqual({ rate: 0.5, interpolation: 'blend' });
+    expect(clip.pushIn).toBeCloseTo(20, 0);
+    expect(r.warnings).toEqual(expect.arrayContaining([
+      expect.stringContaining('variable speed'),
+      expect.stringContaining('reverse ignored'),
+      expect.stringContaining('read as push-in'),
+    ]));
   });
 });

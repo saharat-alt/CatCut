@@ -1,61 +1,86 @@
 <!doctype html>
 <html lang="th">
 <head>
-  <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>EDITMCP · รีวิว</title><link rel="preload" href="fonts/NotoSansThai.ttf" as="font" type="font/ttf" crossorigin><link rel="stylesheet" href="style.css"><script src="app.js" defer></script>
+  <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1"><meta name="color-scheme" content="dark light">
+  <title>CatCut · รีวิว</title><link rel="preload" href="fonts/NotoSansThai.ttf" as="font" type="font/ttf" crossorigin><link rel="stylesheet" href="style.css"><script src="app.js" defer></script>
 </head>
 <body>
   <header class="topbar">
-    <div class="brand"><span class="brand-symbol" aria-hidden="true"><i></i><i></i><i></i></span><span class="wordmark">EDITMCP<span>Review studio</span></span></div>
-    <div class="project"><h1 id="project-name">กำลังเปิดรีวิว…</h1><span id="version"></span></div>
-    <div class="header-actions"><span id="save-state" role="status" aria-live="polite">กำลังอ่านโน้ต</span><button id="submit" class="primary" disabled>ส่งรีวิวให้ agent ↗</button></div>
+    <div class="brand"><img id="logo" class="logo" alt="" width="20" height="20" hidden><span id="brand-mark" class="brand-mark" aria-hidden="true"></span><span class="wordmark">CatCut</span></div>
+    <div class="crumbs"><h1 id="project-name">กำลังเปิดรีวิว…</h1><span class="crumb-sep" aria-hidden="true">/</span><span id="version" class="chip"></span></div>
+    <div class="header-actions"><span id="save-state" role="status" aria-live="polite">กำลังอ่านโน้ต</span><button id="submit" class="primary" disabled>ส่งรีวิว</button></div>
   </header>
   <div id="error" class="error" role="alert" hidden><span id="error-text"></span><button id="retry">ลองบันทึกอีกครั้ง</button><button id="reload">โหลดโน้ตล่าสุด</button></div>
   <main class="workspace" id="workspace" aria-busy="true">
     <section class="viewer" aria-label="เครื่องเล่นรีวิว">
-      <div class="viewer-heading"><div><span class="eyebrow">PREVIEW</span><span id="shot-label">กำลังอ่านช็อต</span></div><span id="frame-label">—</span></div>
+      <div class="viewer-heading"><span id="shot-label">กำลังอ่านช็อต</span><span id="frame-label">—</span></div>
       <div class="stage" id="stage">
         <video id="video" preload="metadata" playsinline aria-label="วิดีโอรีวิว"></video>
+        <video id="video-b" class="video-b" preload="metadata" playsinline muted aria-label="วิดีโอเวอร์ชันที่เทียบ"></video>
         <svg id="drawing" viewBox="0 0 1000 1000" preserveAspectRatio="none" aria-label="พื้นที่วงจุดแก้"><g id="strokes"></g></svg>
+        <div class="wipe-line" aria-hidden="true"></div>
+        <span id="tag-b" class="ab-tag tag-b" hidden></span><span id="tag-a" class="ab-tag tag-a" hidden></span>
         <div id="media-loading" class="media-loading">กำลังโหลดวิดีโอ…</div>
       </div>
       <div class="transport">
-        <div class="playback"><button id="prev" aria-label="ย้อนหนึ่งเฟรม"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 5v14M18 5l-9 7 9 7Z"/></svg></button><button id="play" aria-label="เล่นวิดีโอ">▶</button><button id="next" aria-label="ถัดไปหนึ่งเฟรม"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M18 5v14M6 5l9 7-9 7Z"/></svg></button><output id="timecode">00:00:00:00</output></div>
+        <div class="playback">
+          <button id="prev" class="icon" aria-label="ย้อนหนึ่งเฟรม" title="ย้อนหนึ่งเฟรม · ←"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 6v12M18 6l-8 6 8 6Z"/></svg></button>
+          <button id="play" class="icon play" aria-label="เล่นวิดีโอ" title="เล่น/หยุด · Space"><svg class="i-play" viewBox="0 0 24 24" aria-hidden="true"><path d="M8 5.5v13l10.5-6.5Z"/></svg><svg class="i-pause" viewBox="0 0 24 24" aria-hidden="true"><path d="M8 5.5h3v13H8zM13 5.5h3v13h-3z"/></svg></button>
+          <button id="next" class="icon" aria-label="ถัดไปหนึ่งเฟรม" title="ถัดไปหนึ่งเฟรม · →"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M17 6v12M6 6l8 6-8 6Z"/></svg></button>
+          <output id="timecode">00:00:00:00</output>
+        </div>
         <div class="drawing-tools" id="tools" role="toolbar" aria-label="เครื่องมือวงบนภาพ">
-          <span class="pen-color"><i aria-hidden="true"></i><span id="pen-label">ข้อความ/กราฟิก</span></span>
+          <span class="pen-color" title="สีปากกา = ประเภทการแก้"><i aria-hidden="true"></i><span id="pen-label">ข้อความ/กราฟิก</span></span>
           <button id="pen" class="tool" aria-pressed="false" aria-label="ปากกาวาดอิสระ (P)" title="ปากกา · P"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 20c3-1 5-3 7-6l7-7a2 2 0 0 0-3-3l-7 7c-3 2-5 4-6 7Z"/></svg></button>
           <button id="tool-circle" class="tool" aria-pressed="false" aria-label="วงกลม (C)" title="วงกลม · C"><svg viewBox="0 0 24 24" aria-hidden="true"><ellipse cx="12" cy="12" rx="8.5" ry="7"/></svg></button>
           <button id="tool-arrow" class="tool" aria-pressed="false" aria-label="ลูกศร (A)" title="ลูกศร · A"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 19 19 5M10 5h9v9"/></svg></button>
-          <button id="undo" disabled>ย้อนเส้น</button><button id="clear" disabled>ล้างเส้น</button>
-          <button id="mark-away" class="mark-away" hidden></button>
+          <button id="undo" class="ghost" disabled>ย้อนเส้น</button><button id="clear" class="ghost" disabled>ล้าง</button>
+          <button id="mark-away" class="ghost mark-away" hidden></button>
         </div>
       </div>
-      <input id="scrub" type="range" min="0" max="0" value="0" step="1" aria-label="เลื่อนไปยังเฟรม">
-      <div id="range-bar" class="range-bar" title="ลากเพื่อเลือกช่วง · คลิกเพื่อเลือกทั้งช็อต" aria-hidden="true"><div id="range-ticks"></div><div class="range-fill"></div></div>
-      <div class="timeline-heading"><h2>ช็อตในไทม์ไลน์</h2><span id="duration"></span></div>
+      <div class="timeline">
+        <input id="scrub" type="range" min="0" max="0" value="0" step="1" aria-label="เลื่อนไปยังเฟรม">
+        <div id="range-bar" class="range-bar" title="ลากเพื่อเลือกช่วง · คลิกเพื่อเลือกทั้งช็อต" aria-hidden="true"><div id="range-ticks"></div><div class="range-fill"></div></div>
+      </div>
       <div class="shots" id="shots" aria-label="ช็อตในเวอร์ชันนี้"></div>
-      <div class="selection"><div><span class="muted">ช่วงที่เลือก</span><output id="range-label">—</output></div><div class="range-actions"><button id="mark-in">ตั้งจุดเข้า <kbd>I</kbd></button><button id="mark-out">ตั้งจุดออก <kbd>O</kbd></button><button id="whole-shot">ทั้งช็อต</button></div></div>
-      <p class="keyboard-help"><kbd>←</kbd> <kbd>→</kbd> ทีละเฟรม <span>·</span> <kbd>J</kbd> <kbd>K</kbd> <kbd>L</kbd> เล่น/หยุด <span>·</span> <kbd>P</kbd> <kbd>C</kbd> <kbd>A</kbd> ปากกา/วงกลม/ลูกศร <span>·</span> <kbd>1</kbd>–<kbd>6</kbd> สี <span>·</span> ลากบนแถบใต้ไทม์ไลน์เพื่อเลือกช่วง</p>
+      <div class="selection">
+        <div class="range-info"><span class="muted">ช่วงที่เลือก</span><output id="range-label">—</output><span id="duration" class="muted"></span></div>
+        <div class="segmented range-actions"><button id="mark-in">จุดเข้า <kbd>I</kbd></button><button id="mark-out">จุดออก <kbd>O</kbd></button><button id="whole-shot">ทั้งช็อต</button></div>
+      </div>
+      <div class="compare-row">
+        <label id="compare-picker" class="compare-picker" hidden><span>เทียบ A/B</span><select id="compare-select" aria-label="เลือกเวอร์ชันที่จะเทียบ"><option value="">เลือกเวอร์ชัน…</option></select></label>
+        <div id="compare-bar" class="compare-bar" hidden>
+          <div class="segmented"><button id="ab-toggle" aria-pressed="false" title="สลับ A/B · B">A/B <kbd>B</kbd></button><button id="ab-wipe" aria-pressed="false" title="แบ่งจอ · W">แบ่งจอ <kbd>W</kbd></button></div>
+          <input id="wipe" type="range" min="0" max="100" value="50" step="1" aria-label="ตำแหน่งเส้นแบ่งจอ" hidden>
+          <output id="b-timecode" class="muted"></output>
+          <button id="prefer" class="ghost" title="บันทึกว่าอยากใช้ช็อตนี้จากเวอร์ชันที่เทียบ">ใช้ช็อตนี้จากเวอร์ชันนั้น</button>
+          <button id="compare-close" class="icon ghost" aria-label="ปิดการเทียบ" title="ปิดการเทียบ"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18"/></svg></button>
+          <p id="compare-warning" class="compare-warning" hidden></p>
+        </div>
+      </div>
+      <p class="keyboard-help"><kbd>←</kbd><kbd>→</kbd> ทีละเฟรม · <kbd>J</kbd><kbd>K</kbd><kbd>L</kbd> เล่น/หยุด · <kbd>I</kbd><kbd>O</kbd> ช่วง · <kbd>P</kbd><kbd>C</kbd><kbd>A</kbd> ปากกา/วงกลม/ลูกศร · <kbd>1</kbd>–<kbd>6</kbd> สี · <kbd>B</kbd> เทียบ A/B</p>
       <details class="qc"><summary id="qc-summary">ผลตรวจวิดีโอ</summary><ul id="qc-issues"></ul><img id="contact" alt="ภาพรวมเฟรมของเวอร์ชันนี้" hidden></details>
     </section>
-    <aside class="notes-panel" aria-label="โน้ตแก้ไข">
-      <div class="notes-heading"><div><span class="eyebrow">REVIEW NOTES</span><h2>จุดที่อยากแก้</h2></div><span id="note-count">0 จุด</span></div>
-      <form id="note-form">
-        <fieldset><legend>สีปากกา = ประเภทการแก้</legend><div class="intents">
-          <label class="intent cut"><input type="radio" name="intent" value="cut"><span>ตัด/สั้นลง</span></label>
-          <label class="intent timing"><input type="radio" name="intent" value="timing"><span>ไทม์มิ่ง/ขยับ</span></label>
-          <label class="intent text"><input type="radio" name="intent" value="text" checked><span>ข้อความ/กราฟิก</span></label>
-          <label class="intent color"><input type="radio" name="intent" value="color"><span>สี/แสง</span></label>
-          <label class="intent audio"><input type="radio" name="intent" value="audio"><span>เสียง</span></label>
-          <label class="intent other"><input type="radio" name="intent" value="other"><span>อื่น ๆ</span></label>
-        </div></fieldset>
-        <label class="text-label" for="note-text">โน้ต <span>(ไม่บังคับ · วงอย่างเดียวก็ได้)</span></label>
-        <textarea id="note-text" rows="3" maxlength="5000" placeholder="เช่น ชื่อสะกดผิด ใช้คำว่า ‘ธนาคาร’"></textarea>
-        <div class="form-actions"><button id="add-note" class="primary" type="submit" disabled>เพิ่มโน้ต</button><button id="new-note" type="button">โน้ตใหม่</button></div>
-        <p class="form-hint" id="draft-state" role="status" aria-live="polite">ร่างถูกเก็บอัตโนมัติ · กดเพิ่มโน้ตเพื่อให้ agent เห็น</p>
-      </form>
-      <div id="note-list" class="note-list"></div>
-      <p class="review-hint">เมื่อดูครบ กดส่งรีวิวให้ agent เพื่ออ่านโน้ตและเสนอแผนแก้</p>
+    <aside class="notes-panel" id="notes-panel" data-collapsed="false" aria-label="โน้ตแก้ไข">
+      <div class="notes-heading"><h2>โน้ต</h2><span id="note-count" class="count">0</span><button id="notes-toggle" class="ghost notes-toggle" aria-expanded="true" aria-controls="notes-body">ซ่อน</button></div>
+      <div class="notes-body" id="notes-body">
+        <form id="note-form">
+          <fieldset><legend>สีปากกา = ประเภทการแก้</legend><div class="intents">
+            <label class="intent cut"><input type="radio" name="intent" value="cut"><span>ตัด/สั้นลง</span></label>
+            <label class="intent timing"><input type="radio" name="intent" value="timing"><span>ไทม์มิ่ง/ขยับ</span></label>
+            <label class="intent text"><input type="radio" name="intent" value="text" checked><span>ข้อความ/กราฟิก</span></label>
+            <label class="intent color"><input type="radio" name="intent" value="color"><span>สี/แสง</span></label>
+            <label class="intent audio"><input type="radio" name="intent" value="audio"><span>เสียง</span></label>
+            <label class="intent other"><input type="radio" name="intent" value="other"><span>อื่น ๆ</span></label>
+          </div></fieldset>
+          <textarea id="note-text" rows="3" maxlength="5000" aria-label="โน้ต (ไม่บังคับ วงอย่างเดียวก็ได้)" placeholder="โน้ตสั้น ๆ (ไม่บังคับ) เช่น ใช้คำว่า ‘ธนาคาร’"></textarea>
+          <div class="form-actions"><button id="add-note" class="primary" type="submit" disabled>เพิ่มโน้ต</button><button id="new-note" class="ghost" type="button">โน้ตใหม่</button></div>
+          <p class="form-hint" id="draft-state" role="status" aria-live="polite">ร่างถูกเก็บอัตโนมัติ · กดเพิ่มโน้ตเพื่อให้ agent เห็น</p>
+        </form>
+        <div id="note-list" class="note-list"></div>
+        <details id="history" class="history" hidden><summary id="history-title"></summary><div id="history-list" class="note-list"></div></details>
+        <p class="review-hint">✓ แก้แล้ว · ⏸ พักไว้ = ยังไม่ต้องแก้ (agent จะไม่แตะ) · ดูครบแล้วกดส่งรีวิว</p>
+      </div>
     </aside>
   </main>
   <div id="confirm" class="confirm" hidden><div class="confirm-card" role="alertdialog" aria-modal="true" aria-labelledby="confirm-text"><p id="confirm-text"></p><div class="confirm-actions"><button id="confirm-cancel">ยกเลิก</button><button id="confirm-ok" class="danger"></button></div></div></div>

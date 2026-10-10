@@ -3,6 +3,7 @@
  *
  * One ffprobe (packet count, no decode) + at most three parallel ffmpeg passes:
  *   - analysis: blackdetect + freezedetect + silencedetect + ebur128 in a single decode
+ *     (+ optional mpdecimate duplicate-frame cadence on a split of the same decoded video)
  *   - frame count via -count_frames, only when the container's nb_frames is not trustworthy
  *   - contact sheet (select/tile) with a timecode label when a font is available
  *
@@ -38,8 +39,22 @@ export interface QcArgs {
   loudness?: QcLoudnessTarget;
   contactSheetPath?: string; // png; an existing file is never overwritten (suffix _2, _3 ...)
   clipStarts?: QcClipStart[]; // timeline positions used to label issues with a clipId
+  /** duplicate-frame cadence (stutter, e.g. slow motion made by repeating frames); off by default */
+  duplicates?: boolean | QcDuplicateOptions;
+  /** timeline-lint issues (flash / lowmotion ...) to carry into the report unchanged */
+  lintIssues?: QcIssue[];
   signal?: AbortSignal;
   timeoutMs?: number; // per ffmpeg/ffprobe process; default scales with media duration
+}
+
+export interface QcDuplicateOptions {
+  ranges?: Array<{ start: Frames; end: Frames }>; // only report inside these timeline ranges (end exclusive)
+  minRatio?: number; // duplicated share of a window to count as cadence (default 0.3)
+  minSec?: number; // window length (default 0.5 s)
+  /** mpdecimate thresholds (8×8 block SAD); strict defaults so only near-identical frames count */
+  hi?: number;
+  lo?: number;
+  frac?: number;
 }
 
 export interface LoudnessStats {
@@ -56,6 +71,13 @@ const FREEZE_MIN_SEC = 0.5;
 const SILENCE_NOISE = '-50dB';
 const SILENCE_MIN_SEC = 1.0;
 const DEFAULT_TOLERANCE_LU = 1.0;
+const DUP_MIN_RATIO = 0.3;
+const DUP_MIN_SEC = 0.5;
+const DUP_MAX_RATIO = 0.85; // above this the window is a freeze/still, which freezedetect reports
+const DUP_MAX_RUN = 4; // cadence repeats a frame at most a few times in a row (20% slow motion = 4)
+const DUP_HI = 64 * 4;
+const DUP_LO = 64 * 2;
+const DUP_FRAC = 0.33;
 
 // Contact sheet layout.
 const SHEET_COLUMNS = 6;
@@ -86,7 +108,7 @@ async function run(file: string, args: string[], ctx: RunCtx): Promise<RunResult
     timeout: ctx.timeoutMs,
     cancelSignal: ctx.signal,
     forceKillAfterDelay: 2000,
-    maxBuffer: 64 * 2 ** 20,
+    maxBuffer: 256 * 2 ** 20, // showinfo lines (duplicates analysis) can be large on long masters
     stripFinalNewline: false,
   });
   if (r.isCanceled) throw new Error('QC cancelled');
@@ -270,15 +292,30 @@ interface Analysis {
   freeze: SecRange[];
   silence: SecRange[];
   loudness?: LoudnessStats;
+  kept?: number[]; // pts_time of frames mpdecimate kept (duplicates analysis only)
 }
 
 const VIDEO_CHAIN = `blackdetect=d=${BLACK_MIN_SEC}:pix_th=${BLACK_PIX_TH},freezedetect=n=${FREEZE_NOISE}:d=${FREEZE_MIN_SEC},metadata=mode=print:file=-`;
 const AUDIO_CHAIN = `silencedetect=n=${SILENCE_NOISE}:d=${SILENCE_MIN_SEC},ametadata=mode=print:file=-,ebur128=peak=true:framelog=quiet`;
 
-async function analyze(tools: ToolPaths, path: string, p: StreamProbe, ctx: RunCtx): Promise<Analysis> {
+function dupChain(o: QcDuplicateOptions): string {
+  return `mpdecimate=hi=${o.hi ?? DUP_HI}:lo=${o.lo ?? DUP_LO}:frac=${o.frac ?? DUP_FRAC},showinfo=checksum=0,nullsink`;
+}
+
+/** pts_time of every frame showinfo printed (stderr log lines are atomic, unlike two stdout printers). */
+function parseShowinfo(stderr: string): number[] {
+  const out: number[] = [];
+  for (const m of stderr.matchAll(/Parsed_showinfo_\d+[^\r\n]*?\bpts_time:\s*(-?\d+(?:\.\d+)?)/g)) out.push(Number(m[1]));
+  return out;
+}
+
+async function analyze(tools: ToolPaths, path: string, p: StreamProbe, ctx: RunCtx, dup?: QcDuplicateOptions): Promise<Analysis> {
   const graph: string[] = [];
   const maps: string[] = [];
-  if (p.hasVideo) { graph.push(`[0:v:0]${VIDEO_CHAIN}[v]`); maps.push('-map', '[v]'); }
+  if (p.hasVideo && dup) {
+    graph.push(`[0:v:0]split=2[qv][qd]`, `[qv]${VIDEO_CHAIN}[v]`, `[qd]${dupChain(dup)}`);
+    maps.push('-map', '[v]');
+  } else if (p.hasVideo) { graph.push(`[0:v:0]${VIDEO_CHAIN}[v]`); maps.push('-map', '[v]'); }
   if (p.hasAudio) { graph.push(`[0:a:0]${AUDIO_CHAIN}[a]`); maps.push('-map', '[a]'); }
   if (graph.length === 0) return { black: [], freeze: [], silence: [] };
   const r = await run(
@@ -294,7 +331,67 @@ async function analyze(tools: ToolPaths, path: string, p: StreamProbe, ctx: RunC
     silence: parseRanges(text, 'silence'),
   };
   if (p.hasAudio) out.loudness = parseEbur128Summary(r.stderr);
+  if (p.hasVideo && dup) out.kept = parseShowinfo(r.stderr);
   return out;
+}
+
+/**
+ * Cadence ranges (frames, end exclusive): windows of `minSec` where the duplicated share is between
+ * minRatio and DUP_MAX_RATIO. Repeats longer than DUP_MAX_RUN frames are holds (freeze/black/still,
+ * reported by freezedetect), not cadence, so they never count. Ranges are trimmed to the first
+ * repeated pair and the last repeat.
+ */
+function duplicateRanges(kept: number[], frames: Frames, fps: number, o: QcDuplicateOptions): Array<{ start: Frames; end: Frames; ratio: number }> {
+  if (!kept.length || frames <= 0) return [];
+  const t0 = Math.min(...kept.slice(0, 4));
+  const dup = new Uint8Array(frames).fill(1);
+  for (const t of kept) {
+    const f = Math.round((t - t0) * fps);
+    if (f >= 0 && f < frames) dup[f] = 0;
+  }
+  for (let f = 0; f < frames;) {
+    if (!dup[f]) { f++; continue; }
+    let e = f;
+    while (e < frames && dup[e]) e++;
+    if (e - f > DUP_MAX_RUN) dup.fill(0, f, e); // a hold, not a cadence
+    f = e;
+  }
+  const w = Math.max(2, Math.round((o.minSec ?? DUP_MIN_SEC) * fps));
+  const minRatio = o.minRatio ?? DUP_MIN_RATIO;
+  const mark = new Uint8Array(frames);
+  let dups = 0;
+  for (let f = 0; f < frames; f++) {
+    dups += dup[f]!;
+    if (f >= w) dups -= dup[f - w]!;
+    if (f >= w - 1) {
+      const ratio = dups / w;
+      if (ratio >= minRatio && ratio <= DUP_MAX_RATIO) mark.fill(1, f - w + 1, f + 1);
+    }
+  }
+  const out: Array<{ start: Frames; end: Frames; ratio: number }> = [];
+  for (let f = 0; f < frames;) {
+    if (!mark[f]) { f++; continue; }
+    let e = f;
+    while (e < frames && mark[e]) e++;
+    let first = -1;
+    let last = -1;
+    let n = 0;
+    for (let g = f; g < e; g++) if (dup[g]) { if (first < 0) first = g; last = g; n++; }
+    if (first >= 0) {
+      const start = Math.max(0, first - 1); // the frame being repeated starts the stutter
+      const end = last + 1;
+      out.push({ start, end, ratio: n / (end - start) });
+    }
+    f = e;
+  }
+  return out;
+}
+
+function clampToRanges(r: { start: Frames; end: Frames }, ranges: Array<{ start: Frames; end: Frames }> | undefined, minLen: Frames): Array<{ start: Frames; end: Frames }> {
+  if (!ranges) return [r];
+  return ranges
+    .map((x) => ({ start: Math.max(r.start, x.start), end: Math.min(r.end, x.end) }))
+    .filter((x) => x.end - x.start >= minLen);
 }
 
 /** Integrated loudness, true peak and LRA of the first audio stream (ebur128; loudnorm JSON as fallback). */
@@ -413,6 +510,7 @@ export async function runQc(args: QcArgs): Promise<QcReport> {
   const durationSec = p.durationSec ?? (p.nbPackets ?? expectedFrames) / fps;
   const ctx: RunCtx = { timeoutMs: args.timeoutMs ?? Math.max(120_000, Math.ceil(durationSec * 6) * 1000), signal: args.signal };
 
+  const dupOpts: QcDuplicateOptions | undefined = args.duplicates === true ? {} : args.duplicates || undefined;
   const issues: QcIssue[] = [];
   if (!p.hasVideo) issues.push({ kind: 'spec', severity: 'error', message: `ไม่มี video stream: ${path}` });
   if (p.fps !== undefined && Math.abs(p.fps - fps) > 0.01) {
@@ -421,7 +519,7 @@ export async function runQc(args: QcArgs): Promise<QcReport> {
 
   const [frames, analysis, sheet] = await Promise.all([
     p.hasVideo ? countFrames(tools, path, p, ctx) : Promise.resolve(0),
-    analyze(tools, path, p, ctx),
+    analyze(tools, path, p, ctx, dupOpts),
     args.contactSheetPath && p.hasVideo
       ? contactSheet(tools, path, args.contactSheetPath, p.nbPackets ?? expectedFrames, fps, ctx)
       : Promise.resolve<{ path?: string; error?: string }>({}),
@@ -443,6 +541,16 @@ export async function runQc(args: QcArgs): Promise<QcReport> {
     issues.push(rangeIssue('freeze', 'ภาพค้าง (freeze)', r, ictx));
   }
   for (const r of analysis.silence) issues.push(rangeIssue('silence', 'เสียงเงียบ (silence)', r, ictx));
+  if (dupOpts && analysis.kept) {
+    const minLen = Math.max(2, Math.round((dupOpts.minSec ?? DUP_MIN_SEC) * fps));
+    for (const d of duplicateRanges(analysis.kept, frames, fps, dupOpts)) {
+      for (const r of clampToRanges(d, dupOpts.ranges, minLen)) {
+        const issue = rangeIssue('duplicate', `เฟรมซ้ำเป็นจังหวะ ~${Math.round(d.ratio * 100)}% (กระตุก/slow-mo แบบซ้ำเฟรม — ลอง interpolation blend/motion)`, { start: r.start / fps, end: r.end / fps }, ictx);
+        issues.push(issue);
+      }
+    }
+  }
+  if (args.lintIssues) issues.push(...args.lintIssues);
 
   let loud = analysis.loudness;
   if (!loud && p.hasAudio) {

@@ -211,6 +211,7 @@ export interface Version {
   deliverables: Record<string, string>; // target id -> path
   qc?: QcReport;
   stats: BuildStats;
+  clipSnapshots?: Record<string, { clip: Clip; render?: AeRenderRecord; fingerprint?: string }>; // per-clip state of this build (shot_revert)
 }
 
 export interface ReviewShot {

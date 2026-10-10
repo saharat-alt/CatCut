@@ -8,6 +8,7 @@ import type {
   Asset,
   AudioClip,
   Clip,
+  ClipSpeed,
   FileAsset,
   Frames,
   ProbeInfo,
@@ -94,6 +95,9 @@ function parseProject(raw: string, abs: string, file: string): Project {
     timeline: normalizeTimeline(data.timeline),
     delivery: data.delivery ?? { targets: [] },
     versions: data.versions ?? [],
+    ...(data.board !== undefined ? { board: data.board } : {}),
+    ...(data.constraints !== undefined ? { constraints: data.constraints } : {}),
+    ...(data.styleRules !== undefined ? { styleRules: data.styleRules } : {}),
   };
 }
 
@@ -127,8 +131,8 @@ interface Base {
 const bases = new WeakMap<Project, Base>();
 
 function persistedOf(p: Project): Persisted {
-  const { meta, assets, timeline, delivery, versions } = p;
-  return JSON.parse(JSON.stringify({ meta, assets, timeline, delivery, versions })) as Persisted;
+  const { meta, assets, timeline, delivery, versions, board, constraints, styleRules } = p;
+  return JSON.parse(JSON.stringify({ meta, assets, timeline, delivery, versions, board, constraints, styleRules })) as Persisted;
 }
 
 function revisionOf(raw: string): number {
@@ -555,6 +559,132 @@ function hasAudio(a: Asset): boolean | undefined {
 
 const isFrames = (v: unknown): v is Frames => Number.isInteger(v);
 
+// ---------- speed (retime) ----------
+// A clip's retime is a curve pos(t): clip-local timeline frame t -> source position relative to `in`
+// (fractional source frames). Constant rate r: pos = r*t. Ramp: the rate eases (smoothstep) from
+// rampFrom to rate over the first rampFrames timeline frames, then stays at rate; dissolve handles
+// before the clip (t < 0) run at the start rate. Nearest-frame sampling shows source frame `in + m`
+// at slot k for the largest m whose first slot `curveSlot(m)` is <= k (== floor(pos(k)) up to 1e-7).
+// Dissolve handles are timeline frames and go through the same curve: the a = floor(N/2) frames a clip
+// shows before its in-point play at its start rate, the b frames past its out-point at its end rate.
+// E.g. N = 10 at 50%: frames -5..-1 show in-3..in-1 (3 source frames before `in`); at 200%: in-10..in-2.
+
+export interface SpeedCurve {
+  r0: number; // start rate (rampFrom, or rate when there is no ramp)
+  r1: number; // rate after the ramp
+  R: number; // ramp length in timeline frames (0 = constant)
+}
+
+const SLOT_EPS = 1e-7;
+
+/** The clip's retime curve, or undefined for realtime (no speed, rate 1, no ramp). */
+export function speedCurve(c: Pick<Clip, 'speed'>): SpeedCurve | undefined {
+  const s = c.speed;
+  if (!s) return undefined;
+  const R = s.rampFrom !== undefined && (s.rampFrames ?? 0) > 0 ? (s.rampFrames as number) : 0;
+  const r0 = R > 0 ? (s.rampFrom as number) : s.rate;
+  if (s.rate === 1 && (R === 0 || r0 === 1)) return undefined;
+  return { r0, r1: s.rate, R };
+}
+
+/** Effective interpolation: the clip's choice, else blend when any part of the curve is slow motion, else nearest. */
+export function clipInterpolation(c: Pick<Clip, 'speed'>): NonNullable<ClipSpeed['interpolation']> {
+  if (c.speed?.interpolation) return c.speed.interpolation;
+  const curve = speedCurve(c);
+  return curve && Math.min(curve.r0, curve.r1) < 1 ? 'blend' : 'nearest';
+}
+
+/** Average rate of the clip over its duration (constant rate, or source span / dur for ramps); 1 when realtime. */
+export function averageRate(c: Pick<Clip, 'dur' | 'speed'>): number {
+  const curve = speedCurve(c);
+  if (!curve) return 1;
+  return curve.R > 0 && c.dur > 0 ? curvePos(curve, c.dur) / c.dur : curve.r1;
+}
+
+/** Source position (relative to `in`, fractional frames) at clip-local timeline time t. */
+export function curvePos(c: SpeedCurve, t: number): number {
+  if (t <= 0) return c.r0 * t;
+  if (c.R > 0 && t < c.R) {
+    const x = t / c.R;
+    return c.r0 * t + (c.r1 - c.r0) * c.R * (x ** 3 - x ** 4 / 2); // integral of the smoothstep-eased rate
+  }
+  return (c.R * (c.r0 + c.r1)) / 2 + c.r1 * (t - c.R);
+}
+
+/** Inverse of curvePos: timeline time at which the source position reaches m. */
+export function curveTime(c: SpeedCurve, m: number): number {
+  if (m <= 0) return m / c.r0;
+  const pR = curvePos(c, c.R);
+  if (m >= pR) return c.R + (m - pR) / c.r1;
+  let lo = 0;
+  let hi = c.R;
+  for (let i = 0; i < 60; i++) {
+    const mid = (lo + hi) / 2;
+    if (curvePos(c, mid) < m) lo = mid;
+    else hi = mid;
+  }
+  return (lo + hi) / 2;
+}
+
+/** First clip-local slot that shows source frame `in + m` (nearest sampling). */
+export function curveSlot(c: SpeedCurve, m: number): number {
+  return Math.ceil(curveTime(c, m) - SLOT_EPS);
+}
+
+/** Source frame (relative to `in`) shown at clip-local slot k with nearest sampling. */
+export function shownFrame(c: SpeedCurve | undefined, k: number): number {
+  if (!c) return k;
+  let m = Math.floor(curvePos(c, k) + 1e-6);
+  while (curveSlot(c, m + 1) <= k) m++;
+  while (m > -1e9 && curveSlot(c, m) > k) m--;
+  return m;
+}
+
+/** Source frames the clip covers: round(dur * rate) for constant speed (the contract), the curve's span for ramps. */
+export function clipSourceSpan(c: Pick<Clip, 'dur' | 'speed'>): Frames {
+  const curve = speedCurve(c);
+  return curve ? Math.round(curvePos(curve, c.dur)) : c.dur;
+}
+
+/**
+ * Source range (relative to `in`, [first, end)) a clip needs when it also shows `before` timeline
+ * frames of handle ahead of its in-point and `after` frames past its out-point (dissolves). The body
+ * needs max(span, last shown frame + 1); handles need every frame they show (nearest sampling; a blend
+ * or motion lookahead past the source end holds the last frame instead).
+ */
+export function clipSourceNeeds(c: Pick<Clip, 'dur' | 'speed'>, before = 0, after = 0): { first: number; end: number } {
+  const curve = speedCurve(c);
+  if (!curve) return { first: -before, end: c.dur + after };
+  const first = before > 0 ? shownFrame(curve, -before) : 0;
+  const last = shownFrame(curve, c.dur + after - 1) + 1;
+  return { first, end: after > 0 ? last : Math.max(clipSourceSpan(c), last) };
+}
+
+function speedLabel(c: Clip): string {
+  const s = c.speed;
+  if (!s) return '100%';
+  const pct = (r: number) => `${Math.round(r * 1000) / 10}%`;
+  return s.rampFrom !== undefined && s.rampFrames ? `${pct(s.rampFrom)}→${pct(s.rate)}/${s.rampFrames}f` : pct(s.rate);
+}
+
+function speedErrors(c: Clip, tag: string): string[] {
+  const errors: string[] = [];
+  const s = c.speed;
+  if (s !== undefined) {
+    if (!s || typeof s !== 'object') return [`${tag}: speed must be an object`];
+    const okRate = (v: unknown): boolean => typeof v === 'number' && Number.isFinite(v) && v >= 0.05 && v <= 20;
+    if (!okRate(s.rate)) errors.push(`${tag}: speed.rate must be between 0.05 and 20 (got ${s.rate})`);
+    if (s.rampFrom !== undefined && !okRate(s.rampFrom)) errors.push(`${tag}: speed.rampFrom must be between 0.05 and 20 (got ${s.rampFrom})`);
+    if (s.rampFrames !== undefined && (!isFrames(s.rampFrames) || s.rampFrames < 0)) errors.push(`${tag}: speed.rampFrames must be an integer >= 0 (got ${s.rampFrames})`);
+    if ((s.rampFrom === undefined) !== (s.rampFrames === undefined)) errors.push(`${tag}: speed ramp needs both rampFrom and rampFrames`);
+    if (s.interpolation !== undefined && !['nearest', 'blend', 'motion'].includes(s.interpolation)) errors.push(`${tag}: speed.interpolation must be nearest | blend | motion (got ${s.interpolation})`);
+  }
+  if (c.pushIn !== undefined && !(typeof c.pushIn === 'number' && Number.isFinite(c.pushIn) && c.pushIn >= 0 && c.pushIn <= 100)) {
+    errors.push(`${tag}: pushIn must be a percent between 0 and 100 (got ${c.pushIn})`);
+  }
+  return errors;
+}
+
 export function validateTimeline(p: Project): string[] {
   const errors: string[] = [];
   const t = p.timeline ?? normalizeTimeline(undefined);
@@ -567,6 +697,7 @@ export function validateTimeline(p: Project): string[] {
   // --- video clips ---
   const clipById = new Map<string, Clip>();
   const clipIndex = new Map<string, number>();
+  const retimable = new Set<Clip>(); // clips whose speed fields are valid (safe to map through the curve)
   video.forEach((c, i) => {
     const tag = `clip[${c?.id ?? `#${i}`}]`;
     if (!c || typeof c !== 'object') { errors.push(`${tag}: not an object`); return; }
@@ -579,13 +710,21 @@ export function validateTimeline(p: Project): string[] {
     if (!isFrames(c.in)) errors.push(`${tag}: in must be an integer frame count (got ${c.in})`);
     else if (c.in < 0) errors.push(`${tag}: in must be >= 0 (got ${c.in})`);
     if (c.scale !== undefined && !(Number.isFinite(c.scale) && c.scale > 0)) errors.push(`${tag}: scale must be > 0 (got ${c.scale})`);
+    const speedErrs = speedErrors(c, tag);
+    errors.push(...speedErrs);
+    if (speedErrs.length === 0) retimable.add(c);
 
     const a = c.src ? assetOf(c.src) : undefined;
     if (!a) { errors.push(`${tag}: unknown asset '${c.src}'`); return; }
     if (a.kind === 'audio') errors.push(`${tag}: asset '${c.src}' is audio-only, cannot be used as video`);
     const len = sourceFrames(a);
-    if (len !== undefined && isFrames(c.in) && isFrames(c.dur) && c.in + c.dur > len) {
-      errors.push(`${tag}: in+dur (${c.in + c.dur}) exceeds source length ${len} of '${c.src}'`);
+    if (len !== undefined && isFrames(c.in) && isFrames(c.dur) && c.dur > 0) {
+      if (!speedCurve(c)) {
+        if (c.in + c.dur > len) errors.push(`${tag}: in+dur (${c.in + c.dur}) exceeds source length ${len} of '${c.src}'`);
+      } else if (speedErrs.length === 0) {
+        const need = clipSourceNeeds(c).end;
+        if (c.in + need > len) errors.push(`${tag}: in + source span (${c.in}+${need} = ${c.in + need} source frames for ${c.dur} frames at speed ${speedLabel(c)}) exceeds source length ${len} of '${c.src}'`);
+      }
     }
   });
 
@@ -616,11 +755,22 @@ export function validateTimeline(p: Project): string[] {
     const assetB = assetOf(B.src);
     const lenA = assetA ? sourceFrames(assetA) : undefined;
     if (lenA !== undefined && isFrames(A.in) && A.in >= 0 && isFrames(A.dur) && A.dur > 0) {
-      const avail = lenA - (A.in + A.dur);
-      if (avail < b) errors.push(`${tag}: dissolve ${cut.dissolve} needs ${b} handle frame(s) after '${A.id}' out, source '${A.src}' has ${Math.max(0, avail)}`);
+      if (!speedCurve(A)) {
+        const avail = lenA - (A.in + A.dur);
+        if (avail < b) errors.push(`${tag}: dissolve ${cut.dissolve} needs ${b} handle frame(s) after '${A.id}' out, source '${A.src}' has ${Math.max(0, avail)}`);
+      } else if (retimable.has(A)) {
+        // the handle plays at the clip's end rate: b timeline frames show source frames up to `end`
+        const end = A.in + clipSourceNeeds(A, 0, b).end;
+        if (end > lenA) errors.push(`${tag}: dissolve ${cut.dissolve} needs ${b} handle frame(s) after '${A.id}' out = source frames up to ${end} at speed ${speedLabel(A)}, source '${A.src}' has ${lenA}`);
+      }
     }
-    if (assetB && assetB.kind !== 'still' && isFrames(B.in) && B.in >= 0 && B.in < a) {
-      errors.push(`${tag}: dissolve ${cut.dissolve} needs ${a} handle frame(s) before '${B.id}' in, clip has ${B.in}`);
+    if (assetB && assetB.kind !== 'still' && isFrames(B.in) && B.in >= 0) {
+      if (!speedCurve(B)) {
+        if (B.in < a) errors.push(`${tag}: dissolve ${cut.dissolve} needs ${a} handle frame(s) before '${B.id}' in, clip has ${B.in}`);
+      } else if (retimable.has(B)) {
+        const need = -clipSourceNeeds(B, a, 0).first;
+        if (B.in < need) errors.push(`${tag}: dissolve ${cut.dissolve} needs ${a} handle frame(s) before '${B.id}' in = ${need} source frame(s) at speed ${speedLabel(B)}, clip has ${B.in}`);
+      }
     }
   }
   for (const [id, n] of reserved) {

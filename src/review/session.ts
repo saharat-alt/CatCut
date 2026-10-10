@@ -26,11 +26,21 @@ const stroke = z.object({
   color: color.optional(),
 }).strict().refine(s => s.kind === 'free' || s.points.length === 2, 'Circle and arrow marks have exactly two points');
 const strokes = z.array(stroke).max(16);
+/**
+ * open = the agent should act; resolved = done; parked = "พักไว้ / ยังไม่ต้องแก้": kept for later, the agent must not act on it.
+ * Sessions written before 'parked' existed only contain open/resolved and still parse.
+ */
+export const NOTE_STATUSES = ['open', 'resolved', 'parked'] as const;
+/** "Prefer this version for this shot" (อันก่อนสวยกว่า): the agent may call shot_revert(version, clipId). */
+const revertTo = z.object({ version: z.string().regex(/^v\d+$/), clipId: z.string().min(1).max(200) }).strict();
 const noteBase = z.object({
   id: z.string().min(1).max(80), frame, in: frame, out: frame, intent, color: color.optional(), text, strokes,
-  status: z.enum(['open', 'resolved']).default('open'),
+  status: z.enum(NOTE_STATUSES).default('open'),
+  revertTo: revertTo.optional(),
 }).strict();
-const noteInput = noteBase.refine(n => n.text.length > 0 || n.strokes.length > 0, 'A note needs text or a mark');
+const noteInput = noteBase
+  .refine(n => n.text.length > 0 || n.strokes.length > 0 || !!n.revertTo, 'A note needs text or a mark')
+  .refine(n => !n.revertTo || n.intent === 'other', 'A version preference uses the "other" intent');
 const saveInput = z.object({ revision: frame, notes: z.array(noteInput).max(100) }).strict();
 const submitInput = z.object({ revision: frame }).strict();
 
@@ -171,7 +181,10 @@ async function locked<T>(dir: string, fn: () => Promise<T>): Promise<T> {
 
 export function saveReviewSession(p: Project, v: Version, input: unknown): Promise<ReviewSession> {
   const parsed = saveInput.safeParse(input);
-  if (!parsed.success) throw new ReviewError(parsed.error.issues.some(i => i.message === 'A note needs text or a mark') ? 'A note needs text or a mark' : 'Invalid notes or revision');
+  if (!parsed.success) {
+    const known = ['A note needs text or a mark', 'A version preference uses the "other" intent'];
+    throw new ReviewError(parsed.error.issues.find(i => known.includes(i.message))?.message ?? 'Invalid notes or revision');
+  }
   const plan = versionPlan(p, v);
   const ids = new Set<string>();
   const notes = parsed.data.notes.map(n => {
@@ -180,6 +193,7 @@ export function saveReviewSession(p: Project, v: Version, input: unknown): Promi
     if (n.in > n.frame || n.out <= n.frame || n.out > plan.frames) throw new ReviewError('Note range must contain its frame and stay inside the version');
     const shot = plan.shots.find(s => n.frame >= s.start && n.frame < s.start + s.dur);
     if (!shot) throw new ReviewError('No shot at this frame');
+    if (n.revertTo) checkRevert(p, v, n.revertTo, shot.id);
     return withColors({ ...n, shot: shot.id, asset: shot.src, sourceFrame: shot.in + n.frame - shot.start, ...(shot.comp ? { comp: shot.comp } : {}) });
   });
   const dir = sessionDir(p, v);
@@ -192,7 +206,42 @@ export function saveReviewSession(p: Project, v: Version, input: unknown): Promi
   }));
 }
 
-export function submitReview(p: Project, v: Version, revision?: number): Promise<{ session: ReviewSession; path: string }> {
+function checkRevert(p: Project, v: Version, r: { version: string; clipId: string }, shotId: string): void {
+  if (r.version === v.id) throw new ReviewError('A version preference must name another version');
+  if (r.clipId !== shotId) throw new ReviewError('A version preference must target the shot at its frame');
+  const other = p.versions.find(x => x.id === r.version);
+  if (!other) throw new ReviewError('Unknown version for this preference');
+  let plan: ReviewPlan;
+  try { plan = versionPlan(p, other); } catch { throw new ReviewError('That version has no shot snapshot'); }
+  if (!plan.shots.some(s => s.id === r.clipId)) throw new ReviewError('That shot is not in the preferred version');
+}
+
+type StoredNote = ReviewSession['notes'][number];
+export interface AgentReview {
+  /** How the agent must treat the lists below. */
+  rule: string;
+  /** status 'open': propose a fix plan for these (confirm before building). */
+  actionable: StoredNote[];
+  /** status 'parked' (พักไว้ / ยังไม่ต้องแก้): informational only, change nothing for them. */
+  parked: StoredNote[];
+  resolved: StoredNote[];
+  /** Actionable notes that ask to bring a shot back from another version: shot_revert(version, clipId). */
+  revertRequests: Array<{ noteId: string; version: string; clipId: string; frame: number }>;
+}
+
+/** Split notes into what the agent may act on and what is parked. */
+export function agentReview(s: ReviewSession): AgentReview {
+  const actionable = s.notes.filter(n => n.status === 'open');
+  return {
+    rule: 'Act only on `actionable` (propose a plan and confirm before building). `parked` = the user said not yet (ยังไม่ต้องแก้): do not change anything for them. `resolved` = done.',
+    actionable,
+    parked: s.notes.filter(n => n.status === 'parked'),
+    resolved: s.notes.filter(n => n.status === 'resolved'),
+    revertRequests: actionable.flatMap(n => n.revertTo ? [{ noteId: n.id, version: n.revertTo.version, clipId: n.revertTo.clipId, frame: n.frame }] : []),
+  };
+}
+
+export function submitReview(p: Project, v: Version, revision?: number): Promise<{ session: ReviewSession; path: string } & AgentReview> {
   const dir = sessionDir(p, v);
   return serialize(dir, () => locked(dir, async () => {
     const previous = await readReviewSession(p, v);
@@ -203,9 +252,10 @@ export function submitReview(p: Project, v: Version, revision?: number): Promise
     const s: ReviewSession = { ...previous, revision: previous.revision + 1, updatedAt: new Date().toISOString(), status: 'submitted' };
     await mkdir(dir, { recursive: true });
     const file = join(dir, `submitted-${randomUUID()}.json`);
-    await writeFile(file, JSON.stringify(s, null, 2) + '\n', { encoding: 'utf8', flag: 'wx' });
+    const agent = agentReview(s);
+    await writeFile(file, JSON.stringify({ ...s, ...agent }, null, 2) + '\n', { encoding: 'utf8', flag: 'wx' });
     await persist(dir, 'session', s);
-    return { session: s, path: file };
+    return { session: s, path: file, ...agent };
   }));
 }
 

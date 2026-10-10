@@ -11,6 +11,7 @@
  */
 import path from 'node:path';
 import { XMLParser } from 'fast-xml-parser';
+import { averageRate, clipInterpolation, clipSourceNeeds, speedCurve } from '../core/project.js';
 import { splitDissolve } from '../core/timecode.js';
 import type {
   Asset,
@@ -201,8 +202,16 @@ function placeLanes(items: PlacedAudio[]): PlacedAudio[][] {
   return lanes;
 }
 
-function motionFilter(scale: number | undefined): XNode | undefined {
-  if (scale === undefined || scale === 100) return undefined;
+/**
+ * Basic Motion scale. A push-in becomes two scale keyframes, base at the first body frame and
+ * base * (1 + pushIn%) at the last one (`when` in the clipitem's in/out space); handles hold the end values.
+ */
+function motionFilter(scale: number | undefined, push?: { pct: number; from: Frames; to: Frames }): XNode | undefined {
+  const base = scale ?? 100;
+  if (base === 100 && !push) return undefined;
+  const kfs = push
+    ? [el('keyframe', el('when', push.from), el('value', base)), el('keyframe', el('when', push.to), el('value', round(base * (1 + push.pct / 100), 6)))]
+    : [];
   return el(
     'filter',
     el(
@@ -212,9 +221,55 @@ function motionFilter(scale: number | undefined): XNode | undefined {
       el('effectcategory', 'motion'),
       el('effecttype', 'motion'),
       el('mediatype', 'video'),
-      el('parameter', el('parameterid', 'scale'), el('name', 'Scale'), el('valuemin', 0), el('valuemax', 1000), el('value', scale)),
+      el('parameter', el('parameterid', 'scale'), el('name', 'Scale'), el('valuemin', 0), el('valuemax', 1000), el('value', base), ...kfs),
     ),
   );
+}
+
+/**
+ * Constant speed written for a clip, in percent (4 decimals): its rate, or a ramp's average rate
+ * (source span / dur; FCP7 constant speed cannot ramp). Undefined = realtime, or a still (speed is a no-op).
+ */
+function speedPctOf(c: Clip, a: Asset): number | undefined {
+  if (a.kind === 'still' || !speedCurve(c)) return undefined;
+  const pct = round(averageRate(c) * 100, 4);
+  return pct === 100 ? undefined : pct;
+}
+
+/** FCP7 constant-speed Time Remap filter (Premiere's export shape: variablespeed 0 + speed %). */
+function timeRemapFilter(pct: number, blend: boolean, mediatype: 'video' | 'audio'): XNode {
+  const prm = (id: string, value: string | number, min?: number, max?: number): XNode =>
+    el('parameter', el('parameterid', id), el('name', id), min !== undefined && el('valuemin', min), max !== undefined && el('valuemax', max), el('value', value));
+  return el(
+    'filter',
+    el(
+      'effect',
+      el('name', 'Time Remap'),
+      el('effectid', 'timeremap'),
+      el('effectcategory', 'motion'),
+      el('effecttype', 'motion'),
+      el('mediatype', mediatype),
+      prm('variablespeed', 0, 0, 1),
+      prm('speed', pct, -100000, 100000),
+      prm('reverse', 'FALSE'),
+      prm('frameblending', blend ? 'TRUE' : 'FALSE'),
+    ),
+  );
+}
+
+/** What the XML cannot carry exactly (speed ramps, optical-flow interpolation, muted slow-mo audio). */
+export function xmemlExportWarnings(p: Project): string[] {
+  const out: string[] = [];
+  for (const c of p.timeline.video) {
+    const a = p.assets[c.src];
+    const curve = speedCurve(c);
+    if (!a || !curve || a.kind === 'still') continue;
+    const pct = round(averageRate(c) * 100, 4);
+    if (curve.R > 0) out.push(`clip '${c.id}': speed ramp ${round(curve.r0 * 100, 2)}%→${round(curve.r1 * 100, 2)}% exported as constant ${pct}% (average); rebuild the ramp with Time Remapping in Premiere if needed`);
+    const interp = clipInterpolation(c);
+    if (interp === 'motion') out.push(`clip '${c.id}': motion interpolation exported as frame blending (choose Optical Flow in Premiere)`);
+  }
+  return out;
 }
 
 /** Audio Levels filter: linear gain, fades as keyframes in source frames (same space as in/out). */
@@ -348,19 +403,34 @@ export function writeXmeml(p: Project, opts: XmemlWriteOptions): string {
     needed.set(assetId, Math.max(needed.get(assetId) ?? 0, out));
   };
 
-  // --- video in/out per clip (stills may shift `in` so a preceding dissolve never asks for in < 0)
+  // --- video in/out per clip (stills may shift `in` so a preceding dissolve never asks for in < 0).
+  // A retimed clip's in/out are in its retimed frame space (source frame / rate), so out - in still
+  // equals end - start; the Time Remap filter carries the rate.
   const vIn: Frames[] = [];
   const vOut: Frames[] = [];
+  const speedPct: Array<number | undefined> = [];
   clips.forEach((c, i) => {
     const a = assetOf(c.src, `clip '${c.id}'`);
-    let xIn = c.in - ap(i);
+    const pct = speedPctOf(c, a);
+    const r = pct === undefined ? 1 : pct / 100;
+    let xIn = (pct === undefined ? c.in : Math.round(c.in / r)) - ap(i);
     if (xIn < 0 && a.kind === 'still') xIn = 0;
     if (xIn < 0) throw new Error(`xmeml: clip '${c.id}' needs ${ap(i)} handle frame(s) before in=${c.in} for the dissolve`);
     const xOut = xIn + ap(i) + c.dur + bn(i);
     vIn.push(xIn);
     vOut.push(xOut);
-    need(c.src, xOut);
+    speedPct.push(pct);
+    need(c.src, pct === undefined ? xOut : Math.max(c.in + clipSourceNeeds(c, ap(i), bn(i)).end, Math.ceil(xOut * r)));
   });
+  /** clipitem <duration>: the file's, in the clip's (retimed) frame space */
+  const itemDuration = (i: number, a: Asset, assetId: string): Frames => {
+    const pct = speedPct[i];
+    return pct === undefined ? fileDuration(a, assetId) : Math.ceil((fileDuration(a, assetId) * 100) / pct);
+  };
+  const remapFor = (i: number, c: Clip, mediatype: 'video' | 'audio'): XNode | undefined => {
+    const pct = speedPct[i];
+    return pct === undefined ? undefined : timeRemapFilter(pct, clipInterpolation(c) !== 'nearest', mediatype);
+  };
 
   // --- vo / music / sfx placement
   const resolveAudio = (c: AudioClip): PlacedAudio => {
@@ -471,7 +541,7 @@ export function writeXmeml(p: Project, opts: XmemlWriteOptions): string {
         { id: vId[i] ?? '' },
         el('name', c.id),
         el('enabled', 'TRUE'),
-        el('duration', fileDuration(a, c.src)),
+        el('duration', itemDuration(i, a, c.src)),
         rate(),
         el('start', ap(i) > 0 ? -1 : start),
         el('end', bn(i) > 0 ? -1 : start + c.dur),
@@ -481,7 +551,8 @@ export function writeXmeml(p: Project, opts: XmemlWriteOptions): string {
         el('anamorphic', 'FALSE'),
         el('alphatype', 'none'),
         fileRef(c.src),
-        motionFilter(c.scale),
+        remapFor(i, c, 'video'),
+        motionFilter(c.scale, c.pushIn ? { pct: c.pushIn, from: (vIn[i] ?? 0) + ap(i), to: (vIn[i] ?? 0) + ap(i) + Math.max(1, c.dur - 1) } : undefined),
         ...linksFor(i),
       ),
     );
@@ -505,7 +576,7 @@ export function writeXmeml(p: Project, opts: XmemlWriteOptions): string {
           { id: aId[i]?.[L] ?? '', premiereChannelType: 'stereo' },
           el('name', c.id),
           el('enabled', 'TRUE'),
-          el('duration', fileDuration(a, c.src)),
+          el('duration', itemDuration(i, a, c.src)),
           rate(),
           el('start', hp > 0 ? -1 : start),
           el('end', hn > 0 ? -1 : start + c.dur),
@@ -513,6 +584,7 @@ export function writeXmeml(p: Project, opts: XmemlWriteOptions): string {
           el('out', xIn + hp + c.dur + hn),
           fileRef(c.src),
           el('sourcetrack', el('mediatype', 'audio'), el('trackindex', assetChannels(a) === 1 ? 1 : L + 1)),
+          remapFor(i, c, 'audio'),
           ...linksFor(i),
         ),
       );
@@ -751,7 +823,7 @@ function readItems(track: PNode, label: string, fps: number, fileOf: (node: PNod
       }
     }
     if (it.out < 0) it.out = it.in + (it.end - it.start);
-    if (it.out - it.in !== it.end - it.start) warn(`${label}: '${it.name}' source span (${it.out - it.in}) != timeline span (${it.end - it.start}); speed change ignored`);
+    if (it.out - it.in !== it.end - it.start && !readTimeRemap(it.node)) warn(`${label}: '${it.name}' source span (${it.out - it.in}) != timeline span (${it.end - it.start}) without a Time Remap filter; speed change ignored`);
   });
   return items;
 }
@@ -770,22 +842,75 @@ function cutOf(t: RItem, label: string, warn: Warn): Frames {
   return t.start + splitDissolve(n).a;
 }
 
-function readScale(clipNode: PNode, name: string, warn: Warn): number | undefined {
+interface TimeRemap {
+  pct: number; // constant speed in percent
+  variable: boolean; // time-remapping keyframes (read as the constant `speed` value)
+  reverse: boolean;
+  blend: boolean; // frame blending
+}
+
+/** Time Remap filter of a clipitem (undefined when absent or 100% forward). */
+function readTimeRemap(clipNode: PNode): TimeRemap | undefined {
+  for (const f of children(clipNode, 'filter')) {
+    for (const e of children(f, 'effect')) {
+      if (childText(e, 'effectid') !== 'timeremap' && childText(e, 'name') !== 'Time Remap') continue;
+      const prm = (id: string): PNode | undefined => children(e, 'parameter').find((x) => childText(x, 'parameterid') === id);
+      const flag = (id: string): boolean => {
+        const n = prm(id);
+        const v = (n && childText(n, 'value'))?.toUpperCase();
+        return v === 'TRUE' || v === '1';
+      };
+      const sp = prm('speed');
+      const pct = sp ? childNum(sp, 'value') : undefined;
+      if (pct === undefined || !(Math.abs(pct) > 0)) return undefined;
+      const r: TimeRemap = { pct: Math.abs(pct), variable: flag('variablespeed'), reverse: flag('reverse') || pct < 0, blend: flag('frameblending') };
+      return r.pct === 100 && !r.variable && !r.reverse ? undefined : r;
+    }
+  }
+  return undefined;
+}
+
+/**
+ * Basic Motion scale. Animated scale is read as a push-in: the zoom rate between the first and last
+ * keyframe, extended over the clip body [bodyIn, bodyIn + dur - 1] (exact for what writeXmeml writes,
+ * an approximation otherwise, with a warning).
+ */
+function readMotion(clipNode: PNode, name: string, bodyIn: Frames, dur: Frames, warn: Warn): { scale?: number; pushIn?: number } {
   for (const f of children(clipNode, 'filter')) {
     for (const e of children(f, 'effect')) {
       if (childText(e, 'effectid') !== 'basic' && childText(e, 'name') !== 'Basic Motion') continue;
       for (const prm of children(e, 'parameter')) {
         if (childText(prm, 'parameterid') !== 'scale') continue;
-        const kfs = children(prm, 'keyframe');
-        if (kfs.length > 0) warn(`V1: '${name}' has animated scale; first keyframe used`);
+        const kfs = children(prm, 'keyframe')
+          .map((k) => ({ when: childNum(k, 'when'), value: childNum(k, 'value') }))
+          .filter((k): k is { when: number; value: number } => k.when !== undefined && k.value !== undefined)
+          .sort((x, y) => x.when - y.when);
         const first = kfs[0];
-        const v = (first && childNum(first, 'value')) ?? childNum(prm, 'value');
-        return v === undefined ? undefined : round(v, 4);
+        const last = kfs[kfs.length - 1];
+        if (!first || !last || kfs.length < 2 || last.when <= first.when || first.value <= 0) {
+          if (kfs.length > 0) warn(`V1: '${name}' has animated scale; first keyframe used`);
+          const v = first?.value ?? childNum(prm, 'value');
+          return v === undefined ? {} : { scale: round(v, 4) };
+        }
+        if (last.value <= first.value) {
+          warn(`V1: '${name}' scale animates down (pull-out) or not at all; first keyframe used, no push-in`);
+          return { scale: round(first.value, 4) };
+        }
+        const perFrame = (last.value / first.value - 1) / (last.when - first.when);
+        const span = Math.max(1, dur - 1);
+        const scale = round(first.value * (1 + perFrame * (bodyIn - first.when)), 4);
+        const pushIn = round(((perFrame * span) / (1 + perFrame * (bodyIn - first.when))) * 100, 3);
+        const exact = kfs.length === 2 && first.when === bodyIn && last.when === bodyIn + span;
+        if (!exact) warn(`V1: '${name}' animated scale read as push-in ${pushIn}% from ${scale}% (approximation of ${kfs.length} keyframes)`);
+        return { scale, pushIn };
       }
     }
   }
-  return undefined;
+  return {};
 }
+
+/** Constant source rate of a project clip as writeXmeml writes it (percent, 4 decimals). */
+const writtenPct = (c: Clip): number => round(averageRate(c) * 100, 4);
 
 function readLevels(clipNode: PNode, xmlIn: Frames, xmlOut: Frames): Pick<AudioClip, 'gainDb' | 'fadeIn' | 'fadeOut'> {
   const res: Pick<AudioClip, 'gainDb' | 'fadeIn' | 'fadeOut'> = {};
@@ -1048,8 +1173,34 @@ export function readXmeml(xml: string, p?: Project, opts: XmemlReadOptions = {})
     const clip: Clip = { id: uniqueId(videoIds, it.name, `v${video.length + 1}`), src: srcFor(it, 'V1'), in: it.in + (cPrev - it.start), dur };
     // A still with no head handle is clamped to XML in=0; remove that synthetic source offset on import.
     if (p?.assets[clip.src]?.kind === 'still' && it.in === 0) clip.in = 0;
-    const scale = readScale(it.node, it.name, warn);
-    if (scale !== undefined && scale !== 100) clip.scale = scale;
+    const bodyIn = it.in + (cPrev - it.start); // first body frame in the clipitem's in/out space
+    const old = p?.timeline.video.find((c) => c.id === clip.id && c.src === clip.src);
+    const remap = readTimeRemap(it.node);
+    if (remap && p?.assets[clip.src]?.kind !== 'still') {
+      const r = remap.pct / 100;
+      if (remap.variable) warn(`V1: '${it.name}' uses variable speed (time remapping); read as constant ${remap.pct}%`);
+      if (remap.reverse) warn(`V1: '${it.name}' plays in reverse; reverse ignored (forward ${remap.pct}%)`);
+      const retimedUnits = it.out - it.in === it.end - it.start;
+      if (!retimedUnits && Math.abs(it.out - it.in - (it.end - it.start) * r) > 1) warn(`V1: '${it.name}' in/out span ${it.out - it.in} matches neither the timeline span nor speed ${remap.pct}%; read as retimed frames`);
+      // in/out are in retimed frames (out - in == end - start): source frame = retimed frame * rate
+      clip.in = retimedUnits || Math.abs(it.out - it.in - (it.end - it.start) * r) > 1 ? Math.round(bodyIn * r) : it.in + Math.round((cPrev - it.start) * r);
+      clip.speed = { rate: round(r, 6), interpolation: remap.blend ? 'blend' : 'nearest' };
+      // our own export of an unchanged clip: keep the exact model (ramp, interpolation, odd in-points)
+      if (old?.speed && writtenPct(old) === round(remap.pct, 4) && (clipInterpolation(old) !== 'nearest') === remap.blend) {
+        if (speedCurve(old)?.R) warn(`V1: '${it.name}' speed ramp kept from the project (the XML carries its ${remap.pct}% average)`);
+        clip.speed = structuredClone(old.speed);
+        if (retimedUnits && Math.round(old.in / r) === bodyIn) clip.in = old.in;
+      }
+    }
+    const motion = readMotion(it.node, it.name, bodyIn, dur, warn);
+    if (motion.scale !== undefined && motion.scale !== 100) clip.scale = motion.scale;
+    if (motion.pushIn !== undefined && motion.pushIn > 0) {
+      clip.pushIn = old?.pushIn !== undefined && Math.abs(old.pushIn - motion.pushIn) < 0.01 ? old.pushIn : motion.pushIn;
+      if (clip.pushIn > 100) {
+        warn(`V1: '${it.name}' push-in ${clip.pushIn}% exceeds 100%; clamped`);
+        clip.pushIn = 100;
+      }
+    }
     const lastClip = video[video.length - 1];
     if (lastClip) {
       const adjacent = prevT !== undefined && before === items[lastIdx];

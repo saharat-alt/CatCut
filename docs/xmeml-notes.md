@@ -62,6 +62,33 @@ Video: `Cross Dissolve` (effectid `Cross Dissolve`). Audio cross fades on clip a
 name `Cross Fade (+3dB)`, effectid `KGAudioTransCrossFade3dB`. Dissolve N at cut C covers [C−a, C+b),
 a = floor(N/2); touching clip edges are written as −1.
 
+## Speed (Clip.speed) and push-in (Clip.pushIn)
+
+- **Constant speed** → a `Time Remap` filter (effectid `timeremap`, category/type `motion`) with
+  `variablespeed` 0, `speed` = rate × 100 (4 decimals), `reverse` FALSE, `frameblending` TRUE unless the
+  clip's effective interpolation is `nearest`. The clipitem's `in`/`out` (and `<duration>`) are in the
+  clip's **retimed** frame space: `in` = round(source in / rate), so `out − in == end − start` as for any
+  clip; source frames needed = round(retimed frame × rate). The linked clip-audio items carry the same
+  filter (mediatype audio) and the same retimed in/out.
+- **Ramps** (rampFrom/rampFrames) cannot be expressed as constant speed: the writer uses the average rate
+  (source span / dur) and `xmemlExportWarnings(p)` says so. `motion` interpolation is written as frame
+  blending (Premiere's Optical Flow has no xmeml field) with a warning too.
+- **Push-in** → Basic Motion `scale` with two keyframes: base scale (`Clip.scale`, default 100) at the first
+  body frame, base × (1 + pushIn/100) at the last body frame (`when` in the clipitem's in/out space);
+  dissolve handles hold the end values, as the Assembler does.
+- **Reader**: a `timeremap` filter gives `speed.rate` (and interpolation from `frameblending`). in/out are
+  taken as retimed frames when `out − in == end − start`, as source frames when `out − in ≈ (end − start) ×
+  rate` (some exporters), otherwise retimed with a warning. Variable speed and reverse are read as the
+  constant forward `speed` value with a warning. Animated scale is read back as a push-in: the zoom rate
+  between the first and last keyframe extended over the clip body — exact for our own output, an
+  approximation (warning) for hand-moved or extra keyframes; a pull-out keeps only the first value.
+- **Round trip against the project**: when a clip with the same id and asset exists in the project and the
+  XML speed equals what we would write for it, the project's exact speed object (ramp, interpolation) and
+  in-point are kept (rate 2 with an odd in-point would otherwise come back ±1 frame); the ramp keep is
+  reported as a warning.
+
 ## Still unverified in Premiere 2026
 
-Odd dissolve lengths, Motion scale, Thai `pathurl`, and whether `MZ.TrackName` survives a round trip.
+Odd dissolve lengths, Motion scale, Thai `pathurl`, whether `MZ.TrackName` survives a round trip, and the
+speed representation: whether Premiere's importer expects retimed or source in/out on speed-changed clips,
+and whether it needs the Time Remap filter on the linked audio items.

@@ -8,14 +8,16 @@
  * - Every process spawn goes through an injectable `spawn` (default: execa) so tests
  *   can fake aerender while still running real ffmpeg/ffprobe.
  * - Timeout / abort → the whole process tree is killed (taskkill /T /F on Windows).
+ * - Refuses to start when the output or AE-cache drive is nearly full; retries once when aerender
+ *   crashes before rendering its first frame (never after a timeout or abort).
  */
 import { execa } from 'execa';
 import { constants, existsSync, mkdirSync, readdirSync, statSync } from 'node:fs';
-import { copyFile, link, unlink } from 'node:fs/promises';
+import { copyFile, link, statfs as fsStatfs, unlink } from 'node:fs/promises';
 import os from 'node:os';
-import { basename, dirname, extname, join } from 'node:path';
+import { basename, dirname, extname, join, parse, resolve } from 'node:path';
 import { randomBytes } from 'node:crypto';
-import type { Frames, Progress, RenderRequest, RenderResult, ToolPaths } from '../core/types.js';
+import type { AeBackend, Frames, Progress, RenderRequest, RenderResult, ToolPaths } from '../core/types.js';
 import { tcToFrames } from '../core/timecode.js';
 
 export type SpawnFn = typeof execa;
@@ -34,22 +36,153 @@ export interface AerenderRequest extends RenderRequest {
   /** Warn (default) or refuse (`strictRam`) when free RAM is below this many GB. */
   minFreeRamGb?: number;
   strictRam?: boolean;
+  /** Comp size, for the disk-space estimate (default 1920×1080). */
+  width?: number;
+  height?: number;
+  /** Overrides the estimated output size used by the disk-space check. */
+  estimatedBytes?: number;
 }
 
 export interface AerenderOptions {
   spawn?: SpawnFn;
   /** Max parallel aerender processes (default 1, or EDITMCP_AE_PARALLEL). */
   maxParallel?: number;
+  /** Disk-space preflight on the output and AE-cache drives (default on). */
+  checkDisk?: boolean;
+  /** Minimum free GB on each checked drive (default 5; the requirement is max(this, 2 × estimate)). */
+  minFreeGb?: number;
+  /** Folder on the AE disk-cache drive (default defaultAeCacheDir()). */
+  cacheDir?: string;
+  /** Injectable for tests (default fs.promises.statfs). */
+  statfs?: StatfsFn;
+  /** Retry once when aerender crashes during startup (default true). */
+  retryStartupCrash?: boolean;
+  /** Pause before that retry (default 3000 ms). */
+  retryDelayMs?: number;
 }
 
 export type AerenderFailure = 'exit' | 'timeout' | 'abort' | 'output' | 'frames';
 
 /** Structured aerender failure: callers decide on fallbacks from `reason` + aerender's own error lines. */
 export class AerenderError extends Error {
-  constructor(message: string, readonly reason: AerenderFailure, readonly errors: string[]) {
+  /** startupCrash: non-zero exit before any frame was rendered that looks like a crash, not a usage error. */
+  constructor(message: string, readonly reason: AerenderFailure, readonly errors: string[], readonly startupCrash = false) {
     super(message);
     this.name = 'AerenderError';
   }
+}
+
+const STARTUP_CRASH = /crash|unexpected(?:ly)?\s+(?:quit|exit|terminat)|access violation|0xc0000005|unhandled exception|failed to (?:start|launch|initiali[sz]e)|unable to (?:start|launch|initiali[sz]e)|could not (?:start|launch|initiali[sz]e|connect)|after effects (?:has )?(?:stopped|quit|crashed)/i;
+
+/**
+ * Exit before the first frame that looks like a crash: a Windows exception exit code, no aerender ERROR
+ * line at all (process died silently), or a crash-like message. Plain ERROR lines (comp not found,
+ * bad template...) are deterministic and are not retried.
+ */
+export function isStartupCrashOutput(exitCode: number | undefined, errors: string[], log: string[], userStrings: string[] = []): boolean {
+  if (exitCode === undefined || exitCode < 0 || exitCode >= 0xc0000000) return true;
+  const clean = (l: string) => { let s = l; for (const u of userStrings) if (u) s = s.split(u).join(' '); return s; };
+  if (log.some((l) => !l.startsWith('$ ') && STARTUP_CRASH.test(clean(l)))) return true;
+  return errors.length === 0;
+}
+
+// ---------- disk space ----------
+
+export interface DiskStat { bavail: number | bigint; bsize: number | bigint }
+export type StatfsFn = (path: string) => Promise<DiskStat>;
+const GB = 2 ** 30;
+
+/** Free bytes on the volume holding `path` (or its nearest existing ancestor). */
+export async function freeDiskBytes(path: string, statfs: StatfsFn = (p) => fsStatfs(p)): Promise<number> {
+  let cur = resolve(path);
+  while (!existsSync(cur)) { const up = dirname(cur); if (up === cur) break; cur = up; }
+  const s = await statfs(cur);
+  return Number(s.bavail) * Number(s.bsize);
+}
+
+/** Folder on the drive AE's disk cache uses: EDITMCP_AE_CACHE_DIR, else %LOCALAPPDATA% (AE's default lives under it). */
+export function defaultAeCacheDir(): string {
+  return process.env['EDITMCP_AE_CACHE_DIR'] || process.env['LOCALAPPDATA'] || os.tmpdir();
+}
+
+/** ProRes 422 HQ ≈ 0.45 byte/pixel/frame; the Lossless fallback writes ~4 bytes/pixel before the transcode. */
+export function estimateOutputBytes(frames: Frames, width = 1920, height = 1080, fallback = false): number {
+  return frames * width * height * (fallback ? 4.5 : 0.45);
+}
+
+export class DiskSpaceError extends Error {
+  constructor(message: string, readonly path: string, readonly freeBytes: number, readonly needBytes: number) {
+    super(message);
+    this.name = 'DiskSpaceError';
+  }
+}
+
+function driveOf(p: string): string {
+  const root = parse(resolve(p)).root;
+  return process.platform === 'win32' ? root.toLowerCase() : root;
+}
+
+/**
+ * Refuse a render when the output drive or the AE disk-cache drive has less than
+ * max(minFreeGb (5), 2 × estimated output) free. Returns a log note; a failing statfs only warns.
+ */
+async function checkRenderDiskSpace(req: AerenderRequest, frames: Frames, opts: AerenderOptions): Promise<string | undefined> {
+  const est = req.estimatedBytes ?? estimateOutputBytes(frames, req.width, req.height, req.fallback);
+  const need = Math.max((opts.minFreeGb ?? 5) * GB, 2 * est);
+  const checks = [{ path: dirname(resolve(req.outPath)), what: 'output' }, { path: opts.cacheDir ?? defaultAeCacheDir(), what: 'AE disk cache' }];
+  const seen = new Set<string>();
+  const notes: string[] = [];
+  for (const c of checks) {
+    const drive = driveOf(c.path);
+    if (seen.has(drive)) continue;
+    seen.add(drive);
+    let free: number;
+    try { free = await freeDiskBytes(c.path, opts.statfs); } catch (e) {
+      notes.push(`WARN disk space check skipped for ${c.path}: ${e instanceof Error ? e.message : String(e)}`);
+      continue;
+    }
+    if (free < need) {
+      const f = (free / GB).toFixed(1), n = (need / GB).toFixed(1);
+      throw new DiskSpaceError(
+        `พื้นที่ดิสก์ไม่พอสำหรับ render: ไดรฟ์ ${drive} (${c.what}) เหลือ ${f} GB ต้องมีอย่างน้อย ${n} GB — ลบไฟล์เก่าหรือล้าง cache ของ AE (ae_purge_cache) ก่อน / `
+        + `not enough disk space to render: ${drive} (${c.what}) has ${f} GB free, need ${n} GB (max(${opts.minFreeGb ?? 5} GB, 2 × estimated output ${(est / GB).toFixed(2)} GB)); free space or purge the AE cache first`,
+        c.path, free, need,
+      );
+    }
+  }
+  return notes.length ? notes.join('\n') : undefined;
+}
+
+export interface PurgePolicy {
+  /** default true */
+  enabled?: boolean;
+  /** purge only when the cache drive has less than this many GB free (default 20) */
+  belowGb?: number;
+  cacheDir?: string;
+  statfs?: StatfsFn;
+}
+
+export interface PurgeOutcome { purged: boolean; reason: string; freeGbBefore?: number; freeGbAfter?: number }
+
+/** Call after a batch of renders: purges AE caches when the disk-cache drive runs low. Never throws. */
+export async function purgeIfLowCacheSpace(backend: Pick<AeBackend, 'purgeCaches'>, policy: PurgePolicy = {}): Promise<PurgeOutcome> {
+  if (policy.enabled === false) return { purged: false, reason: 'disabled' };
+  if (!backend.purgeCaches) return { purged: false, reason: 'backend cannot purge caches' };
+  const dir = policy.cacheDir ?? defaultAeCacheDir();
+  const below = policy.belowGb ?? 20;
+  let before: number | undefined;
+  try { before = (await freeDiskBytes(dir, policy.statfs)) / GB; } catch { /* unknown: purge only when forced */ }
+  if (before === undefined ? below !== Infinity : before >= below) {
+    return { purged: false, reason: before === undefined ? 'free space unknown' : `cache drive has ${before.toFixed(1)} GB free (>= ${below} GB)`, ...(before !== undefined ? { freeGbBefore: before } : {}) };
+  }
+  try {
+    await backend.purgeCaches();
+  } catch (e) {
+    return { purged: false, reason: `purge failed: ${e instanceof Error ? e.message : String(e)}`, ...(before !== undefined ? { freeGbBefore: before } : {}) };
+  }
+  let after: number | undefined;
+  try { after = (await freeDiskBytes(dir, policy.statfs)) / GB; } catch { /* ignore */ }
+  return { purged: true, reason: before === undefined ? 'forced' : `cache drive had ${before.toFixed(1)} GB free (< ${below} GB)`, ...(before !== undefined ? { freeGbBefore: before } : {}), ...(after !== undefined ? { freeGbAfter: after } : {}) };
 }
 
 /**
@@ -290,6 +423,28 @@ export async function aerender(tools: ToolPaths, req: AerenderRequest, opts: Aer
 
   const maxParallel = opts.maxParallel ?? Math.max(1, parseInt(process.env['EDITMCP_AE_PARALLEL'] ?? '1', 10) || 1);
   const release = await gate(maxParallel).acquire();
+  try {
+    req.signal?.throwIfAborted();
+    const diskNote = opts.checkDisk === false ? undefined : await checkRenderDiskSpace(req, endFrame - startFrame + 1, opts);
+    let r: RenderResult;
+    try {
+      r = await renderOnce(tools, req, spawn, startFrame, endFrame);
+    } catch (error) {
+      // aerender sometimes dies while starting up (license/GPU/plugin init); one retry, never on timeout/abort.
+      if (opts.retryStartupCrash === false || !(error instanceof AerenderError) || !error.startupCrash || req.signal?.aborted) throw error;
+      const delay = opts.retryDelayMs ?? 3000;
+      if (delay > 0) await new Promise((res) => setTimeout(res, delay));
+      req.signal?.throwIfAborted();
+      r = await renderOnce(tools, req, spawn, startFrame, endFrame);
+      r = { ...r, log: `retry: first attempt crashed during startup (${error.message.split('\n')[0]})\n${r.log}` };
+    }
+    return diskNote ? { ...r, log: `${diskNote}\n${r.log}` } : r;
+  } finally {
+    release();
+  }
+}
+
+async function renderOnce(tools: ToolPaths, req: AerenderRequest, spawn: SpawnFn, startFrame: Frames, endFrame: Frames): Promise<RenderResult> {
   const t0 = Date.now();
   const log: string[] = [];
   const pushLog = (l: string) => { if (log.length < MAX_LOG_LINES) log.push(l); };
@@ -319,7 +474,7 @@ export async function aerender(tools: ToolPaths, req: AerenderRequest, opts: Aer
     };
 
     // Arguments are an array and no shell is used, so Thai comp names / project paths pass through verbatim.
-    const child = spawn(tools.aerender, args, {
+    const child = spawn(tools.aerender!, args, { // checked by aerender()
       reject: false, windowsHide: true, timeout: 0, stripFinalNewline: false,
     }) as unknown as PromiseLike<{ exitCode?: number; stdout?: unknown; stderr?: unknown; timedOut?: boolean; isCanceled?: boolean }>
       & { pid?: number; kill?: (s?: string) => unknown; stdout?: NodeJS.ReadableStream | null; stderr?: NodeJS.ReadableStream | null };
@@ -364,7 +519,8 @@ export async function aerender(tools: ToolPaths, req: AerenderRequest, opts: Aer
       throw new AerenderError(`aerender ${killed === 'timeout' ? `timed out after ${timeoutMs} ms` : 'aborted'} (process tree killed)\n${tail(log)}`, killed, parser.errors);
     }
     if (res.exitCode !== 0) {
-      throw new AerenderError(`aerender exited with code ${res.exitCode}${parser.errors.length ? ': ' + parser.errors.join(' | ') : ''}\n${tail(log)}`, 'exit', parser.errors);
+      const err = new AerenderError(`aerender exited with code ${res.exitCode}${parser.errors.length ? ': ' + parser.errors.join(' | ') : ''}\n${tail(log)}`, 'exit', parser.errors);
+      throw new AerenderError(err.message, 'exit', parser.errors, parser.done === 0 && isStartupCrashOutput(res.exitCode, parser.errors, log, [req.comp, req.aep, req.omTemplate]) && !isMissingOmTemplate(err, [req.comp, req.aep, req.omTemplate]));
     }
 
     // Locate what AE wrote.
@@ -407,8 +563,6 @@ export async function aerender(tools: ToolPaths, req: AerenderRequest, opts: Aer
   } catch (error) {
     if (temp) await removeTempOutputs(temp.dir, temp.prefix);
     throw error;
-  } finally {
-    release();
   }
 }
 

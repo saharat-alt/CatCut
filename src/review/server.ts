@@ -1,8 +1,10 @@
 import { randomBytes } from 'node:crypto';
 import { createReadStream } from 'node:fs';
+import { existsSync } from 'node:fs';
 import { readFile, stat } from 'node:fs/promises';
 import { createServer, type IncomingMessage, type ServerResponse } from 'node:http';
 import type { Project, Version } from '../core/types.js';
+import { comparableVersions, findComparable, mapFrame, mapFrames } from './compare.js';
 import { INTENT_COLORS, readReviewDraft, readReviewSession, ReviewError, saveReviewDraft, saveReviewSession, submitReview, versionPlan } from './session.js';
 
 export interface ReviewServer { url: string; close(): Promise<void> }
@@ -49,7 +51,19 @@ async function media(req: IncomingMessage, res: ServerResponse, file: string): P
   stream.pipe(res);
 }
 
-/** Serves a single immutable version on loopback; no arbitrary file or command routes. */
+/** Notes of the latest earlier comparable version, with frames mapped onto this version (for "ก่อน/หลัง"). */
+async function history(p: Project, v: Version, plan: ReturnType<typeof versionPlan>, previous: Awaited<ReturnType<typeof comparableVersions>>[number] | undefined) {
+  const prev = previous && p.versions.find(x => x.id === previous.id);
+  if (!previous || !prev) return null;
+  try {
+    const s = await readReviewSession(p, prev);
+    if (!s.notes.length) return null;
+    const map = mapFrames(previous.plan, plan, { from: previous.id, to: v.id });
+    return { version: previous.id, notes: s.notes.map(n => ({ id: n.id, frame: mapFrame(map, n.frame), sourceFrame: n.frame, intent: n.intent, color: n.color, text: n.text, status: n.status })) };
+  } catch { return null; }
+}
+
+/** Serves a single immutable version on loopback (plus read-only proxies of comparable versions); no arbitrary file or command routes. */
 export async function openReview(p: Project, v: Version): Promise<ReviewServer> {
   const plan = structuredClone(versionPlan(p, v));
   const proxy = v.reviewProxy;
@@ -62,6 +76,9 @@ export async function openReview(p: Project, v: Version): Promise<ReviewServer> 
     ['', 'index.html', 'text/html'], ['app.js', 'app.js', 'text/javascript'], ['style.css', 'style.css', 'text/css'],
     ['fonts/NotoSansThai.ttf', 'fonts/NotoSansThai.ttf', 'font/ttf'],
   ]) assets.set(route!, { body: await readFile(new URL(`../../web/review/${file}`, import.meta.url)), type: type! });
+  // Optional brand mark; served only when the file ships.
+  const logo = new URL('../../web/review/logo.svg', import.meta.url);
+  if (existsSync(logo)) assets.set('logo.svg', { body: await readFile(logo), type: 'image/svg+xml' });
   let origin = '';
   const server = createServer((req, res) => {
     res.setHeader('Cache-Control', 'no-store');
@@ -86,10 +103,23 @@ export async function openReview(p: Project, v: Version): Promise<ReviewServer> 
       }
       if (req.method !== 'GET' && req.method !== 'HEAD') throw new ReviewError('Method not allowed', 405);
       if (route === 'data') {
-        const [session, draft] = await Promise.all([readReviewSession(p, frozenVersion), readReviewDraft(p, frozenVersion)]);
-        return json(res, 200, { name: p.meta.name, version: v.id, plan, qc: v.qc ?? null, intents: INTENT_COLORS, session, draft });
+        const [session, draft, others] = await Promise.all([readReviewSession(p, frozenVersion), readReviewDraft(p, frozenVersion), comparableVersions(p, frozenVersion)]);
+        const index = p.versions.findIndex(x => x.id === v.id);
+        const previous = others.filter(o => p.versions.findIndex(x => x.id === o.id) < index).pop();
+        return json(res, 200, {
+          name: p.meta.name, version: v.id, plan, qc: v.qc ?? null, intents: INTENT_COLORS, session, draft, brand: { logo: assets.has('logo.svg') },
+          compare: { versions: others.map(o => ({ id: o.id, createdAt: o.createdAt, frames: o.frames })), previous: previous?.id ?? null },
+          history: await history(p, frozenVersion, plan, previous),
+        });
       }
       if (route === 'media') return media(req, res, proxy);
+      const compare = /^compare\/([^/]+)\/(data|media)$/.exec(route);
+      if (compare) {
+        const other = await findComparable(p, frozenVersion, compare[1]!);
+        if (compare[2] === 'media') return media(req, res, other.proxy);
+        const map = mapFrames(plan, other.plan, { from: v.id, to: other.id });
+        return json(res, 200, { version: other.id, fps: other.plan.fps, width: other.plan.width, height: other.plan.height, frames: other.plan.frames, shots: other.plan.shots, ...map });
+      }
       if (route === 'contact' && v.qc?.contactSheet) {
         res.writeHead(200, { 'Content-Type': 'image/png' });
         return res.end(await readFile(v.qc.contactSheet));

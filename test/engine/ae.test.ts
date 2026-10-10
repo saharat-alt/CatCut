@@ -3,7 +3,7 @@ import { constants } from 'node:fs';
 import { copyFile, mkdtemp, readFile, rm, writeFile } from 'node:fs/promises';
 import { join } from 'node:path';
 import os from 'node:os';
-import { createAeBackend, listAfterFxProcesses, type AeProcess } from '../../src/engine/ae.js';
+import { createAeBackend, listAfterFxProcesses, lintMockComp, MockAeBackend, type AeProcess } from '../../src/engine/ae.js';
 import type { SpawnFn } from '../../src/engine/aerender.js';
 
 const dirs: string[] = [];
@@ -67,7 +67,7 @@ async function renderSetup(opts: { comp?: string; durationFrames?: number; displ
     }
     return { exitCode: 0, stdout: '', stderr: '' };
   });
-  const backend = createAeBackend({ ffmpeg: 'ffmpeg', ffprobe: 'ffprobe', afterfx: 'AfterFX.com', aerender: 'aerender.exe' }, { spawn: spawn as unknown as SpawnFn, minFreeRamGb: 0, listProcesses: async () => [] });
+  const backend = createAeBackend({ ffmpeg: 'ffmpeg', ffprobe: 'ffprobe', afterfx: 'AfterFX.com', aerender: 'aerender.exe' }, { spawn: spawn as unknown as SpawnFn, minFreeRamGb: 0, listProcesses: async () => [], statfs: async () => ({ bavail: 10 ** 12, bsize: 1 }), retryDelayMs: 0 });
   return { dir, aep, name, spawn, backend };
 }
 const callsOf = (spawn: { mock: { calls: unknown[][] } }, bin: string) => spawn.mock.calls.filter((c) => c[0] === bin).map((c) => c[1] as string[]);
@@ -215,5 +215,103 @@ describe('AE renders through the backend (mock processes only)', () => {
     });
     await expect(backend.render({ aep, comp, outPath: join(dir, 'a.mov') })).rejects.toThrow(/exited with code 1/);
     expect(callsOf(spawn, 'aerender.exe')).toHaveLength(1);
+  });
+});
+
+describe('AE analysis commands through the headless backend (mock processes only)', () => {
+  /** Fake AfterFX answering each runner action with `answers[action]`; records every job. */
+  async function analysisSetup(answers: Record<string, unknown>, opts: { statfsGb?: number } = {}) {
+    const dir = await mkdtemp(join(os.tmpdir(), 'editmcp-ae-analysis-'));
+    dirs.push(dir);
+    const aep = join(dir, 'เทมเพลต.aep');
+    await writeFile(aep, 'template');
+    const jobs: Array<Record<string, unknown>> = [];
+    const spawn = vi.fn(async (_bin: string, args: string[]) => {
+      const launcher = await readFile(args[3]!, 'utf8');
+      const job = JSON.parse(await readFile(JSON.parse(launcher.match(/var EDITMCP_JOB = (.*);/)![1]!), 'utf8'));
+      jobs.push(job);
+      await writeFile(job.result, JSON.stringify({ ok: true, data: answers[job.action] ?? null }));
+      return { exitCode: 0, stdout: '', stderr: '' };
+    });
+    const backend = createAeBackend({ ffmpeg: 'ffmpeg', ffprobe: 'ffprobe', afterfx: 'AfterFX.com' }, {
+      spawn: spawn as unknown as SpawnFn, minFreeRamGb: 0, listProcesses: async () => [],
+      statfs: async () => ({ bavail: (opts.statfsGb ?? 100) * 2 ** 30, bsize: 1 }), cacheDir: dir,
+    });
+    return { aep, spawn, jobs, backend };
+  }
+
+  it('parses scanTemplate results and fills aep/warnings', async () => {
+    const comp = { name: 'Scene 1', durationFrames: 150, width: 1920, height: 1080, fonts: ['Kanit-Bold'], expressionLocked: ['Title > Transform > Position'],
+      placeholders: [{ layer: 'Photo', kind: 'footage', moving: false, matte: 'Window' }], textAnimators: [{ layer: 'Title', basedOn: 'words' }] };
+    const { aep, jobs, backend } = await analysisSetup({ scanTemplate: { comps: [comp] } });
+    const scan = await backend.scanTemplate(aep);
+    expect(scan.aep).toBe(aep);
+    expect(scan.warnings).toEqual([]);
+    expect(scan.comps[0]).toMatchObject({ name: 'Scene 1', placeholders: [{ layer: 'Photo', moving: false }] });
+    expect(jobs[0]).toMatchObject({ action: 'scanTemplate', aep });
+  });
+  it('lintComp sends only threshold rules to the runner and returns its issues', async () => {
+    const lint = { comp: 'Title', issues: [{ kind: 'animation-ends-early', layer: 'หัวข้อ', frame: 25, message: 'stops' }] };
+    const { aep, jobs, backend } = await analysisSetup({ lintComp: lint });
+    expect(await backend.lintComp(aep, 'Title')).toEqual(lint);
+    expect(jobs[0]).toMatchObject({ action: 'lintComp', comp: 'Title', rules: null });
+    await backend.lintComp(aep, 'Title', { thai: { minCapHeightPct: 4, animateBy: 'line' }, safeMarginPct: 5, palette: ['#fff'] });
+    expect(jobs[1]!.rules).toEqual({ thai: { minCapHeightPct: 4 }, safeMarginPct: 5 });
+  });
+  it('lists fonts (plain and detailed) and purges caches without opening a project', async () => {
+    const { aep, jobs, backend } = await analysisSetup({ listFonts: { fonts: ['Kanit-Bold', 'ArialMT'], families: ['Kanit', 'Arial'], aeMissing: null }, purge: { purged: 'ALL_CACHES' } });
+    expect(await backend.listFonts(aep)).toEqual(['Kanit-Bold', 'ArialMT']);
+    expect(await backend.listFontsDetailed(aep)).toEqual({ fonts: ['Kanit-Bold', 'ArialMT'], families: ['Kanit', 'Arial'], aeMissing: null });
+    await backend.purgeCaches();
+    expect(jobs.map((j) => j.action)).toEqual(['listFonts', 'listFonts', 'purge']);
+    expect(jobs[2]!.aep).toBeUndefined();
+  });
+  it('afterRenderBatch purges only when the cache drive is low', async () => {
+    const roomy = await analysisSetup({ purge: {} }, { statfsGb: 80 });
+    expect(await roomy.backend.afterRenderBatch()).toMatchObject({ purged: false });
+    expect(roomy.spawn).not.toHaveBeenCalled();
+    const low = await analysisSetup({ purge: {} }, { statfsGb: 8 });
+    expect(await low.backend.afterRenderBatch()).toMatchObject({ purged: true, freeGbBefore: 8 });
+    expect(low.jobs.map((j) => j.action)).toEqual(['purge']);
+    expect(await low.backend.afterRenderBatch({ enabled: false })).toMatchObject({ purged: false, reason: 'disabled' });
+  });
+});
+
+describe('MockAeBackend', () => {
+  const comp = {
+    name: 'Card', width: 1920, height: 1080, durationFrames: 250,
+    layers: [
+      { name: 'Title', kind: 'text' as const, text: 'Hello', font: 'Kanit-Bold', fontFamily: 'Kanit', lastKeyFrame: 30, animators: [{ basedOn: 'words' as const }] },
+      { name: 'Photo', kind: 'footage' as const, source: 'photo.mov', matted: true, continuous: true },
+      { name: 'Window', kind: 'shape' as const, isMatte: true, enabled: false },
+      { name: 'Logo slot', kind: 'precomp' as const, source: 'logo comp' },
+      { name: 'BG', kind: 'solid' as const, outFrame: 200, bounds: { x: 0, y: 0, w: 1, h: 1 } },
+    ],
+  };
+  it('scans placeholders like the runner (matte window = still) and never spawns', async () => {
+    const ae = new MockAeBackend({ comps: [comp], aeMissingFonts: ['Kanit-Bold'] });
+    const scan = await ae.scanTemplate('x.aep');
+    expect(scan.comps[0]!.placeholders).toEqual([
+      { layer: 'Title', kind: 'text', moving: true },
+      { layer: 'Photo', kind: 'footage', source: 'photo.mov', moving: false },
+      { layer: 'Logo slot', kind: 'precomp', source: 'logo comp', moving: true },
+    ]);
+    expect(await ae.listFontsDetailed()).toEqual({ fonts: ['Kanit-Bold'], families: ['Kanit'], aeMissing: ['Kanit-Bold'] });
+    await ae.purgeCaches();
+    expect(ae.purged).toBe(1);
+  });
+  it('lints with the runner rules', () => {
+    const kinds = lintMockComp(comp).issues.map((i) => `${i.kind}:${i.layer}`);
+    expect(kinds).toEqual(['animation-ends-early:Title', 'background-ends-early:BG']);
+  });
+  it('writes preview frames without overwriting', async () => {
+    const dir = await mkdtemp(join(os.tmpdir(), 'editmcp-mock-'));
+    dirs.push(dir);
+    const ae = new MockAeBackend({ comps: [comp] });
+    const a = await ae.previewFrame('x.aep', 'Card', 10, join(dir, 'f.png'));
+    const b = await ae.previewFrame('x.aep', 'Card', 10, join(dir, 'f.png'));
+    expect(a).not.toBe(b);
+    expect((await readFile(a)).subarray(1, 4).toString()).toBe('PNG');
+    await expect(ae.previewFrame('x.aep', 'Card', 250, join(dir, 'g.png'))).rejects.toThrow(/past the end/);
   });
 });

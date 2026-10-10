@@ -22,7 +22,64 @@ it. They use `aerender.exe` (`src/engine/aerender.ts`).
 
 Actions: `version`, `list` (CompInfo[] + `displayStartFrame`), `inspect` (layers + snapshot), `fingerprint`
 (snapshot per comp), and `edit`. `edit` runs on a **copy** of the .aep (`.editmcp-<uuid>.aep`), never on
-the user's file.
+the user's file. Read-only analysis actions (below): `scanTemplate`, `lintComp`, `listFonts`, `purge`.
+
+The runner must stay **ASCII-only** (Thai appears as `\uXXXX` escapes): `$.evalFile` may decode a BOM-less file
+in the system code page. `test/engine/jsx.test.ts` enforces this.
+
+## Analysis actions (advisory; the brief decides)
+
+These only report facts. Nothing stylistic is hard-coded: thresholds come from the project's `styleRules`
+(passed as `job.rules`), and without them the threshold checks are skipped.
+
+| Action | Job fields | Result |
+|---|---|---|
+| `scanTemplate` | `aep` | `{ comps: TemplateComp[], warnings }` for every comp |
+| `lintComp` | `aep, comp, rules?` | `CompLint` (`{ comp, issues[] }`) |
+| `listFonts` | `aep` | `{ fonts (PostScript), families, aeMissing }` |
+| `purge` | none (no project is opened) | `app.purge(PurgeTarget.ALL_CACHES)` |
+
+`scanTemplate` per comp:
+- **placeholders**: text layers; footage/image layers (`image` = still); precomps whose layer or source name
+  looks replaceable (placeholder/replace/image/video/logo/... and the Thai words for insert/replace/image/
+  video/logo) or that hold ≤ 3 layers including footage. Track-matte layers themselves are skipped.
+  `moving` is `false` when the layer sits behind a track/luma matte (`hasTrackMatte` / `trackMatteType`) and
+  its own transform (opacity excluded) is not animated: the matte window moves and the clip stays still.
+  `matte` names the matte layer (`trackMatteLayer`, or the layer above for legacy mattes).
+- **expressionLocked**: `"Layer > Group > Prop"` for every property with an enabled expression. Layers holding
+  expression controls (`ADBE * Control` effects, e.g. a Controls null with sliders) are listed in `warnings`.
+- **fonts**: `TextDocument.font` of each text layer at time 0, of every Source Text keyframe, and per character
+  through `characterRange` (AE 24.3+).
+- **textAnimators**: each enabled animator with its Range Selector "Based On" (`ADBE Text Range Type2`:
+  1 characters, 2 characters excluding spaces → `characters`, 3 `words`, 4 `lines`; none → `other`).
+
+`lintComp` issues (frames are comp frames; `comp-lint.ts` maps them onto timeline clips):
+- `animation-ends-early`: a visible layer (enabled, or a track matte) stays to the comp end but its last
+  keyframe (any property incl. time remap, its parents' transforms and precomp contents; markers and audio
+  ignored) is more than 1 s before the end. Video footage and time-based expressions (`time`, `wiggle`,
+  `loopOut`, ...) count as still moving. This is the "text stopped moving after the card was extended" bug.
+- `background-ends-early`: a layer covering > 90% of the frame ends before the comp does.
+- `layer-ends-early`: the bottom visible layer ends before the comp does.
+- `thai-animator`: text containing Thai with an animator based on characters or words (clusters may split).
+  The issue carries `basedOn`; `comp-lint.ts` drops it when `styleRules.thai.animateBy` asks for that basis.
+- `thai-size` (only with `rules.thai.minCapHeightPct`): `fontSize × |scaleY|` below that % of comp height.
+- `style` (only with the rule): text outside `rules.safeMarginPct`; rectangle roundness off
+  `rules.cornerRadiusPct` (% of the short side) by more than 1 point.
+
+Bounds use `sourceRectAtTime` + position/anchor/scale only (no rotation, parenting or 3D).
+
+## Disk space, startup crashes and cache purge (`aerender.ts`)
+
+- Before each render: `fs.statfs` on the output drive and on the AE disk-cache drive (`cacheDir` option,
+  `EDITMCP_AE_CACHE_DIR`, default `%LOCALAPPDATA%`). Refuses (`DiskSpaceError`, Thai + English message) when
+  free < max(5 GB, 2 × estimated output); the estimate is ProRes 422 HQ ≈ 0.45 byte/pixel/frame (4.5 for the
+  Lossless fallback). A failing `statfs` only logs a warning.
+- A render that exits non-zero **before its first PROGRESS frame** with a Windows exception code, no ERROR line
+  at all, or a crash-like message is retried once (after 3 s). Usage errors (comp/template not found),
+  timeouts and aborts are never retried.
+- `purgeIfLowCacheSpace(backend)` / `backend.afterRenderBatch()`: after a batch of renders, runs the `purge`
+  action when the cache drive has < 20 GB free (configurable, can be disabled). The build loop has to call it;
+  the `ae_purge_cache` tool runs it on demand.
 
 Timeouts (`createAeBackend` options): `timeoutMs` applies to `list`/`version` (default 2 min).
 `fingerprintTimeoutMs` applies to `fingerprint`/`inspect`/`edit`, which walk whole comps (default 10 min,
@@ -71,6 +128,16 @@ abort, and never because a comp or project name contains a word like "missing".
 | `app.newProject()` crashed under `-noui` on 26.5 (observed) | The runner only opens existing projects. `tests/adobe_smoke.mjs` tries `-m -noui -r` first and falls back to `-m -r` (a visible window may appear) only to create its fixture |
 | "Allow Scripts to Write Files and Access Network" is off by default | The runner cannot write its result without it. Enable it once in Preferences > Scripting & Expressions. Otherwise every job fails with "cannot write …" |
 | Duplicate comp names | Refused with "ambiguous comp name" instead of AE picking one silently |
+
+### Not yet verified on a real After Effects (mock-tested only)
+
+- `PurgeTarget.ALL_CACHES` from a fresh `-noui` instance really empties the **disk** cache folder (older docs
+  describe it as memory only). Check the cache folder size before/after once.
+- Popup `value` of `ADBE Text Range Type2` is 1–4 as assumed, also for wiggly/expression selectors.
+- `app.fonts.missingOrSubstitutedFonts` exists and has `postScriptName` (AE 24+); otherwise `aeMissing` is null.
+- `hasTrackMatte` / `trackMatteType` / `trackMatteLayer` / `isTrackMatte` on 2023+ track mattes.
+- `sourceRectAtTime` on footage/solids, and `ADBE Position` with separated dimensions.
+- aerender's real crash exit codes and messages (the retry patterns are educated guesses).
 
 ## Fingerprint tradeoffs
 

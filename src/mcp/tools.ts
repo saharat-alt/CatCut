@@ -12,7 +12,9 @@ import { isProtected, ProjectConflictError } from '../core/project.js';
 import { framesToTc } from '../core/timecode.js';
 import type { AeOp, Asset, AudioClip, BuildOptions, Clip, JobInfo, Project, Timeline, Version } from '../core/types.js';
 import { openReview } from '../review/server.js';
-import { readReviewSession, submitReview, versionPlan } from '../review/session.js';
+import { agentReview, readReviewSession, submitReview, versionPlan } from '../review/session.js';
+import { findAeDiskCache, preflight } from '../engine/housekeeping.js';
+import { xmemlExportWarnings } from '../io/xmeml.js';
 import { compsNeedingRender, isAeComp, requireFfmpeg, requireProject, type AppState, type JobContext } from './state.js';
 
 // ---------- result plumbing (shared: tooldef.ts) ----------
@@ -86,6 +88,14 @@ const ClipSchema = z.object({
   dur: frames.describe('timeline duration (frames)'),
   scale: z.number().optional().describe('percent, default 100'),
   marker: z.string().optional().describe('marker name at clip start'),
+  slot: z.string().optional().describe('board slot id this clip realises'),
+  speed: z.object({
+    rate: z.number().min(0.05).max(20).describe('0.5 = 50% slow motion, 2 = 200%; source frames used = round(dur * rate)'),
+    rampFrom: z.number().min(0.05).max(20).optional().describe('ramp: start rate, eased (smoothstep) to `rate` over rampFrames'),
+    rampFrames: frames.min(0).optional().describe('ramp length in timeline frames at the clip start (needs rampFrom)'),
+    interpolation: z.enum(['nearest', 'blend', 'motion']).optional().describe('nearest = repeat/drop frames; blend = mix neighbours (default for slow motion); motion = optical flow (minterpolate, very slow)'),
+  }).optional().describe('retime; omit for realtime'),
+  pushIn: z.number().min(0).max(100).optional().describe('slow centred zoom over the clip in percent (8 = 100%→108%), on top of scale'),
 });
 const CutSchema = z.object({
   after: z.string().describe('clip id; the cut between it and the next clip'),
@@ -799,6 +809,13 @@ const CORE_TOOLS: readonly ToolDef[] = [
       const forceAssets = [...new Set(a.forceAssets ?? [])];
       const notComps = forceAssets.filter((id) => !(p.assets[id] && isAeComp(p.assets[id])));
       if (notComps.length) throw new ToolError(`forceAssets ต้องเป็น aecomp asset / not aecomp assets: ${notComps.join(', ')}`, { notComps });
+      // Disk preflight: ProRes 422 HQ ≈ 184 Mbps at 1080p25; budget master + worst-case new segments.
+      const fps = p.meta.fps;
+      const bytesPerFrame = (184e6 / 8 / 25) * ((p.meta.width * p.meta.height) / (1920 * 1080)) * (25 / fps);
+      const estimate = Math.ceil(2 * state.api.project.timelineFrames(p) * bytesPerFrame);
+      const aeCache = await findAeDiskCache().catch(() => ({ folder: undefined as string | undefined }));
+      const diskIssues = await preflight(p, estimate, { extraPaths: aeCache.folder ? [aeCache.folder] : [] }).catch(() => []);
+      if (diskIssues.some((i) => i.severity === 'error')) throw new ToolError('พื้นที่ดิสก์ไม่พอ / not enough disk space', { issues: diskIssues });
       const job = state.jobs.start('build', async (ctx) => {
         const moved = await forgetRenders(state, p, forceAssets, ctx);
         const opts: BuildOptions & { forceAssets?: string[] } = {
@@ -813,6 +830,7 @@ const CORE_TOOLS: readonly ToolDef[] = [
         return {
           version: r.version.id, master: r.version.master, reviewProxy: r.version.reviewProxy, deliverables: r.version.deliverables, qcOk: r.version.qc?.ok, qcIssues: r.version.qc?.issues.length ?? 0, stats: r.stats,
           ...(forceAssets.length ? { forcedAssets: forceAssets, movedRenders: moved } : {}),
+          ...(diskIssues.length ? { diskWarnings: diskIssues } : {}),
         };
       });
       return { ok: true, jobId: job.id, status: job.status, hint: 'ดูความคืบหน้าด้วย job_status / poll job_status {id}' };
@@ -906,7 +924,9 @@ const CORE_TOOLS: readonly ToolDef[] = [
     input: { version: z.string().optional() },
     handler: async (a, state) => {
       const p = requireProject(state), v = reviewVersion(p, a.version);
-      return { version: v.id, plan: versionPlan(p, v), session: await readReviewSession(p, v) };
+      const session = await readReviewSession(p, v);
+      // actionable vs parked split: agents act only on `actionable`; `parked` notes are informational.
+      return { version: v.id, plan: versionPlan(p, v), ...agentReview(session), session };
     },
   }),
   tool({
@@ -944,7 +964,8 @@ const CORE_TOOLS: readonly ToolDef[] = [
       await mkdir(dir, { recursive: true });
       const path = uniquePath(join(dir, `${fileSafe(p.meta.name)}.xml`));
       await writeFile(path, xml, { encoding: 'utf8', flag: 'wx' });
-      return { ok: true, path, version, sequenceName, clips: p.timeline.video.length, unrendered: compsNeedingRender(p) };
+      const warnings = xmemlExportWarnings(p); // things FCP7 XML cannot carry (ramps, optical-flow, ...)
+      return { ok: true, path, version, sequenceName, clips: p.timeline.video.length, unrendered: compsNeedingRender(p), ...(warnings.length ? { warnings } : {}) };
     },
   }),
 

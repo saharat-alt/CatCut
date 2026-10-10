@@ -1,6 +1,8 @@
-# EDITMCP
+<p align="center"><img src="assets/brand/catcut-logo.svg" width="128" alt="CatCut"></p>
 
-**EDITMCP** คือ MCP server สำหรับตัดต่อวิดีโอแบบ headless: แก้ comp ใน After Effects โดยไม่เปิดหน้าโปรแกรม (`AfterFX -m -noui`), render ด้วย `aerender`, แล้วให้ `ffmpeg` ประกอบเป็น master ProRes 422 HQ จาก "ท่อน" ที่ cache ไว้ — แก้จุดเดียว render ใหม่แค่จุดนั้น ส่วนที่ไม่เปลี่ยนไม่ถูก encode ซ้ำ จึง export เร็วและคุณภาพเท่า export ตรงจาก AE จากนั้นทำ QC (เฟรม, ภาพดำ/ค้าง, เสียงเงียบ, loudness), สร้าง deliverable ตาม preset (YouTube, Facebook, แนวตั้ง, XDCAM HD422 ออกอากาศ, ProRes) และส่งออก/รับกลับ FCP7 XML เพื่อไปขยับไทม์มิ่งเองใน Premiere ได้ ใช้ได้ทั้งกับ Claude Code และ Codex ทุกค่าเวลาเป็น **เฟรม** ไม่ใช่วินาที และ**ไม่เขียนทับไฟล์เดิม**เด็ดขาด (ทุก build ได้เวอร์ชันใหม่)
+# CatCut 🐾
+
+**CatCut** (ชื่อโค้ดเดิม EDITMCP) คือ MCP server สำหรับตัดต่อวิดีโอแบบ headless: แก้ comp ใน After Effects โดยไม่เปิดหน้าโปรแกรม (`AfterFX -m -noui`), render ด้วย `aerender`, แล้วให้ `ffmpeg` ประกอบเป็น master ProRes 422 HQ จาก "ท่อน" ที่ cache ไว้ — แก้จุดเดียว render ใหม่แค่จุดนั้น ส่วนที่ไม่เปลี่ยนไม่ถูก encode ซ้ำ จึง export เร็วและคุณภาพเท่า export ตรงจาก AE จากนั้นทำ QC (เฟรม, ภาพดำ/ค้าง, เสียงเงียบ, loudness), สร้าง deliverable ตาม preset (YouTube, Facebook, แนวตั้ง, XDCAM HD422 ออกอากาศ, ProRes) และส่งออก/รับกลับ FCP7 XML เพื่อไปขยับไทม์มิ่งเองใน Premiere ได้ ใช้ได้ทั้งกับ Claude Code และ Codex ทุกค่าเวลาเป็น **เฟรม** ไม่ใช่วินาที และ**ไม่เขียนทับไฟล์เดิม**เด็ดขาด (ทุก build ได้เวอร์ชันใหม่)
 
 ## ติดตั้ง / Install
 

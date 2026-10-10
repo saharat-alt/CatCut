@@ -1,4 +1,14 @@
-# EDITMCP core implementation status
+# CatCut (EDITMCP) implementation status
+
+## อัปเดต 2026-10-11 (รอบ 2): แก้ตามรีวิว + บทเรียนงาน CSR (DESIGN ข้อ 13)
+
+- ชื่อแอป **CatCut** 🐾 (โลโก้ `assets/brand/catcut-logo.svg`; CLI `catcut` และ alias `editmcp`; env `EDITMCP_*` ยังใช้ได้)
+- หลักสูงสุด: **โจทย์/บรีฟเป็นตัวตัดสิน** — lint/สแกนทั้งหมดเป็น advisory, กฎเก็บต่อโปรเจกต์พร้อมที่มา, บรีฟชนะคำสั่งทั่วไป
+- ใหม่: `board_import/set/check/link`, `board_vs_cut` (HTML), `fit_duration` · `shots_detect`, `timeline_lint` (flash/cutcross/repeat/lowmotion), `timeline_snap`, `scan_footage` (mojibake/pillarbox/VFR) · `template_scan`, `comp_lint` (แอนิเมชันจบก่อน, พื้นหลังหมด, Thai animator), `font_audit`, `ae_purge_cache` · `rules_*` (constraints/styleRules/evidence), `disk_report`, `cache_gc_plan/apply` (ต้องยืนยัน), `version_keep` · speed/ramp/pushIn, `joins_report/apply`, `shot_revert`, `preview_range` · หน้ารีวิว redesign แนว Apple + Linear: ปากกาสี = ประเภทการแก้, โน้ตพักไว้, A/B + wipe, ก่อน/หลัง, `review_compare_sheet`
+- build: เช็กดิสก์ก่อน (error < 5 GB, warn < 20 GB), ล้าง cache AE หลัง render เมื่อดิสก์ต่ำ
+- `npm test`: 28 files ผ่านทั้งหมด (ดูผลล่าสุดใน commit); AE/Premiere ยังไม่ได้ทดสอบจริงกับฟีเจอร์รอบนี้ — ดูรายการ "ต้องตรวจกับ AE จริง" ใน `jsx/README.md` และ `docs/xmeml-notes.md`
+
+---
 
 ตรวจวันที่ 11 ตุลาคม 2026 เวลาไทย บน branch `codex/finish-editmcp` จาก scaffold `ffd2d09` โดยรับไฟล์ที่ Claude เขียนค้างไว้มารวมและทำต่อ
 

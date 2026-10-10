@@ -1,10 +1,11 @@
 {
-  "name": "editmcp",
+  "name": "catcut",
   "version": "0.1.0",
-  "description": "Headless video editing MCP: After Effects (no UI) + aerender + ffmpeg, FCP7 XML for Premiere",
+  "description": "CatCut — headless video editing MCP: After Effects (no UI) + aerender + ffmpeg, FCP7 XML for Premiere",
   "type": "module",
   "license": "MIT",
   "bin": {
+    "catcut": "./dist/mcp/cli.js",
     "editmcp": "./dist/mcp/cli.js"
   },
   "main": "./dist/mcp/server.js",

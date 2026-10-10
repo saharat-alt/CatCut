@@ -9,11 +9,11 @@ const runner = readFileSync(new URL('../../jsx/runner.jsx', import.meta.url), 'u
 const dirs: string[] = [];
 afterEach(async () => { for (const dir of dirs.splice(0)) await rm(dir, { recursive: true, force: true }); });
 
-async function run(action: string, ops: unknown[] = [], nativeJson = true, extra = '', jobText?: string) {
+async function run(action: string, ops: unknown[] = [], nativeJson = true, extra = '', jobText?: string, jobExtra: Record<string, unknown> = {}) {
   const dir = await mkdtemp(join(os.tmpdir(), 'editmcp-jsx-')); dirs.push(dir);
   const aep = join(dir, 'working.aep'), result = join(dir, 'job.result.json'), job = join(dir, 'job.json');
   await writeFile(aep, 'working');
-  await writeFile(job, jobText ?? JSON.stringify({ action, aep, result, comp: 'Title', atFrame: 10, ops }));
+  await writeFile(job, jobText ?? JSON.stringify({ action, aep, result, comp: 'Title', atFrame: 10, ops, ...jobExtra }));
   class File {
     encoding = ''; mode = '';
     constructor(public fsName: string) {}
@@ -122,5 +122,102 @@ describe('ExtendScript runner in a mock AE host', () => {
     const second = await run('inspect', [], true, `app.project.close = function () { closed++; throw new Error('close failed'); };`);
     expect(second.result.ok).toBe(false); // close before open throws -> reported
     expect(second.context.quit).toBe(1);
+  });
+});
+
+// A richer mock comp for the analysis commands: Thai title animated by words whose motion ends at 1 s,
+// a full-frame background that ends at 3 s, a photo behind a track matte, a Controls null.
+const ANALYSIS_HOST = `
+  function AVLayer() {}
+  var PropertyType = { PROPERTY: 1, NAMED_GROUP: 2 };
+  var TrackMatteType = { NO_TRACK_MATTE: 0, ALPHA: 1, LUMA: 3 };
+  var PurgeTarget = { ALL_CACHES: 'all' }; var purgedWith = null; var opened = 0;
+  app.purge = function (t) { purgedWith = t; };
+  app.open = function () { opened++; };
+  app.fonts = { missingOrSubstitutedFonts: [{ postScriptName: 'Kanit-Bold', familyName: 'Kanit' }] };
+  function P(name, mn, o) { var p = { name: name, matchName: mn, propertyType: 1, numKeys: 0, canSetExpression: true, expressionEnabled: false, expression: '' }; for (var k in o) p[k] = o[k]; return p; }
+  function V(name, mn, v, o) { var p = P(name, mn, o || {}); p.value = v; p.valueAtTime = function () { return v; }; return p; }
+  function G(name, mn, kids) { return { name: name, matchName: mn, propertyType: 2, enabled: true, numProperties: kids.length,
+    property: function (i) { if (typeof i === 'number') return kids[i - 1] || null; for (var j = 0; j < kids.length; j++) if (kids[j].matchName === i || kids[j].name === i) return kids[j]; return null; } }; }
+  function keyed(p, times) { p.numKeys = times.length; p.keyTime = function (k) { return times[k - 1]; }; return p; }
+  function transform(o) { o = o || {}; return G('Transform', 'ADBE Transform Group', [
+    V('Anchor Point', 'ADBE Anchor Point', o.anchor || [0, 0]),
+    o.position || V('Position', 'ADBE Position', [160, 90]),
+    V('Scale', 'ADBE Scale', o.scale || [100, 100]),
+    o.opacity || V('Opacity', 'ADBE Opacity', 100)]); }
+  function mk(Ctor, name, groups, o) { var l = new Ctor(); l.name = name; l.enabled = true; l.inPoint = 0; l.outPoint = 4; l.startTime = 0; l.stretch = 100;
+    l.parent = null; l.source = null; l.hasVideo = true; var g = G(name, 'layer', groups); l.numProperties = g.numProperties; l.property = g.property;
+    for (var k in o) l[k] = o[k]; return l; }
+  var titleDoc = new TextDocument(); titleDoc.text = 'สวัสดีครับ ทุกคน'; titleDoc.fontSize = 20; titleDoc.font = 'Kanit-Bold'; titleDoc.fontFamily = 'Kanit';
+  var selector = G('Range Selector 1', 'ADBE Text Selector', [G('Advanced', 'ADBE Text Range Advanced', [V('Based On', 'ADBE Text Range Type2', 3)])]);
+  var title = mk(TextLayer, 'หัวข้อ', [
+    G('Text', 'ADBE Text Properties', [V('Source Text', 'ADBE Text Document', titleDoc),
+      G('Animators', 'ADBE Text Animators', [G('Animator 1', 'ADBE Text Animator', [G('Selectors', 'ADBE Text Selectors', [selector])])])]),
+    transform({ position: keyed(V('Position', 'ADBE Position', [160, 90]), [0, 1]) }),
+    keyed(P('Marker', 'ADBE Marker'), [3.9])]);
+  var footSource = { name: 'bg.png', width: 320, height: 180, hasVideo: true, mainSource: { isStill: true }, file: { fsName: 'D:\\\\media\\\\bg.png' } };
+  var bg = mk(AVLayer, 'BG', [transform({ anchor: [160, 90] })], { outPoint: 3, source: footSource,
+    sourceRectAtTime: function () { return { left: 0, top: 0, width: 320, height: 180 }; } });
+  var photoSource = { name: 'photo.mov', width: 320, height: 180, hasVideo: true, mainSource: { isStill: false }, file: { fsName: 'D:\\\\media\\\\photo.mov' } };
+  var fade = V('Opacity', 'ADBE Opacity', 100, { expressionEnabled: true, expression: 'thisComp.layer("Controls").effect("Fade")(1)' });
+  var matte = mk(ShapeLayer, 'Window', [transform()], { enabled: false, isTrackMatte: true });
+  var photo = mk(AVLayer, 'Photo', [transform({ opacity: fade })], { source: photoSource, hasTrackMatte: true, trackMatteType: 3, trackMatteLayer: matte });
+  var controls = mk(AVLayer, 'Controls', [G('Effects', 'ADBE Effect Parade', [G('Fade', 'ADBE Slider Control', [V('Slider', 'ADBE Slider Control-0001', 1)])])], { nullLayer: true });
+  var layers = [title, controls, matte, photo, bg];
+  comp.numLayers = layers.length;
+  comp.layer = function (i) { return layers[i - 1]; };
+`;
+
+describe('runner analysis commands in a mock AE host', () => {
+  it('scanTemplate reports placeholders (matte window = still), expression locks, controls, fonts and animators', async () => {
+    const { result } = await run('scanTemplate', [], true, ANALYSIS_HOST);
+    expect(result.ok).toBe(true);
+    const [c] = result.data.comps;
+    expect(c).toMatchObject({ name: 'Title', durationFrames: 100, width: 320, height: 180, fonts: ['Kanit-Bold'] });
+    expect(c.textAnimators).toEqual([{ layer: 'หัวข้อ', animator: 'Animator 1', basedOn: 'words' }]);
+    const byLayer = Object.fromEntries(c.placeholders.map((p: { layer: string }) => [p.layer, p]));
+    expect(byLayer['หัวข้อ']).toMatchObject({ kind: 'text', moving: true });
+    expect(byLayer['Photo']).toMatchObject({ kind: 'footage', moving: false, matte: 'Window', source: 'D:\\media\\photo.mov' });
+    expect(byLayer['BG']).toMatchObject({ kind: 'image', moving: true });
+    expect(byLayer['Window']).toBeUndefined(); // the matte itself is not a slot
+    expect(c.expressionLocked).toEqual(['Photo > Transform > Opacity']);
+    expect(result.data.warnings.join('\n')).toMatch(/Controls.*Fade/);
+  });
+  it('lintComp finds stopped animation, early background and Thai animators; thai-size only with a project rule', async () => {
+    const { result, context } = await run('lintComp', [], true, ANALYSIS_HOST, undefined, { rules: { thai: { minCapHeightPct: 15 } } });
+    expect(result.ok).toBe(true);
+    expect(context.saved).toBe(0);
+    const kinds = result.data.issues.map((i: { kind: string }) => i.kind).sort();
+    expect(kinds).toEqual(['animation-ends-early', 'background-ends-early', 'thai-animator', 'thai-size']);
+    const anim = result.data.issues.find((i: { kind: string }) => i.kind === 'animation-ends-early');
+    expect(anim).toMatchObject({ layer: 'หัวข้อ', frame: 25 }); // the marker at 3.9 s is not animation
+    expect(result.data.issues.find((i: { kind: string }) => i.kind === 'background-ends-early')).toMatchObject({ layer: 'BG', frame: 75 });
+    expect(result.data.issues.find((i: { kind: string }) => i.kind === 'thai-animator')).toMatchObject({ basedOn: 'words' });
+    const noRules = await run('lintComp', [], true, ANALYSIS_HOST);
+    expect(noRules.result.data.issues.map((i: { kind: string }) => i.kind)).not.toContain('thai-size');
+  });
+  it('lintComp: a time expression keeps a layer moving; English text with a word animator is fine', async () => {
+    const extra = ANALYSIS_HOST + `
+      titleDoc.text = 'Hello world';
+      title.property('ADBE Transform Group').property('ADBE Opacity').expressionEnabled = true;
+      title.property('ADBE Transform Group').property('ADBE Opacity').expression = 'wiggle(2, 10)';
+    `;
+    const { result } = await run('lintComp', [], true, extra);
+    const kinds = result.data.issues.map((i: { kind: string }) => i.kind);
+    expect(kinds).not.toContain('animation-ends-early');
+    expect(kinds).not.toContain('thai-animator');
+    expect(kinds).toContain('background-ends-early');
+  });
+  it('listFonts collects text fonts and the AE missing list; purge needs no project', async () => {
+    const { result } = await run('listFonts', [], true, ANALYSIS_HOST);
+    expect(result.data).toEqual({ fonts: ['Kanit-Bold'], families: ['Kanit'], aeMissing: ['Kanit-Bold'] });
+    const purge = await run('purge', [], true, ANALYSIS_HOST);
+    expect(purge.result).toMatchObject({ ok: true, data: { purged: 'ALL_CACHES' } });
+    expect(purge.context.purgedWith).toBe('all');
+    expect(purge.context.opened).toBe(0);
+    expect(purge.context.quit).toBe(1);
+  });
+  it('stays ASCII-only so $.evalFile cannot mis-decode it', () => {
+    expect(/[^\x00-\x7f]/.test(runner)).toBe(false);
   });
 });

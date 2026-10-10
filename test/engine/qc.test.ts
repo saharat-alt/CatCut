@@ -232,3 +232,67 @@ describe('measureLoudness', () => {
     expect(loud.lra).toBeGreaterThanOrEqual(0);
   });
 });
+
+describe('runQc duplicate-frame cadence + lint passthrough', () => {
+  /**
+   * 100 frames @ 25, ProRes: motion f0–24, 50% slow motion made by repeating every frame
+   * (setpts=2*PTS + fps=25) f25–74, motion f75–99.
+   */
+  const SLOW = join(MEDIA, 'slowmo.mov');
+
+  beforeAll(async () => {
+    await ff([
+      '-f', 'lavfi', '-i', `testsrc2=size=320x180:rate=${FPS}:duration=4`,
+      '-filter_complex',
+      [
+        '[0:v]trim=end_frame=25,setpts=PTS-STARTPTS[a]',
+        `[0:v]trim=start_frame=25:end_frame=50,setpts=PTS-STARTPTS,setpts=2*PTS,fps=${FPS}[b]`,
+        '[0:v]trim=start_frame=50:end_frame=75,setpts=PTS-STARTPTS[c]',
+        '[a][b][c]concat=n=3:v=1:a=0,format=yuv422p10le[v]',
+      ].join(';'),
+      '-map', '[v]', '-c:v', 'prores_ks', '-profile:v', '3', SLOW,
+    ]);
+  });
+
+  it('finds the duplicated-frame run and maps it to its clip', async () => {
+    const report = await runQc({
+      tools, path: SLOW, expectedFrames: 100, fps: FPS, duplicates: true,
+      clipStarts: [{ clipId: 'a', start: 0, dur: 25 }, { clipId: 'slow', start: 25, dur: 50 }, { clipId: 'c', start: 75, dur: 25 }],
+    });
+    expect(report.frames).toBe(100);
+    const dup = report.issues.filter((i) => i.kind === 'duplicate');
+    expect(dup).toHaveLength(1);
+    near(dup[0]!.startFrame, 25);
+    near(dup[0]!.endFrame, 75);
+    expect(dup[0]!.clipId).toBe('slow');
+    expect(dup[0]!.severity).toBe('warn');
+    expect(dup[0]!.message).toContain('50%');
+    expect(report.ok).toBe(true);
+  });
+
+  it('only reports inside the requested ranges', async () => {
+    const report = await runQc({ tools, path: SLOW, expectedFrames: 100, fps: FPS, duplicates: { ranges: [{ start: 0, end: 20 }, { start: 80, end: 100 }] } });
+    expect(report.issues.filter((i) => i.kind === 'duplicate')).toHaveLength(0);
+    const part = await runQc({ tools, path: SLOW, expectedFrames: 100, fps: FPS, duplicates: { ranges: [{ start: 40, end: 60 }] } });
+    const dup = part.issues.filter((i) => i.kind === 'duplicate');
+    expect(dup).toHaveLength(1);
+    expect(dup[0]!.startFrame).toBe(40);
+    expect(dup[0]!.endFrame).toBe(60);
+  });
+
+  it('does not call a freeze or black hold a cadence problem', async () => {
+    const report = await runQc({ tools, path: SYNTH, expectedFrames: 100, fps: FPS, duplicates: true });
+    expect(report.issues.filter((i) => i.kind === 'duplicate')).toHaveLength(0);
+    expect(report.issues.filter((i) => i.kind === 'freeze')).toHaveLength(1);
+  });
+
+  it('carries timeline-lint issues into the report', async () => {
+    const report = await runQc({
+      tools, path: EOF_CLIP, expectedFrames: 50, fps: FPS,
+      lintIssues: [{ kind: 'flash', severity: 'warn', clipId: 'x', startFrame: 10, endFrame: 13, message: 'เฟรมแวบ 3 เฟรม' }],
+    });
+    const flash = report.issues.find((i) => i.kind === 'flash');
+    expect(flash?.clipId).toBe('x');
+    expect(report.ok).toBe(true);
+  });
+});

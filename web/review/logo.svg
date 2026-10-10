@@ -1,0 +1,47 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" width="256" height="256" role="img" aria-label="CatCut">
+  <title>CatCut</title>
+  <defs>
+    <!-- raised, slightly waving paw: forearm + palm with four toe bumps (three on top, one on the side) -->
+    <path id="arm" d="M72 300 L84 162
+      C72 154 64 138 68 122 C71 110 80 104 90 104
+      C86 86 96 72 112 72
+      C116 56 140 52 150 66
+      C162 58 182 66 182 86
+      C196 90 204 106 198 122 C194 134 186 140 180 144
+      L200 300 Z"/>
+    <clipPath id="armClip"><use href="#arm"/></clipPath>
+  </defs>
+
+  <!-- little "wave" motion marks -->
+  <g stroke="#6e4128" stroke-width="8" stroke-linecap="round" fill="none">
+    <path d="M30 74 L48 84"/>
+    <path d="M48 42 L58 62"/>
+    <path d="M84 28 L84 50"/>
+  </g>
+
+  <g transform="translate(-14 6) rotate(12 132 180)">
+    <!-- fur -->
+    <use href="#arm" fill="#fff6ea"/>
+    <!-- orange tabby stripes -->
+    <g clip-path="url(#armClip)" stroke="#ff9a4d" stroke-width="11" stroke-linecap="round" fill="none">
+      <path d="M70 206 L100 212"/>
+      <path d="M152 196 L194 192"/>
+      <path d="M70 238 L114 246"/>
+      <path d="M130 230 L198 226"/>
+      <path d="M70 268 L120 274"/>
+      <path d="M146 262 L200 260"/>
+    </g>
+    <!-- outline -->
+    <use href="#arm" fill="none" stroke="#6e4128" stroke-width="9" stroke-linejoin="round"/>
+
+    <!-- toe beans -->
+    <g fill="#ffc4b2" stroke="#6e4128" stroke-width="7">
+      <ellipse cx="98" cy="122" rx="12" ry="13"/>
+      <ellipse cx="122" cy="98" rx="12.5" ry="13.5"/>
+      <ellipse cx="154" cy="98" rx="12.5" ry="13.5"/>
+      <ellipse cx="178" cy="124" rx="11" ry="12.5"/>
+      <!-- main pad: wide on top, soft notch at the bottom -->
+      <path d="M100 160 C98 140 118 134 138 134 C160 134 178 144 176 162 C174 176 162 172 154 182 C147 191 133 194 125 184 C118 176 102 178 100 160 Z" stroke-linejoin="round"/>
+    </g>
+  </g>
+</svg>
