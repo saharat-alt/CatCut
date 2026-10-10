@@ -66,7 +66,8 @@ export function isMain(metaUrl: string): boolean {
   }
 }
 
-if (isMain(import.meta.url)) {
+// In the single-file bundle import.meta.url is the bundle itself; only cli.ts is the entry there.
+if (process.env['CATCUT_BUNDLED'] !== '1' && isMain(import.meta.url)) {
   serveStdio().catch((err: unknown) => {
     process.stderr.write(`catcut failed to start: ${err instanceof Error ? err.stack ?? err.message : String(err)}\n`);
     process.exit(1);

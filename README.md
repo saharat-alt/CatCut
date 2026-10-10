@@ -4,6 +4,29 @@
 
 **CatCut** (ชื่อโค้ดเดิม EDITMCP) คือ MCP server สำหรับตัดต่อวิดีโอแบบ headless: แก้ comp ใน After Effects โดยไม่เปิดหน้าโปรแกรม (`AfterFX -m -noui`), render ด้วย `aerender`, แล้วให้ `ffmpeg` ประกอบเป็น master ProRes 422 HQ จาก "ท่อน" ที่ cache ไว้ — แก้จุดเดียว render ใหม่แค่จุดนั้น ส่วนที่ไม่เปลี่ยนไม่ถูก encode ซ้ำ จึง export เร็วและคุณภาพเท่า export ตรงจาก AE จากนั้นทำ QC (เฟรม, ภาพดำ/ค้าง, เสียงเงียบ, loudness), สร้าง deliverable ตาม preset (YouTube, Facebook, แนวตั้ง, XDCAM HD422 ออกอากาศ, ProRes) และส่งออก/รับกลับ FCP7 XML เพื่อไปขยับไทม์มิ่งเองใน Premiere ได้ ใช้ได้ทั้งกับ Claude Code และ Codex ทุกค่าเวลาเป็น **เฟรม** ไม่ใช่วินาที และ**ไม่เขียนทับไฟล์เดิม**เด็ดขาด (ทุก build ได้เวอร์ชันใหม่)
 
+## ติดตั้งสำหรับมือใหม่ (ไม่ต้องรู้ git / โค้ด) / Beginner install (Windows)
+
+**ทางที่ 1 — ให้ AI ติดตั้งให้:** เปิด Claude หรือ Codex แล้วพิมพ์
+
+> ติดตั้ง CatCut ให้หน่อย ตามวิธีมือใหม่ใน https://github.com/thefogusz/CatCut
+
+**ทางที่ 2 — ทำเอง (คัดลอกวางบรรทัดเดียว):**
+1. กดปุ่ม Windows พิมพ์ `PowerShell` แล้วเปิด
+2. วางบรรทัดนี้แล้วกด Enter
+
+```powershell
+irm https://raw.githubusercontent.com/thefogusz/CatCut/main/install.ps1 | iex
+```
+
+หรือดาวน์โหลด [`install.cmd`](install.cmd) แล้วดับเบิลคลิก
+
+ตัวติดตั้งจะทำให้เองทั้งหมด: ติดตั้ง Node.js และ ffmpeg (ถ้ายังไม่มี), ดาวน์โหลด CatCut ไว้ที่ `%LOCALAPPDATA%\CatCut`, ต่อเข้ากับ **Codex** (ถ้ามี) และ **Claude Code** (ถ้ามีคำสั่ง `claude`), แล้วตรวจเครื่องให้ดู
+- ถ้าใช้แอป Claude (แท็บ Code): พิมพ์ในแชทครั้งเดียว `/plugin marketplace add thefogusz/CatCut` แล้ว `/plugin install catcut@catcut`
+- **อัปเดต:** รันคำสั่งเดิมอีกครั้ง (ปิด Claude / Codex ก่อน)
+- After Effects ต้องติดตั้งเองจาก Adobe (ถ้าจะใช้งาน comp/เอฟเฟค)
+
+> สำหรับ AI ที่ติดตั้งให้ผู้ใช้: รันคำสั่ง PowerShell ด้านบนให้ผู้ใช้ (Windows) แล้วบอกผลเป็นภาษาไทยสั้นๆ ไม่ต้อง clone repo หรือ `npm install`
+
 ## ติดตั้งแบบ plugin (ง่ายสุด) / Install as a Claude Code plugin
 
 ในเซสชัน Claude Code:
@@ -13,7 +36,7 @@
 /plugin install catcut@catcut
 ```
 
-หรือใน terminal: `claude plugin install catcut --marketplace thefogusz/CatCut`
+หรือใน terminal: `claude plugin marketplace add thefogusz/CatCut` แล้ว `claude plugin install catcut@catcut`
 
 จากนั้นเรียกใช้:
 
@@ -36,7 +59,7 @@
 
 ```bash
 npm i
-npm run build                  # → dist/
+npm run build                  # → dist/ + dist/bundle/catcut.mjs (ไฟล์เดียว ไม่ต้องมี node_modules)
 node dist/mcp/cli.js doctor    # ตรวจว่าเจอ ffmpeg, encoders (NVENC), AE, RAM
 ```
 
@@ -51,7 +74,7 @@ node dist/mcp/cli.js doctor    # ตรวจว่าเจอ ffmpeg, encoders
   "mcpServers": {
     "editmcp": {
       "command": "node",
-      "args": ["D:/EDITMCP/dist/mcp/cli.js", "serve"]
+      "args": ["D:/EDITMCP/dist/bundle/catcut.mjs", "serve"]
     }
   }
 }
@@ -64,14 +87,16 @@ node dist/mcp/cli.js doctor    # ตรวจว่าเจอ ffmpeg, encoders
 ```toml
 [mcp_servers.editmcp]
 command = "node"
-args = ["D:/EDITMCP/dist/mcp/cli.js", "serve"]
+args = ["D:/EDITMCP/dist/bundle/catcut.mjs", "serve"]
 ```
+
+แล้วคัดลอก `skills/catcut-editor/SKILL.md` ไปไว้ที่ `~/.codex/skills/catcut-editor/SKILL.md` (ตัวติดตั้งทำสองอย่างนี้ให้อัตโนมัติ)
 
 ใส่ `"D:/path/to/project"` ต่อท้าย `serve` ได้ถ้าอยากให้เปิดโปรเจกต์ทันที (ไม่งั้นเรียก `project_open` ทีหลัง)
 
 ## เริ่มใช้ / Quick start
 
-ทุกเครื่องมือรับ JSON และตอบ JSON; งานหนัก (`build`, `deliver`) คืน **job id ทันที** แล้วดูความคืบหน้าด้วย `job_status`
+ทุกเครื่องมือรับ JSON และตอบ JSON; งานหนัก (`build`, `deliver`) คืน **job id ทันที** แล้วรอผลด้วย `job_wait`
 
 ```text
 doctor                                     → ffmpeg / NVENC / AE / RAM + ข้อควรระวังตามเวอร์ชัน

@@ -1,4 +1,5 @@
 node_modules/
+!dist/bundle/node_modules/
 tmp/
 tests/out/
 *.log

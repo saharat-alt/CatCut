@@ -9,7 +9,7 @@
   "mcpServers": {
     "catcut": {
       "command": "node",
-      "args": ["${CLAUDE_PLUGIN_ROOT}/dist/mcp/cli.js", "serve"]
+      "args": ["${CLAUDE_PLUGIN_ROOT}/dist/bundle/catcut.mjs", "serve"]
     }
   }
 }
