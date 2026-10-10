@@ -1,0 +1,52 @@
+<!doctype html>
+<html lang="th">
+<head>
+  <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>EDITMCP · รีวิว</title><link rel="stylesheet" href="style.css"><script src="app.js" defer></script>
+</head>
+<body>
+  <header class="topbar">
+    <span class="wordmark">EDIT<span>MCP</span> <span class="divider">/</span> REVIEW</span>
+    <div class="project"><h1 id="project-name">กำลังเปิดรีวิว…</h1><span id="version"></span></div>
+    <div class="header-actions"><span id="save-state" role="status" aria-live="polite">กำลังอ่านโน้ต</span><button id="submit" class="primary" disabled>ส่งรีวิวให้ agent ↗</button></div>
+  </header>
+  <div id="error" class="error" role="alert" hidden><span id="error-text"></span><button id="retry">ลองบันทึกอีกครั้ง</button><button id="reload">โหลดโน้ตล่าสุด</button></div>
+  <main class="workspace" id="workspace" aria-busy="true">
+    <section class="viewer" aria-label="เครื่องเล่นรีวิว">
+      <div class="viewer-heading"><span id="shot-label">กำลังอ่านช็อต</span><span id="frame-label">—</span></div>
+      <div class="stage" id="stage">
+        <video id="video" preload="metadata" playsinline aria-label="วิดีโอรีวิว"></video>
+        <svg id="drawing" viewBox="0 0 1000 1000" preserveAspectRatio="none" aria-label="พื้นที่วงจุดแก้"><g id="strokes"></g></svg>
+        <div id="media-loading" class="media-loading">กำลังโหลดวิดีโอ…</div>
+      </div>
+      <div class="transport">
+        <div class="playback"><button id="prev" aria-label="ย้อนหนึ่งเฟรม">│◀</button><button id="play" aria-label="เล่นวิดีโอ">▶</button><button id="next" aria-label="ถัดไปหนึ่งเฟรม">▶│</button><output id="timecode">00:00:00:00</output></div>
+        <div class="drawing-tools"><button id="pen" aria-pressed="false">✎ วงจุดแก้</button><button id="undo" disabled>ย้อนเส้น</button><button id="clear" disabled>ล้างเส้น</button></div>
+      </div>
+      <input id="scrub" type="range" min="0" max="0" value="0" step="1" aria-label="เลื่อนไปยังเฟรม">
+      <div class="timeline-heading"><h2>เลือกช็อต</h2><span id="duration"></span></div>
+      <div class="shots" id="shots" aria-label="ช็อตในเวอร์ชันนี้"></div>
+      <div class="selection"><div><span class="muted">ช่วงที่เลือก</span><output id="range-label">—</output></div><div class="range-actions"><button id="mark-in">ตั้งจุดเข้า <kbd>I</kbd></button><button id="mark-out">ตั้งจุดออก <kbd>O</kbd></button><button id="whole-shot">ทั้งช็อต</button></div></div>
+      <p class="keyboard-help"><kbd>←</kbd> <kbd>→</kbd> ทีละเฟรม <span>·</span> <kbd>J</kbd> ถอยหลัง <kbd>K</kbd> หยุด <kbd>L</kbd> เล่น <span>·</span> วงบนเฟรมที่หยุดอยู่</p>
+      <details class="qc"><summary id="qc-summary">ผลตรวจวิดีโอ</summary><ul id="qc-issues"></ul><img id="contact" alt="ภาพรวมเฟรมของเวอร์ชันนี้" hidden></details>
+    </section>
+    <aside class="notes-panel" aria-label="โน้ตแก้ไข">
+      <div class="notes-heading"><h2>จุดที่อยากแก้</h2><span id="note-count">0 จุด</span></div>
+      <form id="note-form">
+        <fieldset><legend>ประเภทการแก้</legend><div class="intents">
+          <label class="intent cut"><input type="radio" name="intent" value="cut"><span>ตัดออก</span></label>
+          <label class="intent timing"><input type="radio" name="intent" value="timing"><span>ไทม์มิ่ง</span></label>
+          <label class="intent text"><input type="radio" name="intent" value="text" checked><span>ข้อความ</span></label>
+          <label class="intent color"><input type="radio" name="intent" value="color"><span>สี / แสง</span></label>
+          <label class="intent audio"><input type="radio" name="intent" value="audio"><span>เสียง</span></label>
+        </div></fieldset>
+        <label class="text-label" for="note-text">อยากให้แก้อะไร</label>
+        <textarea id="note-text" rows="4" maxlength="5000" placeholder="เช่น ชื่อสะกดผิด ใช้คำว่า ‘ธนาคาร’" required></textarea>
+        <div class="form-actions"><button id="add-note" class="primary" type="submit" disabled>เพิ่มโน้ต</button><button id="new-note" type="button">โน้ตใหม่</button></div>
+        <p class="form-hint">เพิ่มแล้วบันทึกอัตโนมัติ กลับมารีวิวต่อได้</p>
+      </form>
+      <div id="note-list" class="note-list"></div>
+      <p class="review-hint">เมื่อดูครบ กดส่งรีวิวให้ agent เพื่ออ่านโน้ตและเสนอแผนแก้</p>
+    </aside>
+  </main>
+</body></html>
