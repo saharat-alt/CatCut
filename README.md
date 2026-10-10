@@ -111,7 +111,16 @@ node tests/stdio_smoke.mjs     # ทดสอบ MCP stdio ของ CLI ที�
 
 กฎของโปรเจกต์อยู่ใน `CLAUDE.md`, แบบดีไซน์ใน `docs/DESIGN.md`
 
-ผลตรวจล่าสุดและข้อจำกัดอยู่ใน [`docs/STATUS.md`](docs/STATUS.md): แกนระบบผ่านการทดสอบด้วย ffmpeg จริง; AE ใช้ mocked process/host และยังต้องตรวจใน Adobe จริงก่อนใช้กับงานผลิต
+ผลตรวจล่าสุดและข้อจำกัดอยู่ใน [`docs/STATUS.md`](docs/STATUS.md): แกนระบบผ่าน ffmpeg จริง และ AE 26.5 ผ่านการอ่าน/แก้/เรนเดอร์/ใช้ cache กับโปรเจกต์ทดสอบแยก; plugin และงานผลิต รวมถึง XML import ใน Premiere ยังไม่ยืนยัน
+
+เมื่อผู้ใช้อนุญาตให้เปิด Adobe สามารถทดสอบ integration แยกด้วย PowerShell หลัง build:
+
+```powershell
+$env:EDITMCP_TEST_ADOBE='1'
+node tests/adobe_smoke.mjs
+```
+
+สคริปต์สร้าง fixture ด้วย AE อินสแตนซ์ใหม่แล้วปิด (AE 26.5 บนเครื่องนี้ล้มเมื่อ `newProject()` ใน `-noui`); การอ่าน/แก้ comp ใช้ `-m -noui` และเรนเดอร์ด้วย aerender เก็บหลักฐานไว้ในโฟลเดอร์ใหม่ใต้ `tmp/adobe-test/` ทดสอบนี้ไม่รวมอยู่ใน `npm test` และไม่เปิดงานผลิต ใช้แทน smoke script เก่าใน `tests/run_noui_smoke.ps1`
 
 `ae_edit` แก้สำเนาชั่วคราวก่อน แล้วบันทึกกลับต้นฉบับพร้อมเก็บ `<name>_backup_<timestamp>.aep`; ถ้าใช้ `saveAs` จะสร้างไฟล์ใหม่และปฏิเสธชื่อที่มีอยู่แล้ว งาน build/deliver จะล็อกคำสั่งแก้โปรเจกต์ของ server นั้นจนจบ ควรใช้ server/CLI เพียงตัวเดียวต่อโฟลเดอร์โปรเจกต์
 

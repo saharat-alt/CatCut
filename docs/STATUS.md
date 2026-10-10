@@ -20,6 +20,7 @@
 - HTTP เปิดเฉพาะ loopback ใช้ session URL แบบสุ่ม, ตรวจ Host/Origin, จำกัดขนาด JSON, validate frames/regions, CSP และเสิร์ฟเฉพาะไฟล์ของเวอร์ชัน
 - ทดสอบใน Chrome และ Codex browser ด้วยสื่อสังเคราะห์: seek ตรงเฟรม, เลือกช่วง, วง/เพิ่มโน้ต, submit, reload แล้วเปิดโน้ตกลับ; ไม่พบ console error และไม่มี horizontal overflow ที่ 320/768/1024/1440 px
 - Regression tests เพิ่มเรื่องเขียนจาก 4 โปรเซส, submit ระหว่าง autosave, วาดก่อน seek เสร็จ และการคง snapshot หลังแก้ไทม์ไลน์; compiled stdio smoke ทดสอบ review proxy → HTTP → notes → submit → close ด้วย
+- UI ใช้ Noto Sans Thai ในเครื่อง ธีมมืดทั้ง viewer/แผงโน้ต/ช่องกรอก ตัวหนังสือโน้ตและช่องกรอก 16 px พร้อมเพิ่ม contrast ของ label; ตรวจ responsive 320/768/1024/1440 px อีกครั้ง และเปิด proxy ที่เรนเดอร์จาก AE จริง
 - ข้อจำกัด: เวอร์ชันเก่าที่ไม่มี snapshot และ planHash ไม่ตรงต้อง rebuild; crash กลาง transaction อาจค้าง `session.lock` ต้องปิดทุก review process แล้วลบ lock ก่อน retry; ยังไม่มี AE layer hit-test, voice note หรือ before/after comparison และ dissolve ใช้ nominal shot mapping
 
 ## สิ่งที่ทำครบใน core
@@ -46,10 +47,23 @@ Project persistence, assets, frame-based timeline edits/validation, content hash
 
 ทดสอบทั้ง 7 preset (`yt`, `fb`, `vert`, `th_tv`, `th_prores`, `led`, `m422hq`) ด้วย fixture 1 วินาที ตรวจ codec, dimensions, frame count, audio format และ decode ได้ครบ; MXF ตรวจ top-field-first (`tt`) ด้วย ffprobe ใช้ CPU ในการทดสอบทุก preset และใช้ mocked GPU failure เพื่อทดสอบ fallback
 
+## ทดสอบ After Effects จริงตามที่ผู้ใช้อนุญาต
+
+`tests/adobe_smoke.mjs` ผ่านกับ AE `26.5x89` บนเครื่องนี้ โดยสร้าง fixture ใหม่แยกจากงานผู้ใช้: 2 comps, 640×360, 25fps, master 50 เฟรม (2 วินาที), dissolve 13 เฟรม, ข้อความและ path ไทย ใช้ฟอนต์ Tahoma ใน comp ทดสอบ
+
+- `AfterFX -m -noui`: list/inspect/fingerprint/edit comp ทำงานจริง; `aerender` เรนเดอร์จริงเป็น master ProRes HQ (`apch`) ตรวจครบ 50 เฟรมและ decode ทั้งไฟล์ทั้งสามเวอร์ชัน
+- ไม่มี template `EDITMCP ProRes 422 HQ` ในเครื่องนี้ จึงใช้ Lossless → ffmpeg ProRes HQ fallback จริงสำเร็จ
+- Build แรก render 2 comps/2 segments; build ไม่แก้ render 0 และ reuse 2; แก้ข้อความไทยหนึ่ง comp แล้ว render 1/reuse 1 ทั้ง comp และ segment โดย hash ของ master เดิมยังเท่าเดิม
+- `ae_edit` เก็บ backup `.aep` ที่ hash ตรงต้นฉบับก่อนแก้; single-frame PNG ผ่าน aerender และ path `เฟรมไทย.png` เปิดแล้วเห็นข้อความไทยถูกต้อง
+- สร้าง XML และ H.264 review proxy จาก master จริงสำเร็จ; ยังไม่ import XML ใน Premiere เพราะ MCP Bridge ไม่เชื่อมต่อ และผู้ใช้ให้ทำ AE/UI ก่อน
+- QC ตรวจ frame count ผ่าน แต่ `qcOk: false` ตาม fixture ที่ตั้งใจให้เป็นภาพนิ่งและไม่มีเสียง: freeze 2 จุด, silence 1 จุด และ loudness ต่ำ 1 จุด ไม่มี black-frame issue; นี่เป็น smoke test ของการเชื่อมต่อ ไม่ใช่งานที่ผ่าน QC เพื่อส่งผลิต
+- พบ `newProject()` ล้มเมื่อสร้าง fixture ด้วย `-noui` บน AE เครื่องนี้ จึงสร้าง fixture ด้วยอินสแตนซ์ใหม่ `-m -r` แล้วปิด จากนั้นทดสอบ backend แบบ headless ตามเดิม ไม่เปลี่ยน prefs ของ Adobe
+
+หลักฐานรอบที่ผ่านอยู่ใน `tmp/adobe-test/real-fy6een/report.json` พร้อม logs/probe/QC และ outputs; ทุกครั้งที่รันจะสร้างโฟลเดอร์ใหม่ ไม่เขียนทับหลักฐานเก่า ไม่แตะงาน `D:\261009_STB50Y_THAI-WORLD_CSR`
+
 ## ขอบเขตที่ยังไม่ยืนยัน
 
-- ไม่เปิด After Effects/aerender ตาม `CLAUDE.md` และไม่แตะงาน `D:\261009_STB50Y_THAI-WORLD_CSR` ตัว AE backend/process และ JSX host ถูกทดสอบด้วย mock เท่านั้น
-- ต้องยืนยัน `-m -noui`, plugin/font, template ProRes, Lossless fallback, project saving และ PNG preview ใน AE 2026 จริง
+- AE plugin/expression/footage และฟอนต์ของงานผลิตยังไม่ทดสอบจริง; template ProRes แบบติดตั้งเองยังไม่ทดสอบ เพราะรอบจริงใช้ Lossless fallback
 - ต้อง import/export XML ใน Premiere 2026 จริง โดยเฉพาะ odd dissolve, scale, path ไทย และฟุตเทจต่าง fps; reader จำกัด V1 และส่ง warning เมื่อทิ้งสิ่งที่โมเดลไม่รองรับ
 - การ decode/probe preset ไม่ใช่การรับรองการ ingest ของสถานีทีวีหรือ color pipeline
 - ยังไม่ทดสอบ GPU จริง; inventory ใน doctor หมายถึง encoder ที่ ffmpeg มี ไม่ได้ยืนยัน driver/hardware
