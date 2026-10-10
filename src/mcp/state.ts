@@ -6,6 +6,7 @@
  * tests may inject in-memory fakes instead.
  */
 import os from 'node:os';
+import type { ReviewServer } from '../review/server.js';
 import { getEnvironment } from '../core/tools.js';
 import type {
   AeBackend, AeCompAsset, Asset, BuildOptions, BuildResult, DeliveryTargetId, Environment, FileAsset, Frames,
@@ -35,7 +36,7 @@ export interface XmemlApi {
 export interface AssemblerLike {
   build(p: Project, opts?: BuildOptions): Promise<BuildResult>;
   deliver(p: Project, versionId: string, targets: DeliveryTargetId[], opts?: { onProgress?: (p: Progress) => void; signal?: AbortSignal }): Promise<Record<string, string>>;
-  reviewProxy(p: Project, versionId: string): Promise<string>;
+  reviewProxy(p: Project, versionId: string, opts?: { signal?: AbortSignal }): Promise<string>;
 }
 
 export interface JobContext {
@@ -53,6 +54,7 @@ export interface JobManagerLike {
 }
 
 export interface AppState {
+  reviews?: Map<string, ReviewServer>;
   project?: Project;
   env: Environment;
   ae: AeBackend;

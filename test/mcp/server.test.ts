@@ -16,7 +16,7 @@ import { JobManager } from '../../src/core/jobs.js';
 import type { AeBackend, Project, Timeline, Version } from '../../src/core/types.js';
 import { createServer } from '../../src/mcp/server.js';
 import { createAppState, safeEnvironment, type AppState } from '../../src/mcp/state.js';
-import { applyEditOps, callTool, diffTimelines, TOOLS, uniquePath } from '../../src/mcp/tools.js';
+import { applyEditOps, callTool, diffTimelines, toolResultData, TOOLS, uniquePath } from '../../src/mcp/tools.js';
 
 const TMP_ROOT = join(process.cwd(), 'tmp', 'mcp-test');
 const MEDIA_DIR = join(process.cwd(), 'tmp', 'test-media');
@@ -104,6 +104,7 @@ const EXPECTED_TOOLS = [
   'project_new', 'project_open', 'project_status', 'asset_add', 'asset_list', 'timeline_set', 'timeline_edit', 'audio_add',
   'ae_list_comps', 'ae_inspect_comp', 'ae_edit', 'ae_preview_frame', 'build', 'deliver', 'job_status', 'job_list',
   'qc_report', 'export_premiere_xml', 'import_premiere_xml', 'doctor',
+  'preview', 'review_open', 'review_notes', 'review_submit', 'review_close',
 ];
 
 // ---------- part 1: real core, fake engines ----------
@@ -344,6 +345,21 @@ describe('mcp server (real core, fake engines)', () => {
 // ---------- pure helpers ----------
 
 describe('background job isolation', () => {
+  const reviewStates: AppState[] = [];
+  const reviewDirs: string[] = [];
+  afterAll(async () => {
+    for (const st of reviewStates) for (const review of st.reviews?.values() ?? []) await review.close();
+    for (const dir of reviewDirs) await rm(dir, { recursive: true, force: true });
+  });
+  async function reviewFixture() {
+    const st = await fakeState();
+    const dir = await mkdtemp(join(TMP_ROOT, 'review-'));
+    reviewDirs.push(dir); reviewStates.push(st);
+    st.project = await projectApi.createProject(dir, { name: 'review', width: 320, height: 180 });
+    st.project.timeline.video = [{ id: 's1', src: 'cam', in: 0, dur: 25 }];
+    await st.assembler.build(st.project);
+    return { st, dir };
+  }
   it('keeps a project stable while build runs and resumes mutations afterwards', async () => {
     const state = await fakeState();
     let finish!: () => void;
@@ -369,6 +385,49 @@ describe('background job isolation', () => {
     const id = JSON.parse(result.content[0]!.text).jobId;
     state.jobs.cancel(id);
     expect((await state.jobs.wait(id)).status).toBe('cancelled');
+    expect(cancelled).toBe(true);
+  });
+
+  it('opens a version review, reads submitted notes through MCP, and closes the local server', async () => {
+    const { st, dir } = await reviewFixture();
+    const p = st.project!;
+    const v = p.versions[p.versions.length - 1]!;
+    v.reviewPlan = projectApi.captureReviewPlan(p);
+    const proxy = join(dir, 'review-fixture.mp4');
+    st.assembler.reviewProxy = async (_p, _id, opts) => {
+      expect(opts?.signal).toBeInstanceOf(AbortSignal);
+      await writeFile(proxy, 'review bytes'); return proxy;
+    };
+    const start = toolResultData(await callTool(st, 'review_open', { version: v.id }));
+    const job = await st.jobs.wait(String(start.jobId));
+    expect(job.status).toBe('done');
+    const url = (job.result as { url: string }).url;
+    expect((await fetch(url)).status).toBe(200);
+    const body = await fetch(url + 'data').then(r => r.json());
+    const save = await fetch(url + 'session', { method: 'PUT', headers: { 'Content-Type': 'application/json', Origin: new URL(url).origin }, body: JSON.stringify({ revision: 0, notes: [{ id: 'n1', frame: 0, in: 0, out: 1, intent: 'text', text: 'แก้หัวเรื่อง', strokes: [] }] }) });
+    expect(save.status).toBe(200);
+    expect(body.version).toBe(v.id);
+    const sent = await callTool(st, 'review_submit', { version: v.id, revision: 1 });
+    expect(sent.isError).not.toBe(true);
+    const notes = toolResultData(await callTool(st, 'review_notes', { version: v.id }));
+    expect(notes).toMatchObject({ session: { status: 'submitted', notes: [{ text: 'แก้หัวเรื่อง' }] } });
+    expect((await callTool(st, 'review_close', { version: v.id })).isError).not.toBe(true);
+    await expect(fetch(url)).rejects.toThrow();
+  });
+
+  it('passes cancellation to preview and blocks timeline mutation during proxy creation', async () => {
+    const { st } = await reviewFixture();
+    let cancelled = false;
+    st.assembler.reviewProxy = async (_p, _id, opts) => new Promise((_resolve, reject) => {
+      opts!.signal!.addEventListener('abort', () => { cancelled = true; reject(new Error('aborted')); }, { once: true });
+    });
+    const result = toolResultData(await callTool(st, 'preview'));
+    const id = String(result.jobId);
+    await new Promise(r => setTimeout(r, 5));
+    expect((await callTool(st, 'timeline_edit', { ops: [] })).isError).toBe(true);
+    expect((await callTool(st, 'build')).isError).toBe(true);
+    st.jobs.cancel(id);
+    expect((await st.jobs.wait(id)).status).toBe('cancelled');
     expect(cancelled).toBe(true);
   });
 });

@@ -87,6 +87,7 @@ editmcp build D:/jobs/csr --force          # --skip-qc --skip-deliver
 editmcp deliver D:/jobs/csr v001 yt th_tv
 editmcp xml-export D:/jobs/csr --version v001
 editmcp xml-import D:/jobs/csr D:/jobs/csr/from_premiere.xml
+editmcp review D:/jobs/csr --version v001 # เปิด URL ที่แสดง; Ctrl+C ปิด server
 ```
 
 `doctor` ไม่เปิด After Effects (รายงาน `AE version: unknown (not launched)`) เว้นแต่ตั้ง `EDITMCP_ALLOW_AE=1`
@@ -117,3 +118,19 @@ node tests/stdio_smoke.mjs     # ทดสอบ MCP stdio ของ CLI ที�
 ไฟล์ที่ fps ต่างจากโปรเจกต์ใช้ตำแหน่งและความยาวเป็นเฟรมของโปรเจกต์เสมอ การ encode ท่อนใหม่จะ decode ตั้งแต่ต้นไฟล์เพื่อคง sampling grid ให้ถูกต้อง จึงอาจช้าเมื่อ in-point อยู่ลึกในฟุตเทจยาว; build ที่ไม่เปลี่ยนภาพจะใช้ cache ตามเดิม
 
 AE fingerprint ติดตาม property/keyframe/expression, precomp, proxy และ image sequence; comp ที่มี expression หรือค่า plugin ที่อ่านไม่ได้จะติดตามไฟล์ `.aep` ทั้งไฟล์แบบ conservative จึงอาจ render ใหม่มากกว่าหนึ่ง comp เมื่อแก้โปรเจกต์
+
+## รีวิวด้วยการวงบนภาพ
+
+`review_open {version: "v001"}` → `job_status` → เปิด URL ในผลลัพธ์ (เว้น version เพื่อใช้ล่าสุด) ถ้ายังไม่มี preview ระบบสร้าง H.264 ขนาดเล็กก่อน โดยไม่เปิด Adobe
+
+เลือกช็อตหรือเลื่อนเฟรม ใช้ `I` / `O` ตั้งช่วง กด **วงจุดแก้** แล้วลากบนภาพ เลือกประเภทและพิมพ์โน้ต กด **เพิ่มโน้ต** เพื่อบันทึกอัตโนมัติ; คลิกโน้ตเพื่อกลับไปเฟรมเดิมและแก้ได้ ใช้ `←` / `→` เดินทีละเฟรม และ `J` / `K` / `L` ถอยหลัง/หยุด/เล่น
+
+เมื่อพร้อมกด **ส่งรีวิวให้ agent** แล้วให้ agent เรียก `review_notes {version}` เพื่ออ่านโน้ตและเสนอแผนแก้ก่อนลงมือ ระบบไม่แก้ไทม์ไลน์จากโน้ตเอง `review_submit {version, revision}` ส่งโน้ตผ่าน MCP ได้ และ `review_close {version}` ปิด server; `preview {version}` สร้าง preview ไฟล์ใหม่
+
+โน้ตอยู่ที่ `<project>/review/<version>/session.json`; แต่ละครั้งที่ส่งเก็บสำเนาใหม่ `submitted-<uuid>.json` แผนช็อตเก็บกับเวอร์ชัน ไม่เปลี่ยนตามไทม์ไลน์ปัจจุบัน เวอร์ชันเก่าที่ไม่มี snapshot และแผนไม่ตรงกับปัจจุบันต้อง build ใหม่ก่อนรีวิว
+
+Server เปิดเฉพาะ `127.0.0.1` ใช้ URL เฉพาะเซสชัน ไม่ส่งวิดีโอออกนอกเครื่อง หลายหน้าต่างบันทึกโน้ตใช้ revision และ lock ป้องกันทับกัน; ถ้าโปรเซส crash ระหว่างบันทึกจนค้าง `session.lock` ให้ปิดทุกโปรเซสรีวิวของโปรเจกต์ก่อนลบ lock นี้ โน้ตและสำเนาที่ส่งยังอยู่
+
+ลองด้วยสื่อสังเคราะห์ (ไม่แตะงานผลิต): `npm run build` แล้ว `node tests/review_demo.mjs` จะสร้างโปรเจกต์ใหม่ใต้ `tmp/review-demo/` และแสดง URL; Ctrl+C เพื่อปิด server
+
+เฟสนี้วงเป็นเส้นอิสระและจับคู่กับช็อต/comp ตามเฟรม บริเวณ dissolve มีภาพจากสองช็อต ต้องดูบริบท transition ในแผนประกอบ; การ hit-test layer ใน AE, voice note และเทียบก่อน/หลังยังเป็นเฟสถัดไป

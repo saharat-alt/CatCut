@@ -9,7 +9,9 @@ import os from 'node:os';
 import { basename, extname, join, resolve } from 'node:path';
 import { z } from 'zod';
 import { framesToTc } from '../core/timecode.js';
-import type { AeOp, Asset, AudioClip, Clip, JobInfo, Project, Timeline } from '../core/types.js';
+import type { AeOp, Asset, AudioClip, Clip, JobInfo, Project, Timeline, Version } from '../core/types.js';
+import { openReview } from '../review/server.js';
+import { readReviewSession, submitReview, versionPlan } from '../review/session.js';
 import { compsNeedingRender, isAeComp, requireFfmpeg, requireProject, type AppState } from './state.js';
 
 // ---------- result plumbing ----------
@@ -62,7 +64,7 @@ function fail(err: unknown): ToolResult {
 export async function runTool(t: ToolDef, args: unknown, state: AppState): Promise<ToolResult> {
   try {
     if (['project_new', 'project_open', 'asset_add', 'timeline_set', 'timeline_edit', 'audio_add', 'ae_edit', 'import_premiere_xml'].includes(t.name)) {
-      const running = activeJob(state, ['build', 'deliver']);
+      const running = activeJob(state, PROJECT_JOBS);
       if (running) throw new ToolError(`wait for ${running.name} before editing the project`, { jobId: running.id });
     }
     return ok(await t.handler(args as never, state));
@@ -223,6 +225,45 @@ function jobSummary(j: JobInfo, logLines = 20) {
 
 function activeJob(state: AppState, names: string[]): JobInfo | undefined {
   return state.jobs.list().find((j) => (j.status === 'running' || j.status === 'queued') && names.includes(j.name));
+}
+
+const PROJECT_JOBS = ['build', 'deliver', 'preview', 'review_open'];
+
+function reviewVersion(p: Project, id?: string): Version {
+  const v = id ? p.versions.find(x => x.id === id) : p.versions[p.versions.length - 1];
+  if (!v) throw new ToolError('ไม่พบเวอร์ชัน ต้อง build ก่อน / unknown version: build first');
+  return v;
+}
+
+function reviewKey(p: Project, v: Version): string { return `${p.dir}/${v.id}`; }
+
+function startReviewJob(state: AppState, id: string | undefined, open: boolean) {
+  const p = requireProject(state);
+  const v = reviewVersion(p, id);
+  const running = activeJob(state, PROJECT_JOBS);
+  if (running) throw new ToolError(`wait for ${running.name} before creating a review`, { jobId: running.id });
+  const snapshot = versionPlan(p, v);
+  if (!open || !v.reviewProxy || !existsSync(v.reviewProxy)) requireFfmpeg(state);
+  const job = state.jobs.start(open ? 'review_open' : 'preview', async ctx => {
+    v.reviewPlan ??= structuredClone(snapshot);
+    if (!open || !v.reviewProxy || !existsSync(v.reviewProxy)) {
+      ctx.log('creating review proxy');
+      v.reviewProxy = await state.assembler.reviewProxy(p, v.id, { signal: ctx.signal });
+    }
+    ctx.signal.throwIfAborted();
+    await state.api.project.saveProject(p);
+    if (!open) return { version: v.id, reviewProxy: v.reviewProxy };
+    state.reviews ??= new Map();
+    const key = reviewKey(p, v);
+    let review = state.reviews.get(key);
+    if (!review) {
+      review = await openReview(p, v);
+      if (ctx.signal.aborted) { await review.close(); ctx.signal.throwIfAborted(); }
+      state.reviews.set(key, review);
+    }
+    return { version: v.id, url: review.url, hint: 'เปิด URL เพื่อรีวิว แล้วอ่าน review_notes; เสนอแผนแก้ก่อนลงมือ / read review_notes after submission, propose edits before applying' };
+  });
+  return { ok: true, version: v.id, jobId: job.id, status: job.status };
 }
 
 /** Apply a new timeline; on validation errors the previous timeline is restored and the errors returned. */
@@ -575,7 +616,7 @@ export const TOOLS: readonly ToolDef[] = [
     handler: async (a, state) => {
       const p = requireProject(state);
       requireFfmpeg(state);
-      const running = activeJob(state, ['build', 'deliver']);
+      const running = activeJob(state, PROJECT_JOBS);
       if (running) throw new ToolError(`มี ${running.name} กำลังทำงานอยู่ / a ${running.name} job is already running`, { jobId: running.id });
       const errors = state.api.project.validateTimeline(p);
       if (errors.length) throw new ToolError('timeline ไม่ผ่านการตรวจสอบ / timeline invalid', { errors });
@@ -603,7 +644,7 @@ export const TOOLS: readonly ToolDef[] = [
     handler: async (a, state) => {
       const p = requireProject(state);
       requireFfmpeg(state);
-      const running = activeJob(state, ['build', 'deliver']);
+      const running = activeJob(state, PROJECT_JOBS);
       if (running) throw new ToolError(`มี ${running.name} กำลังทำงานอยู่ / a ${running.name} job is already running`, { jobId: running.id });
       const version = a.version ?? p.versions[p.versions.length - 1]?.id;
       if (!version) throw new ToolError('ยังไม่มีเวอร์ชัน ต้อง build ก่อน / no version yet: run build first');
@@ -659,6 +700,48 @@ export const TOOLS: readonly ToolDef[] = [
       const v = a.version ? p.versions.find((x) => x.id === a.version) : p.versions[p.versions.length - 1];
       if (!v) throw new ToolError(a.version ? `ไม่พบเวอร์ชัน / unknown version: ${a.version}` : 'ยังไม่มีเวอร์ชัน / no version yet');
       return { version: v.id, master: v.master, qc: v.qc ?? null, note: v.qc ? undefined : 'ไม่มีรายงาน QC (build ด้วย skipQc?) / no QC report' };
+    },
+  }),
+
+  tool({
+    name: 'preview',
+    description: 'สร้าง H.264 preview เวอร์ชันใหม่สำหรับรีวิว (job) · Create a small review proxy without launching Adobe',
+    input: { version: z.string().optional() },
+    handler: async (a, state) => startReviewJob(state, a.version, false),
+  }),
+  tool({
+    name: 'review_open',
+    description: 'เปิดหน้ารีวิวในเครื่อง: เลือกช็อต/ช่วง วงจุดแก้ และบันทึกโน้ต (job → URL) · Local version review',
+    input: { version: z.string().optional() },
+    handler: async (a, state) => startReviewJob(state, a.version, true),
+  }),
+  tool({
+    name: 'review_notes',
+    description: 'อ่านโน้ตและแผนช็อตของเวอร์ชัน ใช้เสนอแผนแก้ก่อนลงมือ · Read version review notes; do not apply edits automatically',
+    input: { version: z.string().optional() },
+    handler: async (a, state) => {
+      const p = requireProject(state), v = reviewVersion(p, a.version);
+      return { version: v.id, plan: versionPlan(p, v), session: await readReviewSession(p, v) };
+    },
+  }),
+  tool({
+    name: 'review_submit',
+    description: 'ส่งสำเนาโน้ตที่บันทึกแล้วให้ agent อ่าน ไม่แก้ไทม์ไลน์ · Submit an immutable note snapshot',
+    input: { version: z.string().optional(), revision: frames.min(0).optional() },
+    handler: async (a, state) => {
+      const p = requireProject(state), v = reviewVersion(p, a.version);
+      return submitReview(p, v, a.revision);
+    },
+  }),
+  tool({
+    name: 'review_close',
+    description: 'ปิด server หน้ารีวิวเวอร์ชันนี้ โน้ตยังอยู่บนดิสก์ · Close this local review server',
+    input: { version: z.string().optional() },
+    handler: async (a, state) => {
+      const p = requireProject(state), v = reviewVersion(p, a.version), key = reviewKey(p, v);
+      const review = state.reviews?.get(key);
+      await review?.close(); state.reviews?.delete(key);
+      return { ok: true, version: v.id, closed: !!review };
     },
   }),
 

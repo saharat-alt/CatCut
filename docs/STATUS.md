@@ -4,12 +4,23 @@
 
 ## ผลที่ตรวจแล้ว
 
-- `npm test`: 112 tests ผ่านทั้งหมดใน 11 files; ไม่มี skipped tests
+- `npm test`: 123 tests ผ่านทั้งหมดใน 14 files; ไม่มี skipped tests
 - `npm run build`: ผ่าน TypeScript compiler; มี CLI และ server ใน `dist/`
 - `npm run typecheck`: ผ่าน
 - `node tests/stdio_smoke.mjs`: ผ่าน MCP stdio ของ CLI ที่ compile แล้วจริง ตั้งแต่ doctor → project/asset/timeline → build สองครั้ง → QC → export/import XML
 - `node dist/mcp/cli.js doctor`: พบ ffmpeg/ffprobe 9.0.1 และ Adobe 2026; ไม่เปิด Adobe เพื่ออ่านเวอร์ชัน
 - `npm audit --omit=dev`: ไม่พบช่องโหว่ใน production dependencies ณ เวลาตรวจ
+
+## หน้ารีวิวในเครื่อง (ทำต่อหลัง core)
+
+- `preview`, `review_open`, `review_notes`, `review_submit`, `review_close` ใช้งานผ่าน MCP; CLI `editmcp review <projectDir> [--version v001]` แสดง URL และรอจนปิด server
+- เครื่องเล่น H.264, เดินเฟรม, J/K/L, เลือกช็อตและช่วง I/O, เส้นวงแบบ normalized, intent/โน้ตไทย, เพิ่ม/แก้/ลบ/ทำเครื่องหมายแก้แล้ว และส่งรีวิว
+- เก็บ shot/source/comp snapshot ต่อ build พร้อม transition context; เวอร์ชันเก่าไม่อ้างไทม์ไลน์ใหม่ผิดชุด และ preview ใช้ format ของเวอร์ชันนั้น
+- Session autosave แบบ atomic, revision conflicts, lock ข้ามโปรเซส และสำเนาใหม่ทุก submission; ไม่ใช้โน้ตสั่งแก้งานเอง
+- HTTP เปิดเฉพาะ loopback ใช้ session URL แบบสุ่ม, ตรวจ Host/Origin, จำกัดขนาด JSON, validate frames/regions, CSP และเสิร์ฟเฉพาะไฟล์ของเวอร์ชัน
+- ทดสอบใน Chrome และ Codex browser ด้วยสื่อสังเคราะห์: seek ตรงเฟรม, เลือกช่วง, วง/เพิ่มโน้ต, submit, reload แล้วเปิดโน้ตกลับ; ไม่พบ console error และไม่มี horizontal overflow ที่ 320/768/1024/1440 px
+- Regression tests เพิ่มเรื่องเขียนจาก 4 โปรเซส, submit ระหว่าง autosave, วาดก่อน seek เสร็จ และการคง snapshot หลังแก้ไทม์ไลน์; compiled stdio smoke ทดสอบ review proxy → HTTP → notes → submit → close ด้วย
+- ข้อจำกัด: เวอร์ชันเก่าที่ไม่มี snapshot และ planHash ไม่ตรงต้อง rebuild; crash กลาง transaction อาจค้าง `session.lock` ต้องปิดทุก review process แล้วลบ lock ก่อน retry; ยังไม่มี AE layer hit-test, voice note หรือ before/after comparison และ dissolve ใช้ nominal shot mapping
 
 ## สิ่งที่ทำครบใน core
 
@@ -46,6 +57,6 @@ Project persistence, assets, frame-based timeline edits/validation, content hash
 - Comp ที่มี expression/opaque plugin values ติดตาม `.aep` ทั้งไฟล์เพื่อไม่ใช้ render เก่า จึงอาจ invalidate หลาย comp; image sequences ตรวจไฟล์ในกลุ่ม prefix/extension เดียวกัน
 - หนึ่ง server/CLI ต่อโฟลเดอร์โปรเจกต์: มี guard งานใน server และป้องกัน overwrite ของ output แต่ยังไม่มี cross-process project lock
 - การสร้างท่อนใหม่ decode ตั้งแต่ต้นเพื่อรักษา fps grid; ฟุตเทจยาวที่ in-point อยู่ลึกอาจใช้เวลามาก
-- ขั้นถัดไปใน DESIGN เช่นคลังเทคนิค, รับบรีฟ/PDF/วิดีโอ, asset scan/transcript และ UI ไม่อยู่ใน core build ที่ Claude เริ่มไว้
+- ขั้นถัดไปใน DESIGN เช่นคลังเทคนิค, รับบรีฟ/PDF/วิดีโอ, asset scan/transcript และ Smart Edit phase 3 ยังไม่ได้ทำ
 
 อ้างอิงพฤติกรรม render engine: [Adobe automated rendering](https://helpx.adobe.com/after-effects/desktop/render-and-export/automate-rendering/automated-rendering-network-rendering.html) ส่วน compatibility ของเครื่องนี้ยึดผลเทสต์ที่ระบุข้างต้น

@@ -15,6 +15,7 @@ const INSTRUCTIONS = [
   'EDITMCP: headless video editing (After Effects headless + aerender + ffmpeg). ทุกเวลาเป็นเฟรมที่ fps ของโปรเจกต์ (ไม่ใช่วินาที).',
   'Flow: doctor → project_new/project_open → asset_add → timeline_set (or timeline_edit / audio_add) → build (returns job id; poll job_status) → deliver → export_premiere_xml.',
   'Premiere loop: export_premiere_xml → edit in Premiere → File > Export > Final Cut Pro XML → import_premiere_xml → build.',
+  'Review: review_open → job_status URL → user selects shots/ranges and annotates → review_notes. Propose edits from submitted notes before applying them.',
   'Builds are incremental: unchanged segments are never re-encoded; outputs are never overwritten (new version each build).',
 ].join('\n');
 
@@ -24,6 +25,12 @@ export async function createServer(state?: AppState): Promise<McpServer> {
   for (const t of TOOLS) {
     server.registerTool(t.name, { description: t.description, inputSchema: t.input }, (args) => runTool(t, args, st));
   }
+  const onclose = server.server.onclose;
+  server.server.onclose = () => {
+    onclose?.();
+    for (const review of st.reviews?.values() ?? []) void review.close();
+    st.reviews?.clear();
+  };
   return server;
 }
 

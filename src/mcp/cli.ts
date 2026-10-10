@@ -17,6 +17,7 @@ const USAGE = `editmcp — headless video editing MCP (After Effects headless + 
   editmcp deliver <projectDir> <version> <targets...>   e.g. v001 yt th_tv
   editmcp xml-export <projectDir> [--version v001] [--name SeqName]
   editmcp xml-import <projectDir> <file.xml>
+  editmcp review <projectDir> [--version v001]        เปิดหน้ารีวิวในเครื่อง (Ctrl+C เพื่อปิด server)
 
   EDITMCP_ALLOW_AE=1   doctor may launch After Effects to read its version (off by default)
 `;
@@ -105,6 +106,18 @@ async function main(argv: string[] = process.argv.slice(2)): Promise<number | nu
     case 'serve':
       await serveStdio({ projectDir: rest[0] });
       return null; // keep running
+    case 'review': {
+      const state = await createAppState({ projectDir: needDir() });
+      const started = report(await callTool(state, 'review_open', { version: values.version }));
+      if (!started) return 1;
+      const result = await tailJob(state, String(started['jobId']));
+      if (!result) return 1;
+      out(String(result['url']));
+      err('Review server is running on this computer. Ctrl+C to close; notes stay on disk.');
+      const close = () => { void Promise.all([...state.reviews?.values() ?? []].map(r => r.close())).then(() => { process.exitCode = 0; }); };
+      process.once('SIGINT', close); process.once('SIGTERM', close);
+      return null;
+    }
     case 'build': {
       const state = await createAppState({ projectDir: needDir() });
       const started = report(await callTool(state, 'build', { force: values.force, skipQc: values['skip-qc'], skipDeliver: values['skip-deliver'] }));
