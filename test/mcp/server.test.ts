@@ -39,6 +39,11 @@ function fakeAe(): AeBackend {
     async inspectComp(_aep, comp) { return { id: 1, name: comp, width: 1920, height: 1080, fps: 25, durationFrames: 100, numLayers: 0, layers: [], fingerprint: `fp${fp}` }; },
     async fingerprint() { return { Title_01: `fp${fp}` }; },
     async edit(req) { fp++; return { ok: true, savedTo: req.saveAs ?? req.aep, fingerprint: `fp${fp}`, log: ['edited'] }; },
+    async create(req) {
+      if (req.jsx.includes('throw')) throw new Error('AfterFX: Error: boom (line 1)');
+      await writeFile(req.saveAs, req.jsx);
+      return { savedTo: req.saveAs, comps: [{ id: 1, name: 'HeartFX', width: 1920, height: 1080, fps: 30, durationFrames: 180, numLayers: 3 }], log: ['built'] };
+    },
     async render() { throw new Error('render not available in fake'); },
     async previewFrame(_aep, _comp, _frame, outPng) { await writeFile(outPng, ''); return outPng; },
     async version() { return 'fake 26.5'; },
@@ -109,8 +114,8 @@ async function call(client: Client, name: string, args: Record<string, unknown> 
 }
 
 const EXPECTED_TOOLS = [
-  'project_new', 'project_open', 'project_status', 'asset_add', 'asset_list', 'timeline_set', 'timeline_edit', 'audio_add',
-  'ae_list_comps', 'ae_inspect_comp', 'ae_edit', 'ae_preview_frame', 'build', 'deliver', 'job_status', 'job_list',
+  'project_new', 'project_open', 'project_status', 'delivery_presets', 'asset_add', 'asset_list', 'timeline_set', 'timeline_edit', 'audio_add',
+  'ae_list_comps', 'ae_inspect_comp', 'ae_edit', 'ae_create', 'ae_preview_frame', 'build', 'deliver', 'job_status', 'job_wait', 'job_list',
   'qc_report', 'export_premiere_xml', 'import_premiere_xml', 'timeline_restore', 'doctor',
   'preview', 'review_open', 'review_notes', 'review_submit', 'review_close',
 ];
@@ -439,6 +444,54 @@ describe('AE jobs, write confinement and forceAssets', () => {
     await st.jobs.wait(String(nowait['jobId']));
   });
 
+  it('ae_create builds a new .aep from a script, registers the comp and repoints it on revision', async () => {
+    const { st } = await withProject('create');
+    const dirP = st.project!.dir;
+    const jsxPath = join(dirP, 'ae', 'build_heart.jsx');
+    mkdirSync(join(dirP, 'ae'), { recursive: true });
+    await writeFile(jsxPath, 'var c = app.project.items.addComp("HeartFX", 1920, 1080, 1, 6, 30);');
+    const v1 = toolResultData(await callTool(st, 'ae_create', { jsxPath, saveAs: join(dirP, 'ae', 'heart_v001.aep'), asset: { comp: 'HeartFX', id: 'heart' } }));
+    expect(v1).toMatchObject({ ok: true, log: ['built'], asset: { id: 'heart', kind: 'aecomp' } });
+    expect(st.project!.assets['heart']).toMatchObject({ aep: join(dirP, 'ae', 'heart_v001.aep'), comp: 'HeartFX' });
+    // never overwrites; a revision gets a new file and the same asset id now points at it, needing a render
+    const again = toolResultData(await callTool(st, 'ae_create', { jsxPath, saveAs: join(dirP, 'ae', 'heart_v001.aep') }));
+    expect(String(again['error'])).toMatch(/overwrite/);
+    (st.project!.assets['heart'] as { render?: unknown }).render = { path: 'old.mov' };
+    const v2 = toolResultData(await callTool(st, 'ae_create', { jsxPath, saveAs: join(dirP, 'ae', 'heart_v002.aep'), asset: { comp: 'HeartFX', id: 'heart' } }));
+    expect(v2['ok']).toBe(true);
+    expect(st.project!.assets['heart']).toEqual({ id: 'heart', kind: 'aecomp', aep: join(dirP, 'ae', 'heart_v002.aep'), comp: 'HeartFX' });
+    // confinement, input checks and script errors
+    expect(String(toolResultData(await callTool(st, 'ae_create', { jsx: 'x', saveAs: join(TMP_ROOT, 'out.aep') }))['error'])).toMatch(/project folder/);
+    expect(String(toolResultData(await callTool(st, 'ae_create', { jsx: 'x', jsxPath, saveAs: join(dirP, 'a.aep') }))['error'])).toMatch(/exactly one/);
+    expect(String(toolResultData(await callTool(st, 'ae_create', { jsx: 'x', saveAs: join(dirP, 'a.aep'), asset: { comp: 'Nope' } }))['error'])).toMatch(/comp not found/);
+    expect(String(toolResultData(await callTool(st, 'ae_create', { jsx: 'throw 1', saveAs: join(dirP, 'b.aep') }))['error'])).toMatch(/boom/);
+  });
+
+  it('job_wait blocks until a job ends and reports done:false on timeout', async () => {
+    const { st } = await withProject('jobwait');
+    let finish!: () => void;
+    const job = st.jobs.start('build', () => new Promise<{ version: string }>((r) => { finish = () => r({ version: 'v001' }); }));
+    const early = toolResultData(await callTool(st, 'job_wait', { id: job.id, timeoutSec: 1 }));
+    expect(early).toMatchObject({ done: false, status: 'running' });
+    setTimeout(() => finish(), 50);
+    const done = toolResultData(await callTool(st, 'job_wait', { id: job.id }));
+    expect(done).toMatchObject({ done: true, status: 'done', result: { version: 'v001' } });
+    expect(String(toolResultData(await callTool(st, 'job_wait', { id: 'job-9999' }))['error'])).toMatch(/unknown job/);
+  });
+
+  it('delivery_presets feeds a picker; project_new stores chosen targets and rejects unknown ones', async () => {
+    const st = await fakeState();
+    const list = toolResultData(await callTool(st, 'delivery_presets'));
+    expect(list['presets']).toEqual(expect.arrayContaining([expect.objectContaining({ id: 'yt', container: 'mp4', size: '1920x1080', lufs: -14 })]));
+    const bad = toolResultData(await callTool(st, 'project_new', { dir: join(dir, 'pick-bad'), name: 'x', targets: ['yt', 'nope'] }));
+    expect(String(bad['error'])).toMatch(/nope/);
+    expect(existsSync(join(dir, 'pick-bad', 'project.json'))).toBe(false);
+    const made = toolResultData(await callTool(st, 'project_new', { dir: join(dir, 'pick'), name: 'pick', fps: 30, targets: ['yt', 'vert', 'yt'] }));
+    expect(made['ok']).toBe(true);
+    expect(st.project!.delivery.targets).toEqual(['yt', 'vert']);
+    expect(toolResultData(await callTool(st, 'delivery_presets'))['projectTargets']).toEqual(['yt', 'vert']);
+  });
+
   it('surfaces opaque comps with a force hint when the backend reports them', async () => {
     const { st, aep } = await withProject('opaque');
     st.api.project.addAeComp(st.project!, aep, 'Title_01', 'C_t');
@@ -586,7 +639,7 @@ describe('background job isolation', () => {
     st.assembler.reviewProxy = async (_p, _id, opts) => new Promise((_resolve, reject) => {
       opts!.signal!.addEventListener('abort', () => { cancelled = true; reject(new Error('aborted')); }, { once: true });
     });
-    const result = toolResultData(await callTool(st, 'preview'));
+    const result = toolResultData(await callTool(st, 'preview', { wait: false }));
     const id = String(result.jobId);
     await new Promise(r => setTimeout(r, 5));
     expect((await callTool(st, 'timeline_edit', { ops: [] })).isError).toBe(true);

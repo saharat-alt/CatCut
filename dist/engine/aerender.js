@@ -151,7 +151,8 @@ export async function purgeIfLowCacheSpace(backend, policy = {}) {
  * user strings (comp name, project path, template name) removed first so names cannot trigger it.
  */
 export function isMissingOmTemplate(error, userStrings = []) {
-    if (!(error instanceof AerenderError) || error.reason !== 'exit')
+    // AE 2026 reports the missing template but exits 0 without writing a file ('output'), older versions exit non-zero.
+    if (!(error instanceof AerenderError) || (error.reason !== 'exit' && error.reason !== 'output'))
         return false;
     return error.errors.some((line) => {
         let l = line;

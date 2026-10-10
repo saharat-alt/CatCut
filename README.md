@@ -25,6 +25,7 @@
 | `/catcut:fix` | แก้ตามโน้ต (เสนอแผนก่อน) |
 | `/catcut:check` | เทียบบอร์ด + หาเฟรมหลุด/กระตุก |
 | `/catcut:deliver` | ส่งงาน YouTube/ทีวี/Master หรือ XML ไป Premiere |
+| `/catcut:motion` | สร้างเอฟเฟค/โมชันกราฟิกใหม่ใน AE (สคริปต์ → `ae_create`) |
 | `@agent-catcut:editor` | ให้ agent CatCut รับงานไปทำทั้งหมด |
 
 ต้องมี Node ≥ 22 และ ffmpeg ในเครื่อง (After Effects ถ้าจะใช้ comp)

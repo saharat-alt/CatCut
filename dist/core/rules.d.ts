@@ -194,6 +194,8 @@ export interface EvidenceTarget {
     clipIds?: string[];
     /** frame inside each instance, relative to the clip start; default: middle of the dissolve-free part */
     offset?: Frames;
+    /** several frames per instance (e.g. each review note's frame); overrides `offset` */
+    offsets?: Frames[];
 }
 /**
  * Every timeline instance of an asset/comp (or the given clips) in a version, with one frame each to grab,

@@ -240,6 +240,24 @@ export function createAeBackend(tools, opts = {}) {
             await rm(working, { force: true });
         }
     }
+    async function create(req) {
+        const savedTo = resolve(req.saveAs);
+        if (extname(savedTo).toLowerCase() !== '.aep')
+            throw new Error('saveAs must be a .aep path');
+        if (existsSync(savedTo))
+            throw new Error(`refusing to overwrite ${savedTo}`);
+        const working = join(dirname(savedTo), `.editmcp-${randomUUID()}.aep`);
+        try {
+            const result = await run('create', { jsx: req.jsx, saveAs: working, ...(req.scriptDir ? { scriptDir: resolve(req.scriptDir) } : {}) });
+            if (!existsSync(working))
+                throw new Error('After Effects did not save the new project');
+            await copyFile(working, savedTo, constants.COPYFILE_EXCL);
+            return { savedTo, comps: result.data ?? [], log: result.log ?? [] };
+        }
+        finally {
+            await rm(working, { force: true });
+        }
+    }
     async function render(req) {
         const aep = resolve(req.aep);
         const t = await compTiming(aep, req.comp);
@@ -289,6 +307,7 @@ export function createAeBackend(tools, opts = {}) {
         }),
         fingerprintDetailed: (aep, comps) => serial(() => fingerprintDetailed(aep, comps)),
         edit: (req) => serial(() => edit(req)),
+        create: (req) => serial(() => create(req)),
         render: (req) => serial(() => render(req)),
         previewFrame: (aep, comp, frame, outPng) => serial(async () => {
             if (!Number.isInteger(frame) || frame < 0)

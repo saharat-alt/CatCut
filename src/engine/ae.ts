@@ -6,7 +6,7 @@ import { basename, dirname, extname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { randomUUID } from 'node:crypto';
 import type {
-  AeBackend, AeEditRequest, AeEditResult, CompDetail, CompInfo, CompLint, Frames, LayerInfo, RenderRequest, RenderResult, StyleRules,
+  AeBackend, AeCreateRequest, AeCreateResult, AeEditRequest, AeEditResult, CompDetail, CompInfo, CompLint, Frames, LayerInfo, RenderRequest, RenderResult, StyleRules,
   TemplateComp, TemplateScan, ToolPaths,
 } from '../core/types.js';
 import { hashFile, hashJson } from '../core/hash.js';
@@ -267,6 +267,19 @@ export function createAeBackend(tools: ToolPaths, opts: AeOptions = {}): Headles
     } finally { await rm(working, { force: true }); }
   }
 
+  async function create(req: AeCreateRequest): Promise<AeCreateResult> {
+    const savedTo = resolve(req.saveAs);
+    if (extname(savedTo).toLowerCase() !== '.aep') throw new Error('saveAs must be a .aep path');
+    if (existsSync(savedTo)) throw new Error(`refusing to overwrite ${savedTo}`);
+    const working = join(dirname(savedTo), `.editmcp-${randomUUID()}.aep`);
+    try {
+      const result = await run<CompInfo[]>('create', { jsx: req.jsx, saveAs: working, ...(req.scriptDir ? { scriptDir: resolve(req.scriptDir) } : {}) });
+      if (!existsSync(working)) throw new Error('After Effects did not save the new project');
+      await copyFile(working, savedTo, constants.COPYFILE_EXCL);
+      return { savedTo, comps: result.data ?? [], log: result.log ?? [] };
+    } finally { await rm(working, { force: true }); }
+  }
+
   async function render(req: RenderRequest) {
     const aep = resolve(req.aep);
     const t = await compTiming(aep, req.comp);
@@ -312,6 +325,7 @@ export function createAeBackend(tools: ToolPaths, opts: AeOptions = {}): Headles
     }),
     fingerprintDetailed: (aep, comps) => serial(() => fingerprintDetailed(aep, comps)),
     edit: (req) => serial(() => edit(req)),
+    create: (req) => serial(() => create(req)),
     render: (req) => serial(() => render(req)),
     previewFrame: (aep, comp, frame, outPng) => serial(async () => {
       if (!Number.isInteger(frame) || frame < 0) throw new Error('frame must be a non-negative integer');

@@ -392,6 +392,16 @@ export interface AeEditResult {
     fingerprint: string;
     log: string[];
 }
+export interface AeCreateRequest {
+    jsx: string;
+    saveAs: string;
+    scriptDir?: string;
+}
+export interface AeCreateResult {
+    savedTo: string;
+    comps: CompInfo[];
+    log: string[];
+}
 export interface RenderRequest {
     aep: string;
     comp: string;
@@ -417,6 +427,7 @@ export interface AeBackend {
     inspectComp(aep: string, comp: string, atFrame?: Frames): Promise<CompDetail>;
     fingerprint(aep: string, comps?: string[]): Promise<Record<string, string>>;
     edit(req: AeEditRequest): Promise<AeEditResult>;
+    create?(req: AeCreateRequest): Promise<AeCreateResult>;
     render(req: RenderRequest): Promise<RenderResult>;
     previewFrame(aep: string, comp: string, frame: Frames, outPng: string): Promise<string>;
     version(): Promise<string>;

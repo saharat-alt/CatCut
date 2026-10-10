@@ -262,6 +262,10 @@ describe('evidence frames', () => {
     }
     expect(evidenceFrames(p, 'v001', { clipIds: ['s2', 'zz'] }).warnings.join(' ')).toMatch(/zz/);
     expect(evidenceFrames(p, 'v001', { assetId: 'title', offset: 5 }).instances.map((i) => i.frame)).toEqual([5, 75]);
+    // several frames per instance (review notes), clamped to the clip and de-duplicated
+    const multi = evidenceFrames(p, 'v001', { clipIds: ['s2'], offsets: [0, 12, 99, 29] }).instances;
+    expect(multi.map((i) => [i.instance, i.frame])).toEqual([[1, 40], [1, 52], [1, 69]]);
+    expect(evidenceFrames(p, 'v001', { assetId: 'title', offsets: [1, 2] }).instances.map((i) => i.instance)).toEqual([1, 1, 2, 2]);
   });
 
   it('falls back to the current timeline (with a warning when it changed)', () => {

@@ -124,6 +124,7 @@ export const RULES_TOOLS = [
             clipIds: z.array(z.string()).optional(),
             version: z.string().optional().describe('default: latest'),
             offset: z.number().int().min(0).optional().describe('frame inside each instance (from clip start); default: middle, clear of dissolves'),
+            offsets: z.array(z.number().int().min(0)).max(24).optional().describe('several frames per instance, e.g. each review note frame minus the clip start; overrides offset'),
             extract: z.boolean().default(true).describe('false: only list the frames'),
         },
         writesProject: true,
@@ -131,14 +132,14 @@ export const RULES_TOOLS = [
             const p = requireProject(state);
             if (!a.assetId && !a.clipIds?.length)
                 throw new ToolError('ต้องระบุ assetId หรือ clipIds / give assetId or clipIds');
-            const plan = evidenceFrames(p, a.version, { ...(a.assetId ? { assetId: a.assetId } : {}), ...(a.clipIds ? { clipIds: a.clipIds } : {}), ...(a.offset !== undefined ? { offset: a.offset } : {}) });
+            const plan = evidenceFrames(p, a.version, { ...(a.assetId ? { assetId: a.assetId } : {}), ...(a.clipIds ? { clipIds: a.clipIds } : {}), ...(a.offset !== undefined ? { offset: a.offset } : {}), ...(a.offsets?.length ? { offsets: a.offsets } : {}) });
             if (!a.extract || !plan.instances.length)
                 return { ok: plan.instances.length > 0, ...plan };
             requireFfmpeg(state);
             const r = await extractEvidence(state.env.tools, p, plan);
             return {
                 ok: r.frames.length === plan.instances.length,
-                versionId: plan.versionId, from: plan.from, instances: plan.instances.length,
+                versionId: plan.versionId, from: plan.from, instances: new Set(plan.instances.map((x) => x.clipId)).size,
                 ...r,
                 note: 'แนบทุกเฟรมเมื่อรายงานผลการแก้ / attach every frame when reporting the fix',
             };

@@ -25,7 +25,7 @@ function activeJob(state: AppState): JobInfo | undefined {
 
 async function runJob(state: AppState, name: string, wait: boolean | undefined, fn: (ctx: JobContext) => Promise<Record<string, unknown>>): Promise<Record<string, unknown>> {
   const job = state.jobs.start(name, fn);
-  const pending = () => ({ ok: true, jobId: job.id, status: state.jobs.get(job.id)?.status ?? job.status, pending: true, hint: 'ยังทำงานอยู่ — ดูผลด้วย job_status {id} / still running: poll job_status' });
+  const pending = () => ({ ok: true, jobId: job.id, status: state.jobs.get(job.id)?.status ?? job.status, pending: true, hint: 'ยังทำงานอยู่ — รอผลด้วย job_wait {id} / still running: call job_wait {id}' });
   if (wait === false) return pending();
   let timer: NodeJS.Timeout | undefined;
   const info = await Promise.race([

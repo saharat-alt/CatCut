@@ -6,4 +6,4 @@ Use the CatCut MCP tools.
 
 Targets: $ARGUMENTS
 - If the user asks for Premiere: `export_premiere_xml` and give the path; mention any export warnings (ramps, optical flow).
-- Otherwise run `qc_report` first; if there are errors, ask before delivering. Then `deliver` with the targets (default: project delivery targets) and report each file path with codec / loudness.
+- Otherwise run `qc_report`, then show the **Export** card (skill: Setup and export cards) with targets from $ARGUMENTS or the project's targets pre-checked and the QC issues listed. Then `deliver` with the chosen targets → `job_wait`, and show the **Done** card with each file path, codec and loudness.

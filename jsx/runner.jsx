@@ -554,7 +554,17 @@
         job = read(EDITMCP_JOB);
         if (job.result) resultPath = job.result;
         if (job.action === "version") result.data = app.version;
-        else if (job.action === "purge") {
+        else if (job.action === "create") {
+            // Build a new project from a script. -noui already starts with an empty project and
+            // app.newProject() kills the headless session, so the script runs in that one.
+            if (app.project && app.project.numItems > 0) throw new Error("expected an empty project");
+            var SCRIPT_DIR = job.scriptDir || "", createLog = result.log;
+            var L = function (s) { createLog.push(String(s)); };
+            eval(job.jsx);
+            app.project.save(new File(job.saveAs));
+            result.data = [];
+            for (var ci = 1; ci <= app.project.numItems; ci++) if (app.project.item(ci) instanceof CompItem) result.data.push(info(app.project.item(ci)));
+        } else if (job.action === "purge") {
             // Needs no project. Verify on each AE version that ALL_CACHES also empties the disk cache folder.
             app.purge(PurgeTarget.ALL_CACHES);
             result.data = { purged: "ALL_CACHES" };

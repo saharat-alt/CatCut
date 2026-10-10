@@ -14,6 +14,7 @@ import { openReview } from '../review/server.js';
 import { agentReview, readReviewSession, submitReview, versionPlan } from '../review/session.js';
 import { findAeDiskCache, preflight } from '../engine/housekeeping.js';
 import { xmemlExportWarnings } from '../io/xmeml.js';
+import { PRESETS } from '../engine/presets.js';
 import { compsNeedingRender, isAeComp, requireFfmpeg, requireProject } from './state.js';
 // ---------- result plumbing (shared: tooldef.ts) ----------
 import { fail, ok, tool, ToolError } from './tooldef.js';
@@ -201,7 +202,7 @@ async function runAeJob(state, name, wait, fn) {
     const job = state.jobs.start(name, fn);
     const pending = () => ({
         ok: true, jobId: job.id, status: state.jobs.get(job.id)?.status ?? job.status, pending: true,
-        hint: 'After Effects กำลังทำงานหรือรอคิว — ดูผลด้วย job_status {id} / AE is busy or queued: poll job_status',
+        hint: 'After Effects กำลังทำงานหรือรอคิว — รอผลด้วย job_wait {id} / AE is busy or queued: call job_wait {id}',
     });
     if (!(wait ?? !busy))
         return pending();
@@ -347,7 +348,7 @@ function reviewVersion(p, id) {
     return v;
 }
 function reviewKey(p, v) { return `${p.dir}/${v.id}`; }
-function startReviewJob(state, id, open) {
+function startReviewJob(state, id, open, wait = true) {
     const p = requireProject(state);
     const v = reviewVersion(p, id);
     const running = activeJob(state, PROJECT_JOBS);
@@ -379,7 +380,30 @@ function startReviewJob(state, id, open) {
         }
         return { version: v.id, url: review.url, hint: 'เปิด URL เพื่อรีวิว แล้วอ่าน review_notes; เสนอแผนแก้ก่อนลงมือ / read review_notes after submission, propose edits before applying' };
     });
-    return { ok: true, version: v.id, jobId: job.id, status: job.status };
+    return awaitJob(state, job.id, wait ? QUICK_WAIT_MS : 0, { version: v.id });
+}
+const QUICK_WAIT_MS = 20_000;
+/** Wait up to `ms` for a job: its result when done, a pending stub (job_wait hint) when still running. */
+async function awaitJob(state, id, ms, extra = {}) {
+    const info = await waitJob(state, id, ms);
+    if (!info) {
+        return { ok: true, ...extra, jobId: id, status: state.jobs.get(id)?.status ?? 'running', pending: true, hint: 'ยังทำงานอยู่ — รอผลด้วย job_wait {id} / still running: call job_wait {id}' };
+    }
+    if (info.status === 'done')
+        return { ok: true, ...extra, ...info.result, jobId: id };
+    throw new ToolError(info.error ?? `${info.name} ${info.status}`, { jobId: id, status: info.status });
+}
+async function waitJob(state, id, ms) {
+    let timer;
+    try {
+        return await Promise.race([
+            state.jobs.wait(id),
+            new Promise((r) => { timer = setTimeout(() => r(undefined), ms); }),
+        ]);
+    }
+    finally {
+        clearTimeout(timer);
+    }
 }
 /** Apply a new timeline; on validation errors the previous timeline is restored and the errors returned. */
 function commitTimeline(state, p, next) {
@@ -583,16 +607,37 @@ const CORE_TOOLS = [
             fps: z.number().positive().optional(),
             width: z.number().int().positive().optional(),
             height: z.number().int().positive().optional(),
+            targets: z.array(z.string()).optional().describe('delivery target ids (see delivery_presets)'),
         },
         handler: async (a, state) => {
             const dir = resolve(a.dir);
             assertWritable(dir, 'project_new.dir');
+            const unknown = (a.targets ?? []).filter((t) => !PRESETS[t]);
+            if (unknown.length)
+                throw new ToolError(`ไม่รู้จัก target / unknown delivery targets: ${unknown.join(', ')}`, { known: Object.keys(PRESETS) });
             if (existsSync(join(dir, 'project.json')))
                 throw new ToolError('มีโปรเจกต์อยู่แล้ว ใช้ project_open / project already exists, use project_open', { dir });
             const p = await state.api.project.createProject(dir, { name: a.name, fps: a.fps, width: a.width, height: a.height });
+            if (a.targets?.length) {
+                p.delivery.targets = [...new Set(a.targets)];
+                await state.api.project.saveProject(p);
+            }
             state.project = p;
             return { ok: true, ...projectStatus(state, p) };
         },
+    }),
+    tool({
+        name: 'delivery_presets',
+        description: 'รายการปลายทางส่งงาน (id, ขนาด, codec, ความดัง) สำหรับให้ผู้ใช้เลือก · List delivery targets with their specs (for a setup/export picker)',
+        input: {},
+        handler: async (_a, state) => ({
+            presets: Object.values(PRESETS).map((t) => ({
+                id: t.id, label: t.label, container: t.container, codec: t.video.codec,
+                size: `${t.video.width}x${t.video.height}`, ...(t.video.fps ? { fps: t.video.fps } : {}), ...(t.video.interlaced ? { interlaced: true } : {}),
+                ...(t.loudness ? { lufs: t.loudness.integratedLufs } : {}),
+            })),
+            projectTargets: state.project?.delivery.targets ?? [],
+        }),
     }),
     tool({
         name: 'project_open',
@@ -774,6 +819,64 @@ const CORE_TOOLS = [
         },
     }),
     tool({
+        name: 'ae_create',
+        description: 'สร้าง .aep ใหม่จากสคริปต์ JSX แบบ headless (job) ใช้แทนการเรียก AfterFX เอง · Create a new .aep by running a JSX build script headlessly (job). '
+            + 'The script runs in an empty project: build comps/layers only — no app.newProject() (kills headless AE), no save, no quit. '
+            + 'L(msg) appends to the returned log; SCRIPT_DIR is the folder of jsxPath. Errors come back with the script line. '
+            + 'asset: registers the comp for build; an existing aecomp id is repointed to the new .aep so the next build re-renders it.',
+        input: {
+            jsx: z.string().optional().describe('script text'),
+            jsxPath: z.string().optional().describe('UTF-8 .jsx file (instead of jsx)'),
+            saveAs: z.string().describe('new .aep inside the project folder (never overwritten; use a new name per revision)'),
+            asset: z.object({ comp: z.string(), id: z.string().optional() }).optional(),
+            wait: z.boolean().optional(),
+        },
+        handler: async (a, state) => {
+            if (!state.ae.create)
+                throw new ToolError('AE backend cannot create projects');
+            if (!a.jsx === !a.jsxPath)
+                throw new ToolError('ระบุ jsx หรือ jsxPath อย่างใดอย่างหนึ่ง / give exactly one of jsx or jsxPath');
+            const jsxPath = a.jsxPath ? resolve(a.jsxPath) : undefined;
+            if (jsxPath && !existsSync(jsxPath))
+                throw new ToolError(`ไม่พบไฟล์ / file not found: ${jsxPath}`);
+            if (!jsxPath || a.asset)
+                requireProject(state);
+            const saveAs = resolve(a.saveAs);
+            if (extname(saveAs).toLowerCase() !== '.aep')
+                throw new ToolError('saveAs ต้องเป็น .aep / saveAs must end in .aep');
+            if (existsSync(saveAs))
+                throw new ToolError(`มีไฟล์นี้แล้ว ใช้ชื่อใหม่ / refusing to overwrite: ${saveAs}`);
+            assertConfined(state, saveAs, jsxPath ?? join(state.project.dir, 'x'), 'saveAs');
+            const existing = a.asset?.id ? state.project.assets[a.asset.id] : undefined;
+            if (existing && existing.kind !== 'aecomp')
+                throw new ToolError(`asset id already in use by a ${existing.kind} file: ${a.asset.id}`);
+            const jsx = a.jsx ?? await readFile(jsxPath, 'utf8');
+            return runAeJob(state, 'ae_create', a.wait, async () => {
+                const res = await state.ae.create({ jsx, saveAs, ...(jsxPath ? { scriptDir: dirname(jsxPath) } : {}) });
+                let asset;
+                const p = state.project;
+                if (p && a.asset) {
+                    if (!res.comps.some((c) => c.name === a.asset.comp))
+                        throw new ToolError(`ไม่มี comp '${a.asset.comp}' ในไฟล์ใหม่ / comp not found in ${res.savedTo}`, { comps: res.comps.map((c) => c.name) });
+                    const cur = a.asset.id ? p.assets[a.asset.id] : undefined;
+                    if (cur && isAeComp(cur)) {
+                        // Repoint: drop the old render so the next build renders the new project.
+                        Object.assign(cur, { aep: res.savedTo, comp: a.asset.comp });
+                        delete cur.render;
+                        delete cur.fingerprint;
+                        delete cur.probe;
+                        asset = cur;
+                    }
+                    else {
+                        asset = state.api.project.addAeComp(p, res.savedTo, a.asset.comp, a.asset.id);
+                    }
+                    await state.api.project.saveProject(p);
+                }
+                return { ok: true, ...res, ...(asset ? { asset: assetSummary(asset), hint: 'ae_preview_frame เพื่อเช็ค แล้ว build / check with ae_preview_frame, then build' } : {}) };
+            });
+        },
+    }),
+    tool({
         name: 'ae_preview_frame',
         description: 'render เฟรมเดียวของ comp เป็น PNG (job) · Render one frame of a comp to PNG (job)',
         input: {
@@ -846,7 +949,7 @@ const CORE_TOOLS = [
                     ...(diskIssues.length ? { diskWarnings: diskIssues } : {}),
                 };
             });
-            return { ok: true, jobId: job.id, status: job.status, hint: 'ดูความคืบหน้าด้วย job_status / poll job_status {id}' };
+            return { ok: true, jobId: job.id, status: job.status, hint: 'รอผลด้วย job_wait {id} (ไม่ต้อง sleep) / call job_wait {id} to block until done' };
         },
     }),
     tool({
@@ -892,6 +995,21 @@ const CORE_TOOLS = [
         },
     }),
     tool({
+        name: 'job_wait',
+        description: 'รอจน job เสร็จ (หรือครบเวลา) แล้วคืนผล — ใช้แทนการวนถาม job_status / sleep · Block until a job finishes (or timeoutSec passes) and return its result',
+        input: {
+            id: z.string(),
+            timeoutSec: z.number().int().min(1).max(3600).optional().describe('default 600; on timeout returns done:false — call again'),
+        },
+        handler: async (a, state) => {
+            if (!state.jobs.get(a.id))
+                throw new ToolError(`ไม่พบ job / unknown job: ${a.id}`);
+            const info = await waitJob(state, a.id, (a.timeoutSec ?? 600) * 1000);
+            const j = info ?? state.jobs.get(a.id);
+            return { ...jobSummary(j, 40), done: !!info, ...(info ? {} : { hint: 'ยังไม่เสร็จ — เรียก job_wait อีกครั้ง / still running: call job_wait again' }) };
+        },
+    }),
+    tool({
         name: 'job_list',
         description: 'รายการ jobs · List jobs',
         input: {},
@@ -923,14 +1041,14 @@ const CORE_TOOLS = [
     tool({
         name: 'preview',
         description: 'สร้าง H.264 preview เวอร์ชันใหม่สำหรับรีวิว (job) · Create a small review proxy without launching Adobe',
-        input: { version: z.string().optional() },
-        handler: async (a, state) => startReviewJob(state, a.version, false),
+        input: { version: z.string().optional(), wait: z.boolean().optional().describe('default true: wait up to ~20 s') },
+        handler: async (a, state) => startReviewJob(state, a.version, false, a.wait ?? true),
     }),
     tool({
         name: 'review_open',
         description: 'เปิดหน้ารีวิวในเครื่อง: เลือกช็อต/ช่วง วงจุดแก้ และบันทึกโน้ต (job → URL) · Local version review',
-        input: { version: z.string().optional() },
-        handler: async (a, state) => startReviewJob(state, a.version, true),
+        input: { version: z.string().optional(), wait: z.boolean().optional().describe('default true: wait up to ~20 s for the URL') },
+        handler: async (a, state) => startReviewJob(state, a.version, true, a.wait ?? true),
     }),
     tool({
         name: 'review_notes',

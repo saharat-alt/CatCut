@@ -186,7 +186,7 @@ async function runJob(state: AppState, name: string, fn: (ctx: JobContext) => Pr
     new Promise<undefined>((r) => { timer = setTimeout(() => r(undefined), WAIT_MS); }),
   ]);
   clearTimeout(timer);
-  if (!info) return { ok: true, pending: true, jobId: job.id, hint: 'ยังทำไม่เสร็จ — ดูผลด้วย job_status {id} / still running: poll job_status' };
+  if (!info) return { ok: true, pending: true, jobId: job.id, hint: 'ยังทำไม่เสร็จ — รอผลด้วย job_wait {id} / still running: call job_wait {id}' };
   if (info.status === 'done') return { ...(info.result as Record<string, unknown>), jobId: job.id };
   throw new ToolError(info.error ?? `${name} ${info.status}`, { jobId: job.id, status: info.status });
 }

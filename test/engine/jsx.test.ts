@@ -79,6 +79,23 @@ describe('ExtendScript runner in a mock AE host', () => {
     expect(context.layer.enabled).toBe(false);
     expect(context.saved).toBe(1);
   });
+  it('create: runs the script in the empty startup project, saves once and lists the comps', async () => {
+    const { context, result } = await run('create', [], true, 'app.project.numItems = 0;', undefined,
+      { jsx: 'app.project.numItems = 1; L("สร้าง " + SCRIPT_DIR);', saveAs: 'new.aep', scriptDir: 'D:/งาน' });
+    expect(result.ok).toBe(true);
+    expect(result.data).toEqual([expect.objectContaining({ name: 'Title' })]);
+    expect(result.log).toEqual(['สร้าง D:/งาน']);
+    expect(context.saved).toBe(1);
+    expect(context.quit).toBe(1);
+  });
+  it('create: a failing script or a non-empty startup project saves nothing', async () => {
+    const bad = await run('create', [], true, 'app.project.numItems = 0;', undefined, { jsx: 'null.x = 1;', saveAs: 'new.aep' });
+    expect(bad.result.ok).toBe(false);
+    expect(bad.context.saved).toBe(0);
+    const busy = await run('create', [], true, '', undefined, { jsx: 'L(1);', saveAs: 'new.aep' });
+    expect(busy.result.error).toContain('expected an empty project');
+    expect(busy.context.saved).toBe(0);
+  });
   it('reports invalid operations and never saves a partially applied edit', async () => {
     const { context, result } = await run('edit', [{ op: 'setText', layer: 'missing', text: 'bad' }]);
     expect(result.ok).toBe(false);

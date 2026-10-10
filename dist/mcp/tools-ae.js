@@ -25,7 +25,7 @@ async function runAeJob(state, name, fn) {
     if (!info) {
         return {
             ok: true, jobId: job.id, status: state.jobs.get(job.id)?.status ?? job.status, pending: true,
-            hint: 'After Effects กำลังทำงานหรือรอคิว — ดูผลด้วย job_status {id} / AE is busy or queued: poll job_status',
+            hint: 'After Effects กำลังทำงานหรือรอคิว — รอผลด้วย job_wait {id} / AE is busy or queued: call job_wait {id}',
         };
     }
     if (info.status === 'done')

@@ -479,6 +479,8 @@ export interface EvidenceTarget {
   clipIds?: string[];
   /** frame inside each instance, relative to the clip start; default: middle of the dissolve-free part */
   offset?: Frames;
+  /** several frames per instance (e.g. each review note's frame); overrides `offset` */
+  offsets?: Frames[];
 }
 
 /**
@@ -518,18 +520,23 @@ export function evidenceFrames(p: Project, versionId: string | undefined, target
     const prev = i > 0 ? shots[i - 1] : undefined;
     const inDiss = prev ? splitDissolve(dissolveAfter.get(prev.id) ?? 0).b : 0;
     const outDiss = splitDissolve(dissolveAfter.get(s.id) ?? 0).a;
-    let off: Frames;
-    if (target.offset !== undefined) off = Math.min(Math.max(0, target.offset), Math.max(0, s.dur - 1));
+    const clampOff = (o: Frames) => Math.min(Math.max(0, o), Math.max(0, s.dur - 1));
+    let offs: Frames[];
+    if (target.offsets?.length) offs = [...new Set(target.offsets.map(clampOff))];
+    else if (target.offset !== undefined) offs = [clampOff(target.offset)];
     else {
       const lo = Math.min(inDiss, Math.max(0, s.dur - 1));
       const hi = Math.max(lo + 1, s.dur - outDiss);
-      off = lo + Math.floor((hi - lo - 1) / 2);
+      offs = [lo + Math.floor((hi - lo - 1) / 2)];
     }
-    const frame = s.start + off;
-    instances.push({
-      instance: instances.length + 1, clipId: s.id, src: s.src, ...(s.comp ? { comp: s.comp } : {}),
-      start: s.start, dur: s.dur, frame, tc: framesToTc(frame, fps), sourceFrame: s.in + off,
-    });
+    const instance = new Set(instances.map((x) => x.clipId)).size + 1;
+    for (const off of offs) {
+      const frame = s.start + off;
+      instances.push({
+        instance, clipId: s.id, src: s.src, ...(s.comp ? { comp: s.comp } : {}),
+        start: s.start, dur: s.dur, frame, tc: framesToTc(frame, fps), sourceFrame: s.in + off,
+      });
+    }
   });
   if (!instances.length) warnings.push(`ไม่พบ instance ในเวอร์ชัน ${version.id} / no matching instance in ${version.id}`);
   return { versionId: version.id, master: version.master, fps, from, instances, warnings };

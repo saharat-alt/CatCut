@@ -86,6 +86,7 @@ interface SourceTiming {
     videoStartExpr: string;
     audioStartSec: number;
     cfr: boolean;
+    tbSec?: number;
 }
 interface SegmentPlan {
     clip: Clip;
