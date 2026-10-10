@@ -1,8 +1,8 @@
 #!/usr/bin/env node
 /**
- * editmcp CLI: doctor | serve [projectDir] | build <projectDir> [--force] [--skip-qc] [--skip-deliver]
+ * editmcp CLI: doctor | serve [projectDir] | build <projectDir> [--force] [--force-assets id,id] [--skip-qc] [--skip-deliver]
  *              | deliver <projectDir> <version> <targets...> | xml-export <projectDir> [--version v001]
- *              | xml-import <projectDir> <xml>
+ *              | xml-import <projectDir> <xml> [--apply]
  */
 import { parseArgs } from 'node:util';
 import { isMain, serveStdio } from './server.js';
@@ -13,13 +13,14 @@ const USAGE = `editmcp — headless video editing MCP (After Effects headless + 
 
   editmcp doctor                                   ตรวจเครื่องมือ / check tools, encoders, RAM, compat notes
   editmcp serve [projectDir]                       MCP stdio server (ใช้กับ Claude Code / Codex)
-  editmcp build <projectDir> [--force] [--skip-qc] [--skip-deliver]
+  editmcp build <projectDir> [--force] [--force-assets C_a,C_b] [--skip-qc] [--skip-deliver]
   editmcp deliver <projectDir> <version> <targets...>   e.g. v001 yt th_tv
   editmcp xml-export <projectDir> [--version v001] [--name SeqName]
-  editmcp xml-import <projectDir> <file.xml>
+  editmcp xml-import <projectDir> <file.xml> [--apply]   ค่าเริ่มต้นแค่สรุปความต่าง; --apply เพื่อใช้ (สำรองไทม์ไลน์ใน history/)
   editmcp review <projectDir> [--version v001]        เปิดหน้ารีวิวในเครื่อง (Ctrl+C เพื่อปิด server)
 
   EDITMCP_ALLOW_AE=1   doctor may launch After Effects to read its version (off by default)
+  EDITMCP_PROTECTED_PATHS=D:/job1;E:/job2   folders EDITMCP must never write into
 `;
 
 const out = (s: string) => process.stdout.write(s + '\n');
@@ -78,6 +79,8 @@ async function main(argv: string[] = process.argv.slice(2)): Promise<number | nu
     allowPositionals: true,
     options: {
       force: { type: 'boolean', default: false },
+      'force-assets': { type: 'string' },
+      apply: { type: 'boolean', default: false },
       'skip-qc': { type: 'boolean', default: false },
       'skip-deliver': { type: 'boolean', default: false },
       version: { type: 'string' },
@@ -120,7 +123,10 @@ async function main(argv: string[] = process.argv.slice(2)): Promise<number | nu
     }
     case 'build': {
       const state = await createAppState({ projectDir: needDir() });
-      const started = report(await callTool(state, 'build', { force: values.force, skipQc: values['skip-qc'], skipDeliver: values['skip-deliver'] }));
+      const started = report(await callTool(state, 'build', {
+        force: values.force, skipQc: values['skip-qc'], skipDeliver: values['skip-deliver'],
+        ...(values['force-assets'] ? { forceAssets: values['force-assets'].split(',').map((s) => s.trim()).filter(Boolean) } : {}),
+      }));
       if (!started) return 1;
       const result = await tailJob(state, String(started['jobId']));
       if (!result) return 1;
@@ -149,10 +155,13 @@ async function main(argv: string[] = process.argv.slice(2)): Promise<number | nu
       const xml = rest[1];
       if (!xml) { err(USAGE); return 1; }
       const state = await createAppState({ projectDir: dir });
-      const d = report(await callTool(state, 'import_premiere_xml', { path: xml }));
+      const d = report(await callTool(state, 'import_premiere_xml', { path: xml, apply: values.apply }));
       if (!d) return 1;
-      out(pretty({ diff: d['diff'], warnings: d['warnings'], unresolvedPaths: d['unresolvedPaths'] }));
-      return 0;
+      for (const line of (d['summary'] as string[] | undefined) ?? []) out(line);
+      for (const w of (d['warnings'] as string[] | undefined) ?? []) err(`  ! ${w}`);
+      out(pretty({ applied: d['applied'], valid: d['valid'], errors: d['errors'], backup: d['backup'], unresolvedPaths: d['unresolvedPaths'] }));
+      if (!values.apply) err('dry run: ไม่ได้แก้ไทม์ไลน์ — ใส่ --apply เพื่อใช้ / nothing applied, re-run with --apply');
+      return d['valid'] === false ? 2 : 0;
     }
     default:
       err(`unknown command: ${cmd}\n`);

@@ -73,8 +73,11 @@ Preset deliverable: `yt`, `fb`, `vert` (1080x1920 ครอปกลาง), `th
 1. `export_premiere_xml` → ได้ `out/<version>/<name>.xml` (xmeml v5) ที่ลิงก์ไป **render เต็ม comp** และไฟล์กล้องต้นฉบับ ไม่ใช่ Dynamic Link
 2. ใน Premiere: File > Import ไฟล์ XML → ขยับ / slip / trim / เปลี่ยนความยาว dissolve / marker / scale ได้ตามใจ
 3. File > Export > **Final Cut Pro XML** → บันทึกเป็นไฟล์ใหม่
-4. `import_premiere_xml {path}` → ได้สรุปความต่าง (คลิปไหนเปลี่ยน in/dur, dissolve ไหนเปลี่ยน) และใช้กับไทม์ไลน์ทันทีถ้าผ่านการตรวจสอบ (ไฟล์ที่จับคู่กับ asset ไม่ได้จะอยู่ใน `unresolvedPaths` — เพิ่มด้วย `asset_add` แล้ว import ใหม่)
-5. `build` → render เฉพาะ dissolve/ท่อนที่กระทบ → เวอร์ชันใหม่ในไม่กี่วินาที–นาที
+4. `import_premiere_xml {path}` → **dry run**: ได้ `summary` (ทีละบรรทัด: คลิปไหนเปลี่ยน in/dur, dissolve ไหนเปลี่ยน), `diff`, `warnings` (คลิปบน V2+ ที่ถูกทิ้ง, ช่องว่าง, speed change, บทบาทแทร็กเสียงที่กำกวม) และ `valid/errors` โดยยังไม่แก้ไทม์ไลน์ (ไฟล์ที่จับคู่กับ asset ไม่ได้จะอยู่ใน `unresolvedPaths` — เพิ่มด้วย `asset_add` แล้ว import ใหม่)
+5. ตรวจแล้ว `import_premiere_xml {path, apply: true}` → สำรองไทม์ไลน์เดิมไว้ที่ `history/timeline-<เวลา>-<n>.json` ก่อน แล้วจึงใช้; ย้อนกลับด้วย `timeline_restore {}` (ดูรายการ) / `timeline_restore {backup: "<ชื่อไฟล์>"}` (สำรองฉบับปัจจุบันก่อนเสมอ)
+6. `build` → render เฉพาะ dissolve/ท่อนที่กระทบ → เวอร์ชันใหม่ในไม่กี่วินาที–นาที
+
+เสียงทุกเลนเขียนเป็นคู่สเตอริโอแบบที่ Premiere export เอง (A1/A2 เสียงกล้อง, A3/A4 vo, A5/A6 music, A7/A8 sfx) รายละเอียดใน [`docs/xmeml-notes.md`](docs/xmeml-notes.md)
 
 สิ่งที่กลับมาได้: trim, slip, ลำดับ, dissolve, marker, scale — เอฟเฟกต์เฉพาะ Premiere (Lumetri, Warp Stabilizer) ไม่กลับมา ให้ทำใน AE แทน
 
@@ -83,14 +86,23 @@ Preset deliverable: `yt`, `fb`, `vert` (1080x1920 ครอปกลาง), `th
 ```bash
 editmcp doctor
 editmcp serve [projectDir]
-editmcp build D:/jobs/csr --force          # --skip-qc --skip-deliver
+editmcp build D:/jobs/csr --force          # --skip-qc --skip-deliver --force-assets C_title,C_end
 editmcp deliver D:/jobs/csr v001 yt th_tv
 editmcp xml-export D:/jobs/csr --version v001
-editmcp xml-import D:/jobs/csr D:/jobs/csr/from_premiere.xml
+editmcp xml-import D:/jobs/csr D:/jobs/csr/from_premiere.xml          # dry run
+editmcp xml-import D:/jobs/csr D:/jobs/csr/from_premiere.xml --apply  # ใช้จริง (สำรองไทม์ไลน์ก่อน)
 editmcp review D:/jobs/csr --version v001 # เปิด URL ที่แสดง; Ctrl+C ปิด server
 ```
 
 `doctor` ไม่เปิด After Effects (รายงาน `AE version: unknown (not launched)`) เว้นแต่ตั้ง `EDITMCP_ALLOW_AE=1`
+
+`EDITMCP_PROTECTED_PATHS=D:/job1;E:/job2` (คั่นด้วย `;`) = โฟลเดอร์ที่ห้ามเขียนเด็ดขาด เพิ่มจากโฟลเดอร์งานผลิตที่ฝังไว้ในโค้ด: `project_new`/`project_open`, ทุกเครื่องมือที่เขียนลงโปรเจกต์, `ae_edit` และ `ae_preview_frame` จะปฏิเสธ; `ae_preview_frame.out` และ `ae_edit.saveAs` ต้องอยู่ในโฟลเดอร์โปรเจกต์หรือโฟลเดอร์ของ `.aep` ต้นทาง
+
+## ใช้หลายโปรเซสพร้อมกัน
+
+MCP server และ CLI (`build`/`review` ในอีกเทอร์มินัล) เปิดโปรเจกต์เดียวกันได้: ทุกการบันทึก `project.json` ทำภายใต้ `project.lock` (pid + เวลา; lock ของโปรเซสที่ตายแล้วหรือเก่ากว่า 2 นาทีถูกเอาคืนอัตโนมัติ) และเทียบกับฉบับที่โหลดมา — ถ้าอีกโปรเซสบันทึกไปก่อน จะรวมการเปลี่ยนที่ไม่ชนกัน (เวอร์ชันที่ build เพิ่ม, reviewProxy/reviewPlan, asset ใหม่, ไทม์ไลน์ถ้าแก้อยู่ฝั่งเดียว) ถ้าชนกันจริง (เช่นแก้ไทม์ไลน์ทั้งสองฝั่ง) เครื่องมือจะตอบ `โปรเจกต์ถูกแก้จากที่อื่น — โหลดใหม่แล้วลองอีกครั้ง` พร้อมโหลดฉบับบนดิสก์ใหม่ให้ แล้วสั่งแก้ซ้ำได้เลย ไม่มีงานฝั่งใดหาย
+
+คำสั่ง `ae_list_comps`, `ae_inspect_comp`, `ae_edit`, `ae_preview_frame` ทำงานเป็น job: ถ้าคิวว่างจะรอผลไม่เกิน ~20 วินาที ถ้ามี build/render อยู่ในคิว (หรือส่ง `wait: false`) จะคืน `jobId` ทันที แล้วดูผลด้วย `job_status`
 
 ## โครงสร้างโปรเจกต์
 
@@ -122,11 +134,13 @@ node tests/adobe_smoke.mjs
 
 สคริปต์สร้าง fixture ด้วย AE อินสแตนซ์ใหม่แล้วปิด (AE 26.5 บนเครื่องนี้ล้มเมื่อ `newProject()` ใน `-noui`); การอ่าน/แก้ comp ใช้ `-m -noui` และเรนเดอร์ด้วย aerender เก็บหลักฐานไว้ในโฟลเดอร์ใหม่ใต้ `tmp/adobe-test/` ทดสอบนี้ไม่รวมอยู่ใน `npm test` และไม่เปิดงานผลิต ใช้แทน smoke script เก่าใน `tests/run_noui_smoke.ps1`
 
-`ae_edit` แก้สำเนาชั่วคราวก่อน แล้วบันทึกกลับต้นฉบับพร้อมเก็บ `<name>_backup_<timestamp>.aep`; ถ้าใช้ `saveAs` จะสร้างไฟล์ใหม่และปฏิเสธชื่อที่มีอยู่แล้ว งาน build/deliver จะล็อกคำสั่งแก้โปรเจกต์ของ server นั้นจนจบ ควรใช้ server/CLI เพียงตัวเดียวต่อโฟลเดอร์โปรเจกต์
+`ae_edit` แก้สำเนาชั่วคราวก่อน แล้วบันทึกกลับต้นฉบับพร้อมเก็บ `<name>_backup_<timestamp>.aep`; ถ้าใช้ `saveAs` จะสร้างไฟล์ใหม่และปฏิเสธชื่อที่มีอยู่แล้ว งาน build/deliver จะล็อกคำสั่งแก้โปรเจกต์ของ server นั้นจนจบ; การบันทึกจากหลายโปรเซสรวมกันได้ (ดูหัวข้อ "ใช้หลายโปรเซสพร้อมกัน") แต่ไม่ควรสั่ง build สองตัวพร้อมกันบนโปรเจกต์เดียว
 
 ไฟล์ที่ fps ต่างจากโปรเจกต์ใช้ตำแหน่งและความยาวเป็นเฟรมของโปรเจกต์เสมอ การ encode ท่อนใหม่จะ decode ตั้งแต่ต้นไฟล์เพื่อคง sampling grid ให้ถูกต้อง จึงอาจช้าเมื่อ in-point อยู่ลึกในฟุตเทจยาว; build ที่ไม่เปลี่ยนภาพจะใช้ cache ตามเดิม
 
 AE fingerprint ติดตาม property/keyframe/expression, precomp, proxy และ image sequence; comp ที่มี expression หรือค่า plugin ที่อ่านไม่ได้จะติดตามไฟล์ `.aep` ทั้งไฟล์แบบ conservative จึงอาจ render ใหม่มากกว่าหนึ่ง comp เมื่อแก้โปรเจกต์
+
+ถ้า backend รายงาน comp เป็น `opaque` (ค่าใน Curves/Levels อ่านไม่ได้) `ae_inspect_comp`/`ae_edit` จะแนบ `opaqueHint`: การแก้เฉพาะในเอฟเฟกต์พวกนั้นอาจไม่เปลี่ยน fingerprint ให้ใช้ `build {force: true}` หรือ `build {forceAssets: ["C_title"]}` — อย่างหลังล้าง render record ของ asset นั้นและย้ายไฟล์ render เดิมไปเป็น `<ชื่อ>_forced.mov` (ไม่ลบ) เพื่อบังคับ render ใหม่
 
 ## รีวิวด้วยการวงบนภาพ
 

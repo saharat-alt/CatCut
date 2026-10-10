@@ -113,12 +113,12 @@ describe('writeXmeml', () => {
   it('references files by stable ids after the first full definition and percent-encodes Thai pathurls', () => {
     const items = v1.clipitem;
     expect(get(items, 0, 'file', '@_id')).toBe('file-cam');
-    expect(get(items, 0, 'file', 'pathurl')).toBe('file:///D:/%E0%B8%87%E0%B8%B2%E0%B8%99/%E0%B8%9F%E0%B8%B8%E0%B8%95%E0%B9%80%E0%B8%97%E0%B8%88/%E0%B8%84%E0%B8%A5%E0%B8%B4%E0%B8%9B%2001.mp4');
+    expect(get(items, 0, 'file', 'pathurl')).toBe('file://localhost/D%3a/%E0%B8%87%E0%B8%B2%E0%B8%99/%E0%B8%9F%E0%B8%B8%E0%B8%95%E0%B9%80%E0%B8%97%E0%B8%88/%E0%B8%84%E0%B8%A5%E0%B8%B4%E0%B8%9B%2001.mp4');
     expect(get(items, 0, 'file', 'name')).toBe('คลิป 01.mp4');
     expect(get(items, 0, 'file', 'duration')).toBe(1000);
     expect(get(items, 0, 'file', 'media', 'audio', 'channelcount')).toBe(2);
     expect(get(items, 2, 'file')).toEqual({ '@_id': 'file-cam' }); // second use of cam: id only
-    expect(get(items, 1, 'file', 'pathurl')).toBe('file:///D:/EDITMCP/tmp/cache/title_abcdef12.mov'); // aecomp -> render path
+    expect(get(items, 1, 'file', 'pathurl')).toBe('file://localhost/D%3a/EDITMCP/tmp/cache/title_abcdef12.mov'); // aecomp -> render path
     expect(get(items, 1, 'file', 'media', 'audio')).toBeUndefined();
     expect(get(items, 3, 'file', 'duration')).toBe(60); // still: duration covers the furthest out
     expect(get(items, 0, '@_id')).toBe('clipitem-c1');
@@ -140,17 +140,24 @@ describe('writeXmeml', () => {
     ]);
   });
 
-  it('lays out audio as A1/A2 linked clip audio, A3 vo, A4 music, A5 sfx, A6 overflow', () => {
+  it('lays out audio as exploded stereo pairs: A1/A2 clip audio, A3/A4 vo, A5/A6 music, A7/A8 sfx, A9/A10 overflow', () => {
     const tracks = get(seq, 'media', 'audio', 'track');
-    expect(tracks).toHaveLength(6);
-    expect(get(tracks, 0, 'outputchannelindex')).toBe(1);
-    expect(get(tracks, 1, 'outputchannelindex')).toBe(2);
+    expect(tracks).toHaveLength(10);
+    const attrs = (i: number) => [get(tracks, i, '@_currentExplodedTrackIndex'), get(tracks, i, '@_totalExplodedTrackCount'), get(tracks, i, '@_premiereTrackType'), get(tracks, i, '@_MZ.TrackName'), get(tracks, i, 'outputchannelindex')];
+    expect([0, 1, 2, 3, 4, 5, 6, 7, 8, 9].map(attrs)).toEqual([
+      ['0', '2', 'Stereo', 'Clip Audio', 1], ['1', '2', 'Stereo', 'Clip Audio', 2],
+      ['0', '2', 'Stereo', 'VO', 1], ['1', '2', 'Stereo', 'VO', 2],
+      ['0', '2', 'Stereo', 'Music', 1], ['1', '2', 'Stereo', 'Music', 2],
+      ['0', '2', 'Stereo', 'SFX', 1], ['1', '2', 'Stereo', 'SFX', 2],
+      ['0', '2', 'Stereo', 'SFX 2', 1], ['1', '2', 'Stereo', 'SFX 2', 2],
+    ]);
     // A1: c1 and c3 (cam has audio); hard cut at C=220 because the title has no audio
     const a1 = get(tracks, 0, 'clipitem');
     expect(a1.map((c: Record<string, unknown>) => [c.name, c.start, c.end, c.in, c.out])).toEqual([
       ['c1', 0, 100, 10, 110],
       ['c3', 220, 300, 300, 380],
     ]);
+    expect(get(a1, 0, '@_premiereChannelType')).toBe('stereo');
     expect(get(a1, 0, 'sourcetrack', 'trackindex')).toBe(1);
     expect(get(tracks, 1, 'clipitem', 0, 'sourcetrack', 'trackindex')).toBe(2);
     expect(get(tracks, 0, 'transitionitem')).toBeUndefined();
@@ -162,9 +169,20 @@ describe('writeXmeml', () => {
       ['clipitem-c3-a2', 'audio', 2, 2],
     ]);
     expect(get(v1, 'clipitem', 1, 'link')).toBeUndefined();
-    // A3 vo with levels + fades, A4 music gain, A5/A6 sfx
+    // A3/A4 vo pair with levels + fades; the source is mono so both sides read channel 1
     const vo1 = get(tracks, 2, 'clipitem', 0);
+    const vo1r = get(tracks, 3, 'clipitem', 0);
     expect([vo1.name, vo1.start, vo1.end, vo1.in, vo1.out]).toEqual(['vo1', 20, 170, 0, 150]);
+    expect([vo1r.name, vo1r.start, vo1r.end, vo1r.in, vo1r.out]).toEqual(['vo1', 20, 170, 0, 150]);
+    expect([get(vo1, 'sourcetrack', 'trackindex'), get(vo1r, 'sourcetrack', 'trackindex')]).toEqual([1, 1]);
+    expect(vo1['@_id']).toBe('clipitem-vo1');
+    expect(vo1r['@_id']).toBe('clipitem-vo1-r');
+    for (const it of [vo1, vo1r]) {
+      expect(it.link.map((l: Record<string, unknown>) => [l.linkclipref, l.mediatype, l.trackindex, l.clipindex, l.groupindex])).toEqual([
+        ['clipitem-vo1', 'audio', 3, 1, 1],
+        ['clipitem-vo1-r', 'audio', 4, 1, 1],
+      ]);
+    }
     const level = get(vo1, 'filter', 'effect', 'parameter');
     expect(get(vo1, 'filter', 'effect', 'effectid')).toBe('audiolevels');
     expect(level.value).toBeCloseTo(0.707946, 5);
@@ -174,14 +192,21 @@ describe('writeXmeml', () => {
       [140, 0.707946],
       [150, 0],
     ]);
-    const m1 = get(tracks, 3, 'clipitem', 0);
+    expect(get(vo1r, 'filter', 'effect', 'parameter', 'value')).toBeCloseTo(0.707946, 5);
+    // A5/A6 music: stereo source -> sourcetrack 1 and 2
+    const m1 = get(tracks, 4, 'clipitem', 0);
     expect([m1.name, m1.start, m1.end, m1.in, m1.out]).toEqual(['m1', 0, 350, 100, 450]);
+    expect([get(m1, 'sourcetrack', 'trackindex'), get(tracks, 5, 'clipitem', 0, 'sourcetrack', 'trackindex')]).toEqual([1, 2]);
     expect(get(m1, 'filter', 'effect', 'parameter', 'value')).toBeCloseTo(0.251189, 5);
     expect(get(m1, 'filter', 'effect', 'parameter', 'keyframe')).toBeUndefined();
-    expect(get(tracks, 4, 'clipitem', 0, 'name')).toBe('s1');
-    expect(get(tracks, 4, 'clipitem')).toHaveLength(1);
-    expect(get(tracks, 5, 'clipitem', 0, 'name')).toBe('s2');
-    expect(get(tracks, 4, 'clipitem', 0, 'filter')).toBeUndefined();
+    expect(get(tracks, 5, 'clipitem', 0, 'link', 1, 'trackindex')).toBe(6);
+    // A7/A8 sfx, A9/A10 overflow
+    expect(get(tracks, 6, 'clipitem', 0, 'name')).toBe('s1');
+    expect(get(tracks, 6, 'clipitem')).toHaveLength(1);
+    expect(get(tracks, 7, 'clipitem', 0, 'name')).toBe('s1');
+    expect(get(tracks, 8, 'clipitem', 0, 'name')).toBe('s2');
+    expect(get(tracks, 9, 'clipitem', 0, 'link', 1, 'trackindex')).toBe(10);
+    expect(get(tracks, 6, 'clipitem', 0, 'filter')).toBeUndefined();
   });
 
   it('adds an audio cross fade when both sides of a dissolve carry clip audio', () => {
@@ -201,6 +226,7 @@ describe('writeXmeml', () => {
     ]);
     expect([get(a1, 'transitionitem', 0, 'start'), get(a1, 'transitionitem', 0, 'end')]).toEqual([46, 54]);
     expect(get(a1, 'transitionitem', 0, 'effect', 'name')).toBe('Cross Fade (+3dB)');
+    expect(get(a1, 'transitionitem', 0, 'effect', 'effectid')).toBe('KGAudioTransCrossFade3dB');
     expect(get(a1, 'transitionitem', 0, 'effect', 'mediatype')).toBe('audio');
   });
 
@@ -211,7 +237,7 @@ describe('writeXmeml', () => {
     const tracks = get(d, 'xmeml', 'sequence', 'media', 'audio', 'track');
     expect(get(tracks, 0, 'clipitem')).toBeUndefined();
     expect(get(tracks, 1, 'clipitem')).toBeUndefined();
-    expect(get(d, 'xmeml', 'sequence', 'media', 'video', 'track', 0, 'clipitem', 0, 'file', 'pathurl')).toBe('file:///E:/proxy/cam.mov');
+    expect(get(d, 'xmeml', 'sequence', 'media', 'video', 'track', 0, 'clipitem', 0, 'file', 'pathurl')).toBe('file://localhost/E%3a/proxy/cam.mov');
   });
 
   it('fails loudly on an unrendered aecomp, unknown asset, or missing dissolve handle', () => {
@@ -242,7 +268,7 @@ describe('round trip', () => {
     expect(r.height).toBe(1080);
     expect(r.unresolvedPaths).toEqual([]);
     expect(r.timeline).toEqual(richTimeline());
-    expect(r.warnings).toEqual(["A6: 's2' is not on a vo/music/sfx track; treated as sfx"]);
+    expect(r.warnings).toEqual([]); // the overflow pair is named 'SFX 2', so its role is not guessed
   });
 
   it('round-trips useClipAudio=false and sources without audio', () => {
@@ -494,9 +520,9 @@ describe('readXmeml on a Premiere-style export', () => {
 
 describe('path <-> url', () => {
   it('encodes Windows, UNC and posix paths and decodes Premiere %3a forms back', () => {
-    expect(pathToUrl('D:\\งาน\\a b.mov')).toBe('file:///D:/%E0%B8%87%E0%B8%B2%E0%B8%99/a%20b.mov');
+    expect(pathToUrl('D:\\งาน\\a b.mov')).toBe('file://localhost/D%3a/%E0%B8%87%E0%B8%B2%E0%B8%99/a%20b.mov');
     expect(pathToUrl('\\\\nas\\share\\x#1.mov')).toBe('file://nas/share/x%231.mov');
-    expect(pathToUrl('/Volumes/RAID/clip.mov')).toBe('file:///Volumes/RAID/clip.mov');
+    expect(pathToUrl('/Volumes/RAID/clip.mov')).toBe('file://localhost/Volumes/RAID/clip.mov');
     expect(pathFromUrl('file:///D:/%E0%B8%87%E0%B8%B2%E0%B8%99/a%20b.mov')).toBe('D:\\งาน\\a b.mov');
     expect(pathFromUrl('file://localhost/D%3a/x/y.mp4')).toBe('D:\\x\\y.mp4');
     expect(pathFromUrl('file://nas/share/x%231.mov')).toBe('\\\\nas\\share\\x#1.mov');
@@ -504,5 +530,109 @@ describe('path <-> url', () => {
     expect(pathFromUrl('D:\\plain\\path.mov')).toBe('D:\\plain\\path.mov');
     expect(pathFromUrl('file:///D:/bad%zz')).toBe('D:\\bad%zz');
     for (const p of ['D:\\งาน\\ฟุตเทจ\\คลิป 01.mp4', 'C:\\a&b\\c\'d\\e.mov', '\\\\srv\\s\\ไทย.wav']) expect(pathFromUrl(pathToUrl(p))).toBe(p);
+  });
+});
+
+// ---------- stereo audio (Premiere exports one clipitem per channel on "exploded" tracks) ----------
+
+const R = '<rate><timebase>25</timebase><ntsc>FALSE</ntsc></rate>';
+function aItem(id: string, name: string, file: string, at: [number, number, number, number], srcTrack: number, links: Array<[string, string, number]>): string {
+  const [start, end, inF, outF] = at;
+  return `<clipitem id="${id}" premiereChannelType="stereo"><name>${name}</name><enabled>TRUE</enabled>${R}<start>${start}</start><end>${end}</end><in>${inF}</in><out>${outF}</out>${file}`
+    + `<sourcetrack><mediatype>audio</mediatype><trackindex>${srcTrack}</trackindex></sourcetrack>`
+    + links.map(([ref, mt, ti], k) => `<link><linkclipref>${ref}</linkclipref><mediatype>${mt}</mediatype><trackindex>${ti}</trackindex><clipindex>${k + 1}</clipindex><groupindex>1</groupindex></link>`).join('')
+    + '</clipitem>';
+}
+const track = (attrs: string, items: string, ch?: number): string => `<track${attrs}>${items}<enabled>TRUE</enabled><locked>FALSE</locked>${ch ? `<outputchannelindex>${ch}</outputchannelindex>` : ''}</track>`;
+const ex = (i: number, type = 'Stereo', total = 2): string => ` currentExplodedTrackIndex="${i}" totalExplodedTrackCount="${total}" premiereTrackType="${type}"`;
+const fdef = (id: string, url: string): string => `<file id="${id}"><name>${id}</name><pathurl>${url}</pathurl>${R}<media><audio><channelcount>2</channelcount></audio></media></file>`;
+const fref = (id: string): string => `<file id="${id}"/>`;
+function stereoDoc(audioTracks: string[]): string {
+  return `<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE xmeml><xmeml version="4"><sequence id="sequence-1" explodedTracks="true"><name>stereo</name><duration>200</duration>${R}<media>`
+    + `<video><format><samplecharacteristics>${R}<width>1920</width><height>1080</height></samplecharacteristics></format>`
+    + `<track><clipitem id="v1"><name>shot</name><enabled>TRUE</enabled>${R}<start>0</start><end>200</end><in>0</in><out>200</out>`
+    + `<file id="f-cam"><name>cam</name><pathurl>file://localhost/D%3a/%E0%B8%87%E0%B8%B2%E0%B8%99/%E0%B8%84%E0%B8%A5%E0%B8%B4%E0%B8%9B%2001.mp4</pathurl>${R}<media><video><samplecharacteristics><width>1920</width><height>1080</height></samplecharacteristics></video><audio><channelcount>2</channelcount></audio></media></file>`
+    + '<link><linkclipref>v1</linkclipref><mediatype>video</mediatype><trackindex>1</trackindex><clipindex>1</clipindex></link>'
+    + '<link><linkclipref>ca1</linkclipref><mediatype>audio</mediatype><trackindex>1</trackindex><clipindex>1</clipindex><groupindex>1</groupindex></link>'
+    + '<link><linkclipref>ca2</linkclipref><mediatype>audio</mediatype><trackindex>2</trackindex><clipindex>1</clipindex><groupindex>1</groupindex></link>'
+    + '</clipitem><enabled>TRUE</enabled><locked>FALSE</locked></track></video>'
+    + `<audio><numOutputChannels>2</numOutputChannels>${audioTracks.join('')}</audio></media></sequence></xmeml>`;
+}
+const camAudio = (side: 0 | 1): string => track(ex(side), aItem(`ca${side + 1}`, 'shot', fref('f-cam'), [0, 200, 0, 200], side + 1, [['v1', 'video', 1], ['ca1', 'audio', 1], ['ca2', 'audio', 2]]), side + 1);
+const VO_URL = 'file://localhost/D%3a/%E0%B8%87%E0%B8%B2%E0%B8%99/vo/%E0%B9%80%E0%B8%AA%E0%B8%B5%E0%B8%A2%E0%B8%87%E0%B8%9A%E0%B8%A3%E0%B8%A3%E0%B8%A2%E0%B8%B2%E0%B8%A2.wav';
+const MUS_URL = 'file://localhost/D%3a/%E0%B8%87%E0%B8%B2%E0%B8%99/music/bed.wav';
+
+describe('stereo audio', () => {
+  const p = makeProject({ video: [], cuts: [], audio: { vo: [], music: [], sfx: [] } });
+  (p.assets.cam as { path: string }).path = 'D:\\งาน\\คลิป 01.mp4';
+
+  it('reads a hand-written Premiere stereo export: linked L/R pairs become one clip, roles follow the logical stereo tracks', () => {
+    const xml = stereoDoc([
+      camAudio(0), camAudio(1),
+      // VO pair (A3/A4) and music pair (A5/A6): same file, same span, linked only to each other
+      track(ex(0), aItem('vo-l', 'vo take', fdef('f-vo', VO_URL), [20, 120, 5, 105], 1, [['vo-l', 'audio', 3], ['vo-r', 'audio', 4]]), 1),
+      track(ex(1), aItem('vo-r', 'vo take', fref('f-vo'), [20, 120, 5, 105], 2, [['vo-l', 'audio', 3], ['vo-r', 'audio', 4]]), 2),
+      track(ex(0), aItem('m-l', 'bed', fdef('f-mus', MUS_URL), [0, 200, 0, 200], 1, [['m-l', 'audio', 5], ['m-r', 'audio', 6]]), 1),
+      track(ex(1), aItem('m-r', 'bed', fref('f-mus'), [0, 200, 0, 200], 2, [['m-l', 'audio', 5], ['m-r', 'audio', 6]]), 2),
+      // a mono track added in Premiere is the 4th logical track -> sfx
+      track(ex(0, 'Mono', 1), aItem('fx', 'whoosh', fref('f-vo'), [150, 160, 0, 10], 1, [])),
+      // a 5th unnamed logical track cannot be placed by position
+      track(ex(0, 'Mono', 1), aItem('fx2', 'boom', fref('f-vo'), [170, 180, 0, 10], 1, [])),
+    ]);
+    const r = readXmeml(xml, p);
+    expect(r.timeline.video).toEqual([{ id: 'shot', src: 'cam', in: 0, dur: 200 }]);
+    expect(r.timeline.audio.vo).toEqual([{ id: 'vo take', src: 'vo', at: 20, in: 5, dur: 100 }]);
+    expect(r.timeline.audio.music).toEqual([{ id: 'bed', src: 'mus', at: 0, dur: 200 }]);
+    expect(r.timeline.audio.sfx.map((c) => [c.id, c.at])).toEqual([['whoosh', 150], ['boom', 170]]);
+    expect(r.timeline.audio.useClipAudio).toBeUndefined(); // camera audio stays linked
+    expect(r.warnings).toEqual([expect.stringMatching(/^A8: 'boom' is on an extra track .*ambiguous/)]);
+  });
+
+  it('track names win over positions', () => {
+    const named = (i: number, name: string): string => `${ex(i)} MZ.TrackName="${name}"`;
+    const xml = stereoDoc([
+      camAudio(0), camAudio(1),
+      track(named(0, 'เพลง Music'), aItem('m-l', 'bed', fdef('f-mus', MUS_URL), [0, 200, 0, 200], 1, [['m-l', 'audio', 3], ['m-r', 'audio', 4]]), 1),
+      track(named(1, 'เพลง Music'), aItem('m-r', 'bed', fref('f-mus'), [0, 200, 0, 200], 2, [['m-l', 'audio', 3], ['m-r', 'audio', 4]]), 2),
+      track(named(0, 'Narration'), aItem('vo-l', 'vo take', fdef('f-vo', VO_URL), [20, 120, 5, 105], 1, [['vo-l', 'audio', 5], ['vo-r', 'audio', 6]]), 1),
+      track(named(1, 'Narration'), aItem('vo-r', 'vo take', fref('f-vo'), [20, 120, 5, 105], 2, [['vo-l', 'audio', 5], ['vo-r', 'audio', 6]]), 2),
+    ]);
+    const r = readXmeml(xml, p);
+    expect(r.timeline.audio.music.map((c) => c.src)).toEqual(['mus']);
+    expect(r.timeline.audio.vo.map((c) => c.src)).toEqual(['vo']);
+    expect(r.timeline.audio.sfx).toEqual([]);
+    expect(r.warnings).toEqual([]);
+  });
+
+  it('legacy layout without exploded attributes: merges a linked pair and warns when it straddles two roles', () => {
+    const xml = stereoDoc([
+      track('', aItem('ca1', 'shot', fref('f-cam'), [0, 200, 0, 200], 1, [['v1', 'video', 1], ['ca1', 'audio', 1], ['ca2', 'audio', 2]]), 1),
+      track('', aItem('ca2', 'shot', fref('f-cam'), [0, 200, 0, 200], 2, [['v1', 'video', 1], ['ca1', 'audio', 1], ['ca2', 'audio', 2]]), 2),
+      track('', aItem('vo-l', 'vo take', fdef('f-vo', VO_URL), [20, 120, 5, 105], 1, [['vo-l', 'audio', 3], ['vo-r', 'audio', 4]])),
+      track('', aItem('vo-r', 'vo take', fref('f-vo'), [20, 120, 5, 105], 2, [['vo-l', 'audio', 3], ['vo-r', 'audio', 4]])),
+    ]);
+    const r = readXmeml(xml, p);
+    expect(r.timeline.audio.vo.map((c) => c.id)).toEqual(['vo take']);
+    expect(r.timeline.audio.music).toEqual([]);
+    expect(r.warnings).toEqual([expect.stringContaining("A3/A4: stereo pair 'vo take' spans tracks read as vo and music; treated as vo")]);
+  });
+
+  it('keeps linked clips separate (with a warning) when they differ', () => {
+    const xml = stereoDoc([
+      camAudio(0), camAudio(1),
+      track(ex(0), aItem('vo-l', 'vo take', fdef('f-vo', VO_URL), [20, 120, 5, 105], 1, [['vo-l', 'audio', 3], ['vo-r', 'audio', 4]]), 1),
+      track(ex(1), aItem('vo-r', 'vo take', fref('f-vo'), [30, 120, 15, 105], 2, [['vo-l', 'audio', 3], ['vo-r', 'audio', 4]]), 2),
+    ]);
+    const r = readXmeml(xml, p);
+    expect(r.timeline.audio.vo.map((c) => c.at)).toEqual([20, 30]);
+    expect(r.warnings).toEqual([expect.stringContaining("linked audio 'vo take' and its partner(s) differ")]);
+  });
+
+  it('round-trips mono and stereo role audio written as pairs without duplicating clips', () => {
+    const t = richTimeline();
+    const q = makeProject(t);
+    const xml = writeXmeml(q, { sequenceName: 'pairs' });
+    expect((xml.match(/<clipitem id="clipitem-m1(-r)?"/g) ?? []).length).toBe(2);
+    expect(readXmeml(xml, q).timeline.audio).toEqual(t.audio);
   });
 });

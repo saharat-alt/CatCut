@@ -1,6 +1,6 @@
 import { execa, type Options as ExecaOptions } from 'execa';
 import { constants, existsSync } from 'node:fs';
-import { copyFile, link, mkdir, readFile, rename, rm, writeFile } from 'node:fs/promises';
+import { copyFile, link, mkdir, readFile, rename, rm, stat, writeFile } from 'node:fs/promises';
 import path from 'node:path';
 import { randomBytes } from 'node:crypto';
 import { performance } from 'node:perf_hooks';
@@ -76,6 +76,9 @@ interface CacheEntry {
   mode: 'copy' | 'encode';
   clipId?: string;
   createdAt: string;
+  /** size + mtime when `frames` was last verified; an unchanged file is trusted without re-counting */
+  size?: number;
+  mtimeMs?: number;
 }
 interface CacheManifest {
   schema: 1;
@@ -88,6 +91,16 @@ interface Source {
   path: string;
   probe: ProbeInfo;
   identity: string; // file hash or comp fingerprint
+  timing: SourceTiming;
+}
+
+/** Stream origins. `*Sec` are absolute container timestamps (what `-copyts` keeps). */
+interface SourceTiming {
+  fmtStartSec: number; // container start; ffmpeg subtracts this from every stream without -copyts
+  videoStartSec: number; // the project-frame origin of a moving source: frame 0 of the clip's `in`
+  videoStartExpr: string; // videoStartSec as an exact ffmpeg expression (start_pts * time_base)
+  audioStartSec: number;
+  cfr: boolean; // r_frame_rate == avg_frame_rate
 }
 
 interface SegmentPlan {
@@ -158,17 +171,57 @@ async function run(bin: string, args: string[], o: { timeoutMs: number; signal?:
   return { stdout, stderr };
 }
 
-/** Seconds budget for an encode of `frames` at `fps`: 30x realtime, floored at 2 min. */
+/** Budget for an encode of `frames` at `fps`: 30x realtime, floored at 2 min. */
 function encodeTimeout(frames: Frames, fps: number): number {
-  return Math.max(MIN_TIMEOUT_MS, Math.ceil((frames / fps) * 1000 * 30));
+  return budgetMs(frames / fps);
+}
+
+/** 30x realtime of `mediaSec` decoded media, floored at 2 min. */
+function budgetMs(mediaSec: number): number {
+  return Math.max(MIN_TIMEOUT_MS, Math.ceil(mediaSec * 1000 * 30));
+}
+
+const SEEK_PREROLL_SEC = 2;
+const GOP_SLACK_SEC = 10; // worst-case distance from the seek point back to the previous keyframe
+/** Dissolve curve id (part of the dissolve cache key): frame k of n mixes B at (k + 0.5) / n. */
+const DISSOLVE_CURVE = 'linear-mid';
+
+interface MovingInput {
+  args: string[]; // input options + -i
+  filters: string[]; // frames [srcIn, srcIn+frames) restamped from 0, before fitting
+  decodeSec: number; // media seconds decoded (preroll + output + keyframe slack)
+}
+
+/**
+ * Input + filters for project frames [srcIn, srcIn+frames) of a moving source. Seeks with -ss
+ * before -i to `SEEK_PREROLL_SEC` before the first needed frame and keeps container timestamps
+ * (-copyts, a global option the caller must add) so the project-frame grid stays anchored at the
+ * video stream start: identical frames to decoding from frame 0 through `fps`, without the decode.
+ */
+function movingInput(src: Source, srcIn: Frames, frames: Frames, fps: number): MovingInput {
+  const t = src.timing;
+  const pre = Math.min(srcIn, Math.round(SEEK_PREROLL_SEC * fps));
+  const k0 = srcIn - pre; // grid frame the decode starts at
+  const args: string[] = [];
+  // -ss is relative to the container start; ffmpeg adds fmtStartSec back.
+  if (k0 > 0) args.push('-ss', (t.videoStartSec - t.fmtStartSec + k0 / fps).toFixed(6));
+  args.push('-i', src.path);
+  const filters = [`setpts=PTS-round(${t.videoStartExpr}/TB)`];
+  const sameRate = t.cfr && src.probe.fps !== undefined && Math.abs(src.probe.fps - fps) < 1e-3;
+  if (!sameRate) filters.push(`fps=${fpsExpr(fps)}:start_time=${gridSec(k0, fps)}`);
+  // Frame k sits at k/fps; half-frame margins make the cut immune to timestamp jitter.
+  filters.push(`trim=start=${gridSec(srcIn - 0.5, fps)}:end=${gridSec(srcIn + frames - 0.5, fps)}`, 'setpts=PTS-STARTPTS');
+  return { args, filters, decodeSec: (pre + frames) / fps + (k0 > 0 ? GOP_SLACK_SEC : 0) };
+}
+
+/** Seconds of grid position `frames` using the exact rational rate (29.97 -> 30000/1001), as fps= does. */
+function gridSec(frames: number, fps: number): string {
+  const [num, den] = fpsExpr(fps).split('/');
+  return ((frames * Number(den ?? 1)) / Number(num)).toFixed(9);
 }
 
 function sec(frames: Frames, fps: number): string {
   return (frames / fps).toFixed(6);
-}
-
-function msOf(frames: Frames, fps: number): number {
-  return Math.round((frames / fps) * 1000);
 }
 
 /** mov timescale: 25 -> 25000, 29.97 -> 30000 (frame duration 1001). */
@@ -228,11 +281,14 @@ interface FfprobeStream {
   duration?: string;
   sample_rate?: string;
   channels?: number;
+  start_pts?: number | string;
+  start_time?: string;
+  time_base?: string;
   disposition?: { attached_pic?: number };
 }
 interface FfprobeOut {
   streams?: FfprobeStream[];
-  format?: { format_name?: string; duration?: string };
+  format?: { format_name?: string; duration?: string; start_time?: string };
 }
 
 function parseRate(s: string | undefined): number | undefined {
@@ -266,7 +322,41 @@ function fpsExpr(fps: number): string {
  * `fps` remains the source frame rate. Stills return 1 and are looped by the assembler.
  */
 export async function probe(tools: ToolPaths, file: string, opts: { fps?: number; signal?: AbortSignal } = {}): Promise<ProbeInfo> {
+  return (await probeDetailed(tools, file, opts)).info;
+}
+
+async function probeDetailed(tools: ToolPaths, file: string, opts: { fps?: number; signal?: AbortSignal } = {}): Promise<{ info: ProbeInfo; timing: SourceTiming }> {
   const data = await ffprobeJson(tools, file, opts.signal);
+  return { info: await probeInfoOf(tools, file, data, opts), timing: timingOf(data) };
+}
+
+async function probeTiming(tools: ToolPaths, file: string, signal?: AbortSignal): Promise<SourceTiming> {
+  return timingOf(await ffprobeJson(tools, file, signal));
+}
+
+function timingOf(data: FfprobeOut): SourceTiming {
+  const streams = data.streams ?? [];
+  const v = streams.find((s) => s.codec_type === 'video' && !s.disposition?.attached_pic);
+  const a = streams.find((s) => s.codec_type === 'audio');
+  const num = (x: string | number | undefined): number | undefined => {
+    const n = x === undefined || x === '' ? Number.NaN : Number(x);
+    return Number.isFinite(n) ? n : undefined;
+  };
+  const fmtStartSec = num(data.format?.start_time) ?? 0;
+  const videoStartSec = num(v?.start_time) ?? fmtStartSec;
+  const tb = /^(\d+)\/(\d+)$/.exec(v?.time_base ?? '');
+  const pts = num(v?.start_pts);
+  const videoStartExpr = tb && pts !== undefined && Number.isInteger(pts) ? `${pts}*${tb[1]}/${tb[2]}` : videoStartSec.toFixed(6);
+  return {
+    fmtStartSec,
+    videoStartSec,
+    videoStartExpr,
+    audioStartSec: num(a?.start_time) ?? fmtStartSec,
+    cfr: !!v?.r_frame_rate && v.r_frame_rate === v.avg_frame_rate,
+  };
+}
+
+async function probeInfoOf(tools: ToolPaths, file: string, data: FfprobeOut, opts: { fps?: number; signal?: AbortSignal }): Promise<ProbeInfo> {
   const streams = data.streams ?? [];
   const v = streams.find((s) => s.codec_type === 'video' && !s.disposition?.attached_pic);
   const a = streams.find((s) => s.codec_type === 'audio');
@@ -365,8 +455,22 @@ export async function measureLoudnorm(
 function loudnormPass2(m: LoudnessMeasure, target: { integratedLufs: number; truePeakDb: number; lra: number }): string {
   // Linear mode needs LRA target >= measured; raise it so loudnorm does not fall back to dynamic.
   const lra = Math.min(50, Math.max(target.lra, Math.ceil(m.inputLra)));
+  // loudnorm rejects measured_I / measured_thresh above 0: a hot float mix is turned down first
+  // (float, so lossless) and the measurements shifted by the same gain.
+  const pre = Math.min(0, -10 - m.inputI);
   const f = (v: number) => (Number.isFinite(v) ? v.toFixed(2) : '0');
-  return `loudnorm=I=${target.integratedLufs}:TP=${target.truePeakDb}:LRA=${lra}:measured_I=${f(m.inputI)}:measured_TP=${f(m.inputTp)}:measured_LRA=${f(m.inputLra)}:measured_thresh=${f(m.inputThresh)}:offset=${f(m.targetOffset)}:linear=true:print_format=summary,aresample=48000`;
+  const ln = `loudnorm=I=${target.integratedLufs}:TP=${target.truePeakDb}:LRA=${lra}:measured_I=${f(m.inputI + pre)}:measured_TP=${f(m.inputTp + pre)}:measured_LRA=${f(m.inputLra)}:measured_thresh=${f(m.inputThresh + pre)}:offset=${f(m.targetOffset)}:linear=true:print_format=summary,aresample=48000`;
+  return pre < 0 ? `volume=${pre.toFixed(2)}dB,${ln}` : ln;
+}
+
+/**
+ * blend expression for an n-frame dissolve: frame k mixes B at (k + 0.5) / n, so no frame is pure A
+ * or pure B (a 1-frame dissolve is a 50/50 frame, not a hard cut). k comes from the timestamp (both
+ * sides start at 0), rounded so the weight is exact whatever the time base: blend's N counter is not
+ * reliably 0-based across ffmpeg versions. The final +0.5 rounds instead of truncating.
+ */
+function dissolveExpr(n: Frames, fps: number): string {
+  return `A+(B-A)*clip((round(T*${fpsExpr(fps)})+0.5)/${n},0,1)+0.5`;
 }
 
 function sameLoudness(a: DeliveryPreset['loudness'], b: DeliveryPreset['loudness']): boolean {
@@ -396,8 +500,11 @@ function fitFilters(srcW: number, srcH: number, W: number, H: number, scalePct: 
 
 interface AudioPiece {
   input: number;
+  /** trim points on ffmpeg's input timeline (container start = 0) */
   startSec: number;
   endSec?: number;
+  /** where the audio stream begins on that timeline; a later start is padded with silence */
+  streamStartSec?: number;
   atSec: number;
   gainDb: number;
   fadeIn?: { sec: number };
@@ -434,11 +541,14 @@ class FilterGraph {
     const trim = [`start=${p.startSec.toFixed(6)}`];
     if (p.endSec !== undefined) trim.push(`end=${p.endSec.toFixed(6)}`);
     f.push(`atrim=${trim.join(':')}`, 'asetpts=PTS-STARTPTS', 'aformat=sample_fmts=fltp:sample_rates=48000:channel_layouts=stereo');
+    // asetpts drops any gap before the first sample; put it back so the piece keeps its origin.
+    const lead = Math.round(Math.max(0, (p.streamStartSec ?? 0) - p.startSec) * 48000);
+    if (lead > 0) f.push(`adelay=delays=${lead}S:all=1`);
     if (p.gainDb) f.push(`volume=${p.gainDb.toFixed(3)}dB`);
     if (p.fadeIn && p.fadeIn.sec > 0) f.push(`afade=t=in:st=0:d=${p.fadeIn.sec.toFixed(6)}`);
     if (p.fadeOut && p.fadeOut.sec > 0) f.push(`afade=t=out:st=${Math.max(0, p.fadeOut.startSec).toFixed(6)}:d=${p.fadeOut.sec.toFixed(6)}`);
-    const ms = Math.round(p.atSec * 1000);
-    if (ms > 0) f.push(`adelay=delays=${ms}:all=1`);
+    const at = Math.round(p.atSec * 48000);
+    if (at > 0) f.push(`adelay=delays=${at}S:all=1`);
     this.add(`[${p.input}:a:0]${f.join(',')}[${out}]`);
     return out;
   }
@@ -465,6 +575,7 @@ export class Assembler {
   private readonly ae: AeBackend;
   private readonly qc?: QcRunner;
   private readonly concurrency: number;
+  private readonly encoderId: string;
   private readonly loudnessCache = new Map<string, LoudnessMeasure | undefined>();
 
   constructor(deps: AssemblerDeps) {
@@ -473,6 +584,8 @@ export class Assembler {
     this.ae = deps.ae;
     this.qc = deps.qc;
     this.concurrency = Math.max(1, deps.concurrency ?? (deps.env.freeRamGb >= 3 ? 2 : 1));
+    // Part of every segment/dissolve key: a different ffmpeg or encoder setting yields different pixels.
+    this.encoderId = hashJson({ ffmpeg: deps.env.ffmpegVersion ?? 'unknown', prores: PRORES_HQ_ARGS });
   }
 
   private async encode(args: string[], videoArgs: string[], cpuArgs: string[], timeoutMs: number, signal?: AbortSignal): Promise<void> {
@@ -510,6 +623,15 @@ export class Assembler {
 
     if (p.timeline.video.length === 0) throw new Error('timeline.video is empty: nothing to build');
 
+    // 0. structural validation first, so a broken timeline fails before minutes of aerender.
+    // Probe-dependent checks (source lengths, audio presence) wait for fresh probes below.
+    const structural = validateTimeline(withoutProbes(p));
+    for (const id of usedAssetIds(p)) {
+      const a = p.assets[id];
+      if (a && a.kind !== 'aecomp' && !existsSync(a.path)) structural.push(`asset '${id}' file missing: ${a.path}`);
+    }
+    if (structural.length) throw new Error(`timeline invalid:\n - ${structural.join('\n - ')}`);
+
     // 1. AE comps
     await timed('comps', () => this.ensureCompRenders(p, paths.cacheRenders, stats, report, signal, opts.force));
 
@@ -520,7 +642,7 @@ export class Assembler {
     if (errors.length) throw new Error(`timeline invalid:\n - ${errors.join('\n - ')}`);
 
     const totalFrames = timelineFrames(p);
-    const { segments, dissolves, order } = planTimeline(p, sources);
+    const { segments, dissolves, order } = planTimeline(p, sources, this.encoderId);
     stats.segmentsTotal = segments.length;
 
     const manifest = await loadManifest(paths.cacheSegments);
@@ -531,7 +653,7 @@ export class Assembler {
       let done = 0;
       report('segments', 0, segments.length);
       await parallel(segments, this.concurrency, async (seg) => {
-        const hit = !opts.force && (await this.cacheHit(manifest, paths.cacheSegments, seg.key, seg.frames, signal));
+        const hit = !opts.force && (await this.cacheHit(manifest, paths.cacheSegments, seg.key, seg.frames, 'segment', signal));
         if (hit) stats.segmentsReused++;
         else {
           await this.renderSegment(p, seg, paths, manifest, signal);
@@ -547,7 +669,7 @@ export class Assembler {
       let done = 0;
       report('dissolves', 0, dissolves.length);
       await parallel(dissolves, this.concurrency, async (d) => {
-        const hit = !opts.force && (await this.cacheHit(manifest, paths.cacheSegments, d.key, d.n, signal));
+        const hit = !opts.force && (await this.cacheHit(manifest, paths.cacheSegments, d.key, d.n, 'dissolve', signal));
         if (!hit) {
           await this.renderDissolve(p, d, paths, manifest, signal);
           stats.dissolvesRendered++;
@@ -557,15 +679,24 @@ export class Assembler {
       await saveManifest();
     });
 
+    // 5. audio (rendered whole every build: cheap)
+    const masterLoud = resolvePreset(MASTER_PRESET_ID, p.delivery.overrides?.[MASTER_PRESET_ID]).loudness;
+    const audio = await timed('audio', async () => {
+      report('audio', 0, 1);
+      const wav = await this.renderAudio(p, sources, totalFrames, paths.tmp, masterLoud, signal);
+      report('audio', 1, 1);
+      return wav;
+    });
+
     // version paths (decided late so a failed build leaves no empty version folder behind)
     const versionId = nextVersionId(p);
     const versionDir = path.join(paths.out, versionId);
     const baseName = `${sanitizeName(p.meta.name, 'master')}_${versionId}`;
-    await mkdir(versionDir, { recursive: true });
+    const master = uniquePath(path.join(versionDir, `${baseName}.mov`));
 
-    // 5. concat -> video-only master
-    const videoOnly = await timed('concat', async () => {
-      report('concat', 0, 1);
+    // 6. one pass: stitch cached segments (-c:v copy, never re-encoded) + mux the audio
+    await timed('mux', async () => {
+      report('mux', 0, 1);
       const list = tmpFile(paths.tmp, '.txt');
       const lines = ['ffconcat version 1.0'];
       for (const item of order) {
@@ -578,44 +709,25 @@ export class Assembler {
       try {
         await run(
           this.tools.ffmpeg,
-          [...FF_BASE, '-y', '-f', 'concat', '-safe', '0', '-i', list, '-map', '0:v:0', '-c', 'copy', '-video_track_timescale', String(movTimescale(fps)), out],
+          [
+            ...FF_BASE, '-y', '-f', 'concat', '-safe', '0', '-i', list, '-i', audio,
+            '-map', '0:v:0', '-map', '1:a:0', '-c:v', 'copy', '-c:a', 'pcm_s24le', '-ar', '48000', '-ac', '2',
+            '-t', sec(totalFrames, fps), '-video_track_timescale', String(movTimescale(fps)), out,
+          ],
           { timeoutMs: Math.max(5 * 60_000, encodeTimeout(totalFrames, fps)), signal },
         );
+        const got = await countVideoPackets(this.tools, out, signal);
+        if (got !== totalFrames) {
+          throw new Error(`stitched master has ${got} frames, timeline is ${totalFrames} (segments: ${order.map((i) => `${i.kind}:${manifest.entries[i.plan.key]?.frames}`).join(' ')})`);
+        }
+        await mkdir(versionDir, { recursive: true });
+        await moveInto(out, master);
+        report('mux', 1, 1, `${got} frames: ${master}`);
       } finally {
         await rm(list, { force: true });
-      }
-      const got = await countVideoPackets(this.tools, out, signal);
-      if (got !== totalFrames) {
         await rm(out, { force: true });
-        throw new Error(`stitched master has ${got} frames, timeline is ${totalFrames} (segments: ${order.map((i) => `${i.kind}:${manifest.entries[i.plan.key]?.frames}`).join(' ')})`);
+        await rm(audio, { force: true });
       }
-      report('concat', 1, 1, `${got} frames`);
-      return out;
-    });
-
-    // 6. audio
-    const masterLoud = resolvePreset(MASTER_PRESET_ID, p.delivery.overrides?.[MASTER_PRESET_ID]).loudness;
-    const audio = await timed('audio', async () => {
-      report('audio', 0, 1);
-      const wav = await this.renderAudio(p, sources, totalFrames, paths.tmp, masterLoud, signal);
-      report('audio', 1, 1);
-      return wav;
-    });
-
-    // 7. mux
-    const master = uniquePath(path.join(versionDir, `${baseName}.mov`));
-    await timed('mux', async () => {
-      report('mux', 0, 1);
-      const out = tmpFile(paths.tmp, '.mov');
-      await run(
-        this.tools.ffmpeg,
-        [...FF_BASE, '-y', '-i', videoOnly, '-i', audio, '-map', '0:v:0', '-map', '1:a:0', '-c:v', 'copy', '-c:a', 'pcm_s24le', '-ar', '48000', '-ac', '2', '-t', sec(totalFrames, fps), out],
-        { timeoutMs: 10 * 60_000, signal },
-      );
-      await moveInto(out, master);
-      await rm(videoOnly, { force: true });
-      await rm(audio, { force: true });
-      report('mux', 1, 1, master);
     });
 
     const version: Version = {
@@ -730,12 +842,15 @@ export class Assembler {
       if (!a) throw new Error(`timeline refers to unknown asset '${id}'`);
       if (a.kind === 'aecomp') {
         if (!a.render || !a.probe) throw new Error(`internal: comp '${id}' has no render`);
-        out.set(id, { assetId: id, kind: a.kind, path: a.render.path, probe: a.probe, identity: a.render.fingerprint });
+        const timing = await probeTiming(this.tools, a.render.path, signal);
+        // renderedAt is part of the identity so a forced re-render with an unchanged fingerprint invalidates its segments.
+        out.set(id, { assetId: id, kind: a.kind, path: a.render.path, probe: a.probe, identity: `${a.render.fingerprint}@${a.render.renderedAt}`, timing });
       } else {
         if (!existsSync(a.path)) throw new Error(`asset '${id}' file missing: ${a.path}`);
         a.hash = await hashFile(a.path);
-        a.probe = await probe(this.tools, a.path, { fps: p.meta.fps, signal });
-        out.set(id, { assetId: id, kind: a.kind, path: a.path, probe: a.probe, identity: a.hash });
+        const { info, timing } = await probeDetailed(this.tools, a.path, { fps: p.meta.fps, signal });
+        a.probe = info;
+        out.set(id, { assetId: id, kind: a.kind, path: a.path, probe: info, identity: a.hash, timing });
       }
       report('probe', ++done, ids.length, id);
     }
@@ -744,20 +859,40 @@ export class Assembler {
 
   // ----- cache -----
 
-  private async cacheHit(manifest: CacheManifest, dir: string, key: string, frames: Frames, signal?: AbortSignal): Promise<boolean> {
+  /**
+   * A cache file is trusted when its size + mtime match what the manifest recorded when its frame
+   * count was last verified; otherwise the packets are re-counted (no decode) and the record refreshed.
+   */
+  private async cacheHit(manifest: CacheManifest, dir: string, key: string, frames: Frames, kind: CacheEntry['kind'], signal?: AbortSignal): Promise<boolean> {
     const entry = manifest.entries[key];
-    if (entry) {
-      if (entry.frames === frames && existsSync(path.join(dir, entry.file)) && await countVideoPackets(this.tools, path.join(dir, entry.file), signal).catch(() => { throwIfAborted(signal); return -1; }) === frames) return true;
+    if (entry && entry.frames !== frames) {
       delete manifest.entries[key];
       return false;
     }
-    // File present but manifest lost: adopt it when the frame count is right.
-    const file = path.join(dir, `${key}.mov`);
-    if (!existsSync(file)) return false;
-    const n = await countVideoPackets(this.tools, file, signal).catch(() => -1);
-    if (n !== frames) return false;
-    manifest.entries[key] = { file: path.basename(file), frames, kind: 'segment', mode: 'encode', createdAt: new Date().toISOString() };
+    // Without an entry, a file present under the key name (manifest lost) is adopted when the frame count is right.
+    const file = path.join(dir, entry?.file ?? `${key}.mov`);
+    const st = await stat(file).catch(() => undefined);
+    if (!st?.isFile()) {
+      if (entry) delete manifest.entries[key];
+      return false;
+    }
+    if (entry && entry.size === st.size && entry.mtimeMs === st.mtimeMs) return true;
+    const n = await countVideoPackets(this.tools, file, signal).catch(() => { throwIfAborted(signal); return -1; });
+    if (n !== frames) {
+      if (entry) delete manifest.entries[key];
+      return false;
+    }
+    manifest.entries[key] = {
+      ...(entry ?? { file: path.basename(file), frames, kind, mode: 'encode', createdAt: new Date().toISOString() }),
+      size: st.size,
+      mtimeMs: st.mtimeMs,
+    };
     return true;
+  }
+
+  private async recordCache(manifest: CacheManifest, key: string, final: string, entry: Omit<CacheEntry, 'file' | 'createdAt' | 'size' | 'mtimeMs'>): Promise<void> {
+    const st = await stat(final);
+    manifest.entries[key] = { ...entry, file: path.basename(final), createdAt: new Date().toISOString(), size: st.size, mtimeMs: st.mtimeMs };
   }
 
   // ----- segments -----
@@ -770,9 +905,11 @@ export class Assembler {
     let mode: CacheEntry['mode'] = 'encode';
 
     if (await this.canStreamCopy(p, seg.src, seg.clip, signal)) {
+      // Same origin as the encode path and clip audio: the video stream start, not the container start.
+      const ss = seg.src.timing.videoStartSec - seg.src.timing.fmtStartSec + seg.srcIn / fps;
       await run(
         this.tools.ffmpeg,
-        [...FF_BASE, '-y', '-ss', sec(seg.srcIn, fps), '-i', seg.src.path, '-map', '0:v:0', '-c:v', 'copy', '-an', '-frames:v', String(seg.frames), '-video_track_timescale', String(movTimescale(fps)), out],
+        [...FF_BASE, '-y', '-ss', ss.toFixed(6), '-i', seg.src.path, '-map', '0:v:0', '-c:v', 'copy', '-an', '-frames:v', String(seg.frames), '-video_track_timescale', String(movTimescale(fps)), out],
         { timeoutMs: encodeTimeout(seg.frames, fps), signal },
       );
       const n = await countVideoPackets(this.tools, out, signal);
@@ -781,7 +918,8 @@ export class Assembler {
       else await rm(out, { force: true }); // not frame-accurate on this file: re-encode instead
     }
     if (mode === 'encode') {
-      await run(this.tools.ffmpeg, this.encodeArgs(p, seg.src, seg.clip, seg.srcIn, seg.frames, out), { timeoutMs: encodeTimeout(seg.frames, fps), signal });
+      const enc = this.encodeArgs(p, seg.src, seg.clip, seg.srcIn, seg.frames, out);
+      await run(this.tools.ffmpeg, enc.args, { timeoutMs: budgetMs(enc.decodeSec), signal });
       const n = await countVideoPackets(this.tools, out, signal);
       if (n !== seg.frames) {
         await rm(out, { force: true });
@@ -789,7 +927,7 @@ export class Assembler {
       }
     }
     await moveInto(out, final);
-    manifest.entries[seg.key] = { file: path.basename(final), frames: seg.frames, kind: 'segment', mode, clipId: seg.clip.id, createdAt: new Date().toISOString() };
+    await this.recordCache(manifest, seg.key, final, { frames: seg.frames, kind: 'segment', mode, clipId: seg.clip.id });
   }
 
   /** Stream copy is frame-accurate only on all-intra ProRes 422 HQ at project size/fps (integer fps). */
@@ -804,24 +942,23 @@ export class Assembler {
   }
 
   /** ffmpeg args for a ProRes 422 HQ video-only piece of `frames` frames starting at source frame `srcIn`. */
-  private encodeArgs(p: Project, src: Source, clip: Clip, srcIn: Frames, frames: Frames, out: string): string[] {
+  private encodeArgs(p: Project, src: Source, clip: Clip, srcIn: Frames, frames: Frames, out: string): { args: string[]; decodeSec: number } {
     const fps = p.meta.fps;
     const W = p.meta.width;
     const H = p.meta.height;
-    const sw = src.probe.width ?? W;
-    const sh = src.probe.height ?? H;
-    const fit = fitFilters(sw, sh, W, H, clip.scale ?? 100);
+    const fit = fitFilters(src.probe.width ?? W, src.probe.height ?? H, W, H, clip.scale ?? 100);
     const args = [...FF_BASE, '-y'];
+    let decodeSec = frames / fps;
     if (src.kind === 'still') {
       args.push('-loop', '1', '-framerate', String(fps), '-i', src.path);
       args.push('-vf', [...fit, 'format=yuv422p10le'].join(','));
     } else {
-      // shortcut: decode from the start to preserve the fps sampling grid; optimize long-source seeking only with frame-equivalence tests.
-      args.push('-i', src.path);
-      args.push('-vf', ['setpts=PTS-STARTPTS', `fps=${fpsExpr(fps)}`, `trim=start_frame=${srcIn}:end_frame=${srcIn + frames}`, 'setpts=PTS-STARTPTS', ...fit, 'format=yuv422p10le'].join(','));
+      const m = movingInput(src, srcIn, frames, fps);
+      args.push('-copyts', ...m.args, '-vf', [...m.filters, ...fit, 'format=yuv422p10le'].join(','));
+      decodeSec = m.decodeSec;
     }
     args.push('-map', '0:v:0', '-an', '-frames:v', String(frames), ...PRORES_HQ_ARGS, '-video_track_timescale', String(movTimescale(fps)), out);
-    return args;
+    return { args, decodeSec };
   }
 
   // ----- dissolves -----
@@ -834,32 +971,40 @@ export class Assembler {
     await rm(final, { force: true });
     const out = tmpFile(paths.tmp, '.mov');
 
-    const args = [...FF_BASE, '-y'];
+    const args = [...FF_BASE, '-y', '-copyts'];
     const chains: string[] = [];
+    let inputs = 0;
+    let decodeSec = 0;
+    // One time base on both sides: blend evaluates T in its first input's time base, which is only
+    // right when framesync does not have to pick a common one.
+    const r = fpsExpr(fps).split('/');
+    const tb = `settb=${r[1] ?? '1'}/${r[0]}`;
     const side = (src: Source, clip: Clip, srcIn: Frames, label: string) => {
       const fit = fitFilters(src.probe.width ?? W, src.probe.height ?? H, W, H, clip.scale ?? 100);
-      const idx = args.filter((x) => x === '-i').length;
+      const idx = inputs++;
       if (src.kind === 'still') {
         args.push('-loop', '1', '-framerate', String(fps), '-i', src.path);
-        chains.push(`[${idx}:v:0]${[...fit, 'format=yuv422p10le', `trim=end_frame=${d.n}`, 'setpts=PTS-STARTPTS'].join(',')}[${label}]`);
+        chains.push(`[${idx}:v:0]${[...fit, 'format=yuv422p10le', `trim=end_frame=${d.n}`, 'setpts=PTS-STARTPTS', tb].join(',')}[${label}]`);
+        decodeSec += d.n / fps;
       } else {
-        args.push('-i', src.path);
-        chains.push(`[${idx}:v:0]${['setpts=PTS-STARTPTS', `fps=${fpsExpr(fps)}`, `trim=start_frame=${srcIn}:end_frame=${srcIn + d.n}`, 'setpts=PTS-STARTPTS', ...fit, 'format=yuv422p10le'].join(',')}[${label}]`);
+        const m = movingInput(src, srcIn, d.n, fps);
+        args.push(...m.args);
+        chains.push(`[${idx}:v:0]${[...m.filters, ...fit, 'format=yuv422p10le', tb].join(',')}[${label}]`);
+        decodeSec += m.decodeSec;
       }
     };
     side(d.a.src, d.a.clip, d.aSrcIn, 'va');
     side(d.b.src, d.b.clip, d.bSrcIn, 'vb');
-    // Both sides are exactly n frames; offset 0 + duration n -> frame k mixes a*(1-k/n) + b*(k/n).
-    chains.push(`[va][vb]xfade=transition=fade:duration=${sec(d.n, fps)}:offset=0[v]`);
+    chains.push(`[va][vb]blend=all_expr='${dissolveExpr(d.n, fps)}'[v]`);
     args.push('-filter_complex', chains.join(';'), '-map', '[v]', '-an', '-frames:v', String(d.n), ...PRORES_HQ_ARGS, '-video_track_timescale', String(movTimescale(fps)), out);
-    await run(this.tools.ffmpeg, args, { timeoutMs: encodeTimeout(d.n * 2, fps), signal });
+    await run(this.tools.ffmpeg, args, { timeoutMs: budgetMs(decodeSec), signal });
     const n = await countVideoPackets(this.tools, out, signal);
     if (n !== d.n) {
       await rm(out, { force: true });
       throw new Error(`dissolve ${d.a.clip.id}->${d.b.clip.id}: got ${n} frames, expected ${d.n} (not enough handle in a source?)`);
     }
     await moveInto(out, final);
-    manifest.entries[d.key] = { file: path.basename(final), frames: d.n, kind: 'dissolve', mode: 'encode', createdAt: new Date().toISOString() };
+    await this.recordCache(manifest, d.key, final, { frames: d.n, kind: 'dissolve', mode: 'encode' });
   }
 
   // ----- audio -----
@@ -892,10 +1037,12 @@ export class Assembler {
         const after = splitDissolve(nNext); // and `b` frames after its out-point
         const srcStart = Math.max(0, clip.in - before.a);
         const lead = clip.in - srcStart;
+        const o = audioOrigin(src);
         const piece: AudioPiece = {
           input: g.input(src.path),
-          startSec: srcStart / fps,
-          endSec: (clip.in + clip.dur + after.b) / fps,
+          startSec: o.originSec + srcStart / fps,
+          endSec: o.originSec + (clip.in + clip.dur + after.b) / fps,
+          streamStartSec: o.streamStartSec,
           atSec: ((starts.get(clip.id) ?? 0) - lead) / fps,
           gainDb: 0,
         };
@@ -914,7 +1061,15 @@ export class Assembler {
         const srcLen = src.probe.durationFrames > 0 ? src.probe.durationFrames : undefined;
         let dur = c.dur ?? (srcLen !== undefined ? srcLen - inF : totalFrames - c.at);
         dur = Math.min(dur, totalFrames - c.at);
-        const piece: AudioPiece = { input: g.input(src.path), startSec: inF / fps, endSec: (inF + dur) / fps, atSec: c.at / fps, gainDb: c.gainDb ?? 0 };
+        const o = audioOrigin(src);
+        const piece: AudioPiece = {
+          input: g.input(src.path),
+          startSec: o.originSec + inF / fps,
+          endSec: o.originSec + (inF + dur) / fps,
+          streamStartSec: o.streamStartSec,
+          atSec: c.at / fps,
+          gainDb: c.gainDb ?? 0,
+        };
         if (c.fadeIn) piece.fadeIn = { sec: c.fadeIn / fps };
         if (c.fadeOut) piece.fadeOut = { startSec: (dur - c.fadeOut) / fps, sec: c.fadeOut / fps };
         return g.piece(piece);
@@ -969,10 +1124,11 @@ export class Assembler {
       g.add(`[${mixed}]apad=whole_dur=${D.toFixed(6)},atrim=end=${D.toFixed(6)}[out]`);
       args.push('-filter_complex', g.toString(), '-map', '[out]');
     }
-    args.push('-c:a', 'pcm_s24le', '-ar', '48000', '-ac', '2', raw);
+    // Float intermediate: a mix summing past 0 dBFS must reach loudnorm unclipped.
+    args.push('-c:a', 'pcm_f32le', '-ar', '48000', '-ac', '2', raw);
     await run(this.tools.ffmpeg, args, { timeoutMs: 20 * 60_000, signal });
 
-    if (!loud) return raw;
+    if (!loud) return raw; // muxed to pcm_s24le by the caller
     const target = { integratedLufs: loud.integratedLufs, truePeakDb: loud.truePeakDb, lra: loud.lra ?? 7 };
     const m = await measureLoudnorm(this.tools, raw, target, signal);
     if (!m) return raw; // silence: nothing to normalise
@@ -1028,14 +1184,19 @@ export class Assembler {
       const enc = presetToFfmpegArgs(preset, this.env, { width: W, height: H, fps: tfps });
 
       const vf: string[] = [];
-      // 50p master -> 25i: weave field pairs; 25p master -> 25i: PsF (flag fields, keep every frame).
-      if (preset.video.interlaced && Math.abs(fps - tfps * 2) < 0.01) vf.push('tinterlace=interleave_top');
-      else if (Math.abs(tfps - fps) > 1e-3) vf.push(`fps=${fpsExpr(tfps)}`);
       const sameAspect = Math.abs(W / H - mw / mh) < 0.01;
-      if (W !== mw || H !== mh) {
-        vf.push(sameAspect ? `scale=${W}:${H}:flags=lanczos` : `scale=${W}:${H}:force_original_aspect_ratio=increase:flags=lanczos,crop=${W}:${H}`);
+      const scale = W === mw && H === mh ? []
+        : [sameAspect ? `scale=${W}:${H}:flags=lanczos` : `scale=${W}:${H}:force_original_aspect_ratio=increase:flags=lanczos,crop=${W}:${H}`];
+      if (preset.video.interlaced && Math.abs(fps - tfps * 2) < 0.01) {
+        // 50p master -> 25i: scale the progressive frames, then weave field pairs (scaling woven
+        // frames would blend the two fields together).
+        vf.push(...scale, 'tinterlace=interleave_top');
+      } else {
+        if (Math.abs(tfps - fps) > 1e-3) vf.push(`fps=${fpsExpr(tfps)}`);
+        vf.push(...scale);
+        // 25p master -> 25i: PsF (flag fields, keep every frame).
+        if (preset.video.interlaced) vf.push('setfield=tff');
       }
-      if (preset.video.interlaced && !vf.includes('tinterlace=interleave_top')) vf.push('setfield=tff');
       vf.push('setsar=1');
 
       const args = [...FF_BASE, '-y', '-i', version.master, '-map', '0:v:0', '-map', '0:a:0?', '-vf', vf.join(','), ...enc.videoArgs];
@@ -1091,6 +1252,25 @@ export class Assembler {
 
 // ---------- planning (pure) ----------
 
+/** The project with probe/render data hidden: validateTimeline then checks structure only. */
+function withoutProbes(p: Project): Project {
+  const assets: Project['assets'] = {};
+  for (const [id, a] of Object.entries(p.assets)) {
+    const copy = { ...a };
+    delete copy.probe;
+    if (copy.kind === 'aecomp') delete copy.render;
+    assets[id] = copy;
+  }
+  return { ...p, assets };
+}
+
+/** Where clip frame 0 / an audio clip's `in` 0 sits on ffmpeg's input timeline, and where its audio starts. */
+function audioOrigin(src: Source): { originSec: number; streamStartSec: number } {
+  const t = src.timing;
+  const origin = src.probe.hasVideo && src.kind !== 'still' ? t.videoStartSec : t.audioStartSec;
+  return { originSec: origin - t.fmtStartSec, streamStartSec: t.audioStartSec - t.fmtStartSec };
+}
+
 function usedAssetIds(p: Project): Set<string> {
   const used = new Set<string>();
   for (const c of p.timeline.video) used.add(c.src);
@@ -1099,7 +1279,7 @@ function usedAssetIds(p: Project): Set<string> {
 }
 
 /** Segment / dissolve plans + concat order. Exported for tests; pure. */
-export function planTimeline(p: Project, sources: Map<string, Source>): { segments: SegmentPlan[]; dissolves: DissolvePlan[]; order: ConcatItem[] } {
+export function planTimeline(p: Project, sources: Map<string, Source>, encoderId = ''): { segments: SegmentPlan[]; dissolves: DissolvePlan[]; order: ConcatItem[] } {
   const t = p.timeline;
   const fps = p.meta.fps;
   const cutAfter = new Map(t.cuts.map((c) => [c.after, c.dissolve]));
@@ -1115,7 +1295,8 @@ export function planTimeline(p: Project, sources: Map<string, Source>): { segmen
     const frames = clip.dur - trimStart - trimEnd;
     if (frames <= 0) throw new Error(`clip '${clip.id}': dissolves (${trimStart}+${trimEnd}) leave no body in ${clip.dur} frames`);
     const key = hashJson({
-      schema: 2, // Invalidate old midpoint-seek segments after fixing the project-frame sampling grid.
+      schema: 3, // 3: seeking input + video-start origin + ffmpeg/encoder id
+      enc: encoderId,
       src: src.identity, in: clip.in, dur: clip.dur, scale: clip.scale ?? 100,
       w: p.meta.width, h: p.meta.height, fps, handlesBefore: trimStart, handlesAfter: trimEnd,
     });
@@ -1133,7 +1314,7 @@ export function planTimeline(p: Project, sources: Map<string, Source>): { segmen
     const half = splitDissolve(n);
     const d: DissolvePlan = {
       a: seg, b: next, n, half,
-      key: hashJson({ a: seg.key, b: next.key, n }),
+      key: hashJson({ schema: 3, a: seg.key, b: next.key, n, curve: DISSOLVE_CURVE, enc: encoderId }),
       aSrcIn: seg.clip.in + seg.clip.dur - half.a,
       bSrcIn: next.clip.in - half.a,
     };

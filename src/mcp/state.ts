@@ -30,7 +30,8 @@ export interface ProjectApi {
 
 export interface XmemlApi {
   writeXmeml(p: Project, opts: XmemlWriteOptions): string;
-  readXmeml(xml: string, p?: Project): XmemlReadResult;
+  /** `warnings` (dropped V2+ clips, gaps, speed changes, ambiguous audio roles...) when the reader provides them */
+  readXmeml(xml: string, p?: Project): XmemlReadResult & { warnings?: string[] };
 }
 
 export interface AssemblerLike {

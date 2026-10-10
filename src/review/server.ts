@@ -3,7 +3,7 @@ import { createReadStream } from 'node:fs';
 import { readFile, stat } from 'node:fs/promises';
 import { createServer, type IncomingMessage, type ServerResponse } from 'node:http';
 import type { Project, Version } from '../core/types.js';
-import { readReviewSession, ReviewError, saveReviewSession, submitReview, versionPlan } from './session.js';
+import { INTENT_COLORS, readReviewDraft, readReviewSession, ReviewError, saveReviewDraft, saveReviewSession, submitReview, versionPlan } from './session.js';
 
 export interface ReviewServer { url: string; close(): Promise<void> }
 
@@ -77,6 +77,7 @@ export async function openReview(p: Project, v: Version): Promise<ReviewServer> 
       if (req.method === 'PUT' || req.method === 'POST') {
         if (req.headers.origin !== origin) throw new ReviewError('Invalid origin', 403);
         if (route === 'session' && req.method === 'PUT') return json(res, 200, await saveReviewSession(p, frozenVersion, await body(req)));
+        if (route === 'draft' && req.method === 'PUT') return json(res, 200, { draft: await saveReviewDraft(p, frozenVersion, await body(req)) });
         if (route === 'submit' && req.method === 'POST') {
           const input = await body(req);
           if (!input || typeof input !== 'object' || !('revision' in input) || Object.keys(input).length !== 1 || typeof input.revision !== 'number') throw new ReviewError('Invalid revision');
@@ -84,7 +85,10 @@ export async function openReview(p: Project, v: Version): Promise<ReviewServer> 
         }
       }
       if (req.method !== 'GET' && req.method !== 'HEAD') throw new ReviewError('Method not allowed', 405);
-      if (route === 'data') return json(res, 200, { name: p.meta.name, version: v.id, plan, qc: v.qc ?? null, session: await readReviewSession(p, frozenVersion) });
+      if (route === 'data') {
+        const [session, draft] = await Promise.all([readReviewSession(p, frozenVersion), readReviewDraft(p, frozenVersion)]);
+        return json(res, 200, { name: p.meta.name, version: v.id, plan, qc: v.qc ?? null, intents: INTENT_COLORS, session, draft });
+      }
       if (route === 'media') return media(req, res, proxy);
       if (route === 'contact' && v.qc?.contactSheet) {
         res.writeHead(200, { 'Content-Type': 'image/png' });

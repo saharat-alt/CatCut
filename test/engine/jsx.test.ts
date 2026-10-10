@@ -9,11 +9,11 @@ const runner = readFileSync(new URL('../../jsx/runner.jsx', import.meta.url), 'u
 const dirs: string[] = [];
 afterEach(async () => { for (const dir of dirs.splice(0)) await rm(dir, { recursive: true, force: true }); });
 
-async function run(action: string, ops: unknown[] = [], nativeJson = true) {
+async function run(action: string, ops: unknown[] = [], nativeJson = true, extra = '', jobText?: string) {
   const dir = await mkdtemp(join(os.tmpdir(), 'editmcp-jsx-')); dirs.push(dir);
-  const aep = join(dir, 'working.aep'), result = join(dir, 'result.json'), job = join(dir, 'job.json');
+  const aep = join(dir, 'working.aep'), result = join(dir, 'job.result.json'), job = join(dir, 'job.json');
   await writeFile(aep, 'working');
-  await writeFile(job, JSON.stringify({ action, aep, result, comp: 'Title', atFrame: 10, ops }));
+  await writeFile(job, jobText ?? JSON.stringify({ action, aep, result, comp: 'Title', atFrame: 10, ops }));
   class File {
     encoding = ''; mode = '';
     constructor(public fsName: string) {}
@@ -50,7 +50,7 @@ async function run(action: string, ops: unknown[] = [], nativeJson = true) {
     var closed = 0, quit = 0, saved = 0;
     var app = { version: '26.0', beginSuppressDialogs: function () {}, endSuppressDialogs: function () {}, quit: function () { quit++; },
       open: function () {}, project: { numItems: 1, item: function () { return comp; }, close: function () { closed++; }, save: function () { saved++; } } };
-  `, context);
+  ` + extra, context);
   vm.runInContext(runner, context, { timeout: 5000 });
   return { context, result: JSON.parse(await readFile(result, 'utf8')) };
 }
@@ -85,5 +85,42 @@ describe('ExtendScript runner in a mock AE host', () => {
     expect(result.error).toContain('layer not found');
     expect(context.saved).toBe(0);
     expect(context.quit).toBe(1);
+  });
+  it('fingerprints expressions by text plus sampled values, flags opaque values, records timing', async () => {
+    const extra = `
+      comp.displayStartFrame = 250; comp.workAreaStart = 1; comp.workAreaDuration = 2;
+      var expr = { name: 'Position', matchName: 'ADBE Position', propertyType: 1, propertyValueType: 5, numKeys: 0,
+        canSetExpression: true, expression: 'time * 10', expressionEnabled: true, expressionError: '',
+        valueAtTime: function (t, pre) { return pre ? 0 : Math.round(t * 1000) / 100; } };
+      var curves = { name: 'Curves', matchName: 'ADBE CurvesCustom', propertyType: 1, propertyValueType: 3, numKeys: 0, canSetExpression: false };
+      var baseProperty = layer.property;
+      layer.numProperties = 3;
+      layer.property = function (n) { return n === 2 ? expr : n === 3 ? curves : baseProperty(n); };
+    `;
+    const { result } = await run('fingerprint', [], true, extra);
+    expect(result.ok).toBe(true);
+    const snap = result.data.Title;
+    expect(snap).toMatchObject({ durationFrames: 100, displayStartFrame: 250, opaque: true });
+    expect(snap.settings).toMatchObject({ workAreaStart: 1, workAreaDuration: 2, displayStartFrame: 250 });
+    const [text, position, curvesSnap] = snap.layers[0].properties;
+    expect(text.value.opaque).toBe(true); // mock TextDocument has no characterRange
+    expect(text.value.text).toBe('เดิม');
+    expect(position.expression).toBe('time * 10');
+    const frames = position.samples.map((s: { f: number }) => s.f);
+    expect(frames[0]).toBe(0);
+    expect(frames[frames.length - 1]).toBe(99);
+    expect(frames.length).toBe(10);
+    expect(position.samples[frames.length - 1].v).toBeCloseTo(39.6);
+    expect(curvesSnap.opaque).toBe(true);
+    expect(JSON.stringify(result.data)).not.toContain('projectDependency');
+  });
+  it('still writes a result and quits when the job cannot be read or close throws', async () => {
+    const { context, result } = await run('inspect', [], true, `app.project.close = function () { closed++; throw new Error('close failed'); };`, '{not json');
+    expect(result.ok).toBe(false);
+    expect(result.error).toMatch(/JSON|Unexpected|invalid/i);
+    expect(context.quit).toBe(1);
+    const second = await run('inspect', [], true, `app.project.close = function () { closed++; throw new Error('close failed'); };`);
+    expect(second.result.ok).toBe(false); // close before open throws -> reported
+    expect(second.context.quit).toBe(1);
   });
 });

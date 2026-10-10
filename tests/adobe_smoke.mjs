@@ -1,8 +1,9 @@
 // Opt-in integration test: launches isolated Adobe instances and keeps evidence under tmp/.
 import assert from 'node:assert/strict';
-import { mkdir, mkdtemp, readFile, writeFile } from 'node:fs/promises';
+import { mkdir, mkdtemp, readFile, rm, writeFile } from 'node:fs/promises';
 import { join } from 'node:path';
 import os from 'node:os';
+import { fileURLToPath } from 'node:url';
 import { execa } from 'execa';
 import { createAppState } from '../dist/mcp/state.js';
 import { callTool, toolResultData } from '../dist/mcp/tools.js';
@@ -10,7 +11,8 @@ import { hashFile } from '../dist/core/hash.js';
 import { killTree } from '../dist/engine/aerender.js';
 
 if (process.env.EDITMCP_TEST_ADOBE !== '1') throw new Error('Set EDITMCP_TEST_ADOBE=1 explicitly; this test opens Adobe.');
-const root = join(process.cwd(), 'tmp', 'adobe-test');
+// All evidence, the fixture .aep and renders stay under <repo>/tmp regardless of the working directory.
+const root = fileURLToPath(new URL('../tmp/adobe-test/', import.meta.url));
 await mkdir(root, { recursive: true });
 const dir = await mkdtemp(join(root, 'real-'));
 const state = await createAppState();
@@ -95,15 +97,28 @@ try {
       }
     })();
   `, 'utf8');
-  // shortcut: this AE 26.5 installation crashes on newProject() with -noui; use GUI setup until Adobe supports it here.
-  const child = execa(state.env.tools.afterfx, ['-m', '-r', setup], { reject: false, windowsHide: true, timeout: 0 });
-  const timer = setTimeout(() => { void killTree(child.pid); }, 120_000);
-  let created;
-  try { created = await child; } finally { clearTimeout(timer); }
-  await writeFile(join(dir, 'setup.log'), created.stdout + '\n' + created.stderr);
-  assert.equal(created.exitCode, 0, 'AE fixture creation failed: ' + created.stderr);
-  const fixture = JSON.parse((await readFile(setupResult, 'utf8')).replace(/^\uFEFF/, ''));
-  assert.equal(fixture.ok, true, fixture.error);
+  // Prefer a headless instance; AE 26.5 was observed to crash on newProject() under -noui, so fall back
+  // to a GUI instance (-m keeps it separate from any running AE) only when the headless attempt fails.
+  async function createFixture(args, label) {
+    await rm(setupResult, { force: true });
+    const child = execa(state.env.tools.afterfx, [...args, setup], { reject: false, windowsHide: true, timeout: 0 });
+    let timedOut = false;
+    const timer = setTimeout(() => { timedOut = true; void killTree(child.pid, execa, child); }, 120_000);
+    let created;
+    try { created = await child; } finally { clearTimeout(timer); }
+    await writeFile(join(dir, `setup-${label}.log`), created.stdout + '\n' + created.stderr);
+    const fixture = await readFile(setupResult, 'utf8').then((s) => JSON.parse(s.replace(/^\uFEFF/, '')), () => undefined);
+    const ok = !timedOut && created.exitCode === 0 && fixture?.ok === true;
+    return { ok, fixture, why: timedOut ? 'timed out (process tree killed)' : fixture?.error ?? `exit ${created.exitCode}: ${created.stderr}` };
+  }
+  let attempt = await createFixture(['-m', '-noui', '-r'], 'noui');
+  if (!attempt.ok) {
+    console.warn(`Headless fixture creation failed (${attempt.why}); retrying with -m -r. A visible After Effects window may appear.`);
+    report.fixtureFallback = attempt.why;
+    attempt = await createFixture(['-m', '-r'], 'gui');
+  }
+  assert.ok(attempt.ok, 'AE fixture creation failed: ' + attempt.why);
+  const fixture = attempt.fixture;
   report.version = fixture.version; report.templates = fixture.templates;
   await record('isolated fixture saved', fixture.version);
 

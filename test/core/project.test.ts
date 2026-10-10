@@ -3,12 +3,17 @@ import { mkdtemp, readFile, readdir, rm, writeFile, mkdir } from 'node:fs/promis
 import { existsSync, mkdirSync } from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { spawnSync } from 'node:child_process';
+import os from 'node:os';
 import type { Asset, ProbeInfo, Project, Timeline } from '../../src/core/types.js';
 import {
+  ProjectConflictError,
+  ProjectLockedError,
   addAeComp,
   addFileAsset,
   clipStartFrames,
   createProject,
+  isProtected,
   loadProject,
   nextVersionId,
   planHash,
@@ -474,5 +479,117 @@ describe('nextVersionId', () => {
     await mkdir(path.join(p.dir, 'out', 'v001'), { recursive: true });
     await mkdir(path.join(p.dir, 'out', 'v002'), { recursive: true });
     expect(nextVersionId(p)).toBe('v003');
+  });
+});
+
+// ---------- concurrency: optimistic merge + project.lock ----------
+
+describe('saveProject concurrency', () => {
+  const version = (id: string): Project['versions'][number] => ({
+    id, createdAt: '2026-01-01T00:00:00.000Z', planHash: `ph-${id}`, master: `D:\\x\\out\\${id}\\m.mov`, deliverables: {},
+    stats: { segmentsTotal: 1, segmentsRendered: 1, segmentsReused: 0, dissolvesRendered: 0, compsRendered: 0, compsReused: 0, timingsMs: {} },
+  });
+
+  it('two loaded copies each append a version: both versions are kept and the second copy sees the first', async () => {
+    const pdir = path.join(dir, 'proj');
+    await createProject(pdir, { name: 'merge' });
+    const a = await loadProject(pdir);
+    const b = await loadProject(pdir);
+    a.versions.push(version('v001'));
+    await saveProject(a);
+    const bv = version('v002');
+    b.versions.push(bv);
+    await saveProject(b);
+    expect(b.versions.map((v) => v.id)).toEqual(['v001', 'v002']);
+    expect(b.versions[1]).toBe(bv); // merged in place: references held by a running build stay valid
+    expect((await loadProject(pdir)).versions.map((v) => v.id)).toEqual(['v001', 'v002']);
+    // a's next save merges b's version back in, and a's review fields on v001 survive
+    a.versions[0]!.reviewProxy = 'D:\\x\\review\\v001.mp4';
+    await saveProject(a);
+    const after = await loadProject(pdir);
+    expect(after.versions.map((v) => [v.id, v.reviewProxy])).toEqual([['v001', 'D:\\x\\review\\v001.mp4'], ['v002', undefined]]);
+    expect(JSON.parse(await readFile(path.join(pdir, 'project.json'), 'utf8')).revision).toBe(4);
+  });
+
+  it('merges non-conflicting edits from both sides (timeline on one side, assets on the other)', async () => {
+    const pdir = path.join(dir, 'proj');
+    const p = await createProject(pdir, { name: 'merge2' });
+    p.assets['A'] = { id: 'A', kind: 'camera', path: 'D:\\x\\a.mp4', hash: 'h', probe: probe(100) };
+    await saveProject(p);
+    const a = await loadProject(pdir);
+    const b = await loadProject(pdir);
+    setTimeline(a, { video: [{ id: 's1', src: 'A', in: 0, dur: 10 }], cuts: [], audio: { vo: [], music: [], sfx: [] } });
+    await saveProject(a);
+    b.assets['B'] = { id: 'B', kind: 'still', path: 'D:\\x\\b.png' };
+    await saveProject(b);
+    const disk = await loadProject(pdir);
+    expect(disk.timeline.video.map((c) => c.id)).toEqual(['s1']);
+    expect(Object.keys(disk.assets).sort()).toEqual(['A', 'B']);
+    expect(b.timeline.video).toHaveLength(1); // adopted in memory too
+  });
+
+  it('conflicting timeline edits throw ProjectConflictError; nothing is lost', async () => {
+    const pdir = path.join(dir, 'proj');
+    await createProject(pdir, { name: 'conflict' });
+    const a = await loadProject(pdir);
+    const b = await loadProject(pdir);
+    const ta: Timeline = { video: [{ id: 'from-a', src: 'X', in: 0, dur: 5 }], cuts: [], audio: { vo: [], music: [], sfx: [] } };
+    const tb: Timeline = { video: [{ id: 'from-b', src: 'Y', in: 0, dur: 7 }], cuts: [], audio: { vo: [], music: [], sfx: [] } };
+    setTimeline(a, ta);
+    await saveProject(a);
+    setTimeline(b, tb);
+    const err = await saveProject(b).catch((e: unknown) => e);
+    expect(err).toBeInstanceOf(ProjectConflictError);
+    expect((err as ProjectConflictError).conflicts).toEqual(['timeline']);
+    expect((err as Error).message).toContain('โปรเจกต์ถูกแก้จากที่อื่น');
+    expect((await loadProject(pdir)).timeline.video[0]!.id).toBe('from-a'); // a's edit stays on disk
+    expect(b.timeline.video[0]!.id).toBe('from-b'); // b's edit is still in memory
+    const b2 = await loadProject(pdir); // after reloading, the edit can be applied again
+    setTimeline(b2, tb);
+    await saveProject(b2);
+    expect((await loadProject(pdir)).timeline.video[0]!.id).toBe('from-b');
+  });
+
+  it('reclaims a stale lock (dead pid, or too old) and waits for / times out on a live one', async () => {
+    const pdir = path.join(dir, 'proj');
+    const p = await createProject(pdir, { name: 'lock' });
+    const lock = path.join(pdir, 'project.lock');
+    const dead = spawnSync(process.execPath, ['-e', '0']).pid;
+    await writeFile(lock, JSON.stringify({ pid: dead, host: os.hostname(), at: new Date().toISOString(), token: 'x' }), 'utf8');
+    p.delivery.note = 'after dead pid';
+    await saveProject(p);
+    expect(existsSync(lock)).toBe(false);
+
+    await writeFile(lock, JSON.stringify({ pid: process.pid, host: os.hostname(), at: new Date(Date.now() - 60 * 60_000).toISOString(), token: 'old' }), 'utf8');
+    p.delivery.note = 'after old lock';
+    await saveProject(p);
+    expect(existsSync(lock)).toBe(false);
+
+    await writeFile(lock, JSON.stringify({ pid: process.pid, host: os.hostname(), at: new Date().toISOString(), token: 'live' }), 'utf8');
+    p.delivery.note = 'blocked';
+    await expect(saveProject(p, { lockTimeoutMs: 150 })).rejects.toBeInstanceOf(ProjectLockedError);
+    expect(JSON.parse(await readFile(lock, 'utf8')).token).toBe('live'); // someone else's lock is never removed
+    const pending = saveProject(p, { lockTimeoutMs: 5_000 });
+    setTimeout(() => { void rm(lock, { force: true }); }, 100);
+    await pending;
+    expect((await loadProject(pdir)).delivery.note).toBe('blocked');
+  });
+
+  it('refuses to create or save projects inside protected paths', async () => {
+    expect(isProtected('D:\\261009_STB50Y_THAI-WORLD_CSR')).toBe(true);
+    expect(isProtected('d:/261009_stb50y_thai-world_csr/sub/project.json')).toBe(process.platform === 'win32');
+    expect(isProtected('D:\\261009_STB50Y_THAI-WORLD_CSR_other')).toBe(false);
+    const locked = path.join(dir, 'locked');
+    const prev = process.env['EDITMCP_PROTECTED_PATHS'];
+    process.env['EDITMCP_PROTECTED_PATHS'] = ` ${path.join(dir, 'elsewhere')} ;${locked}`;
+    try {
+      expect(isProtected(path.join(locked, 'a', 'b'))).toBe(true);
+      await expect(createProject(path.join(locked, 'p'), { name: 'x' })).rejects.toThrow(/protected/);
+      expect(existsSync(locked)).toBe(false);
+      await expect(saveProject(fixtureProject({ dir: path.join(locked, 'q') }))).rejects.toThrow(/protected/);
+    } finally {
+      if (prev === undefined) delete process.env['EDITMCP_PROTECTED_PATHS'];
+      else process.env['EDITMCP_PROTECTED_PATHS'] = prev;
+    }
   });
 });

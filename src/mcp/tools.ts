@@ -4,15 +4,16 @@
  * All times are frames at project fps (CLAUDE.md).
  */
 import { existsSync } from 'node:fs';
-import { mkdir, readFile, writeFile } from 'node:fs/promises';
+import { mkdir, readdir, readFile, rename, writeFile } from 'node:fs/promises';
 import os from 'node:os';
-import { basename, extname, join, resolve } from 'node:path';
+import { basename, dirname, extname, isAbsolute, join, relative, resolve } from 'node:path';
 import { z } from 'zod';
+import { isProtected, ProjectConflictError } from '../core/project.js';
 import { framesToTc } from '../core/timecode.js';
-import type { AeOp, Asset, AudioClip, Clip, JobInfo, Project, Timeline, Version } from '../core/types.js';
+import type { AeOp, Asset, AudioClip, BuildOptions, Clip, JobInfo, Project, Timeline, Version } from '../core/types.js';
 import { openReview } from '../review/server.js';
 import { readReviewSession, submitReview, versionPlan } from '../review/session.js';
-import { compsNeedingRender, isAeComp, requireFfmpeg, requireProject, type AppState } from './state.js';
+import { compsNeedingRender, isAeComp, requireFfmpeg, requireProject, type AppState, type JobContext } from './state.js';
 
 // ---------- result plumbing ----------
 
@@ -61,16 +62,42 @@ function fail(err: unknown): ToolResult {
   return { isError: true, content: [{ type: 'text', text: json(body) }] };
 }
 
+/** Tools that change the project while a build/deliver/review job may be using it. */
+const MUTATING = new Set(['project_new', 'project_open', 'asset_add', 'timeline_set', 'timeline_edit', 'audio_add', 'ae_edit', 'import_premiere_xml', 'timeline_restore']);
+/** Tools that write into the open project's folder. */
+const WRITES_PROJECT = new Set([
+  'asset_add', 'timeline_set', 'timeline_edit', 'audio_add', 'ae_edit', 'import_premiere_xml', 'timeline_restore',
+  'build', 'deliver', 'preview', 'review_open', 'review_submit', 'export_premiere_xml',
+]);
+
 export async function runTool(t: ToolDef, args: unknown, state: AppState): Promise<ToolResult> {
   try {
-    if (['project_new', 'project_open', 'asset_add', 'timeline_set', 'timeline_edit', 'audio_add', 'ae_edit', 'import_premiere_xml'].includes(t.name)) {
+    if (MUTATING.has(t.name)) {
       const running = activeJob(state, PROJECT_JOBS);
       if (running) throw new ToolError(`wait for ${running.name} before editing the project`, { jobId: running.id });
     }
+    if (WRITES_PROJECT.has(t.name) && state.project) assertWritable(state.project.dir, 'project folder');
     return ok(await t.handler(args as never, state));
   } catch (err) {
+    if (err instanceof ProjectConflictError || (err instanceof Error && err.name === 'ProjectConflictError')) return fail(await onConflict(state, err));
     return fail(err);
   }
+}
+
+/** Another process saved project.json in a conflicting way: reload so the agent's retry starts from disk. */
+async function onConflict(state: AppState, err: Error): Promise<ToolError> {
+  const data: Record<string, unknown> = { conflicts: (err as Partial<ProjectConflictError>).conflicts ?? [] };
+  const p = state.project;
+  if (p && !activeJob(state, PROJECT_JOBS)) {
+    try {
+      state.project = await state.api.project.loadProject(p.dir);
+      data['reloaded'] = true;
+    } catch (e) {
+      data['reloaded'] = false;
+      data['reloadError'] = e instanceof Error ? e.message : String(e);
+    }
+  }
+  return new ToolError('โปรเจกต์ถูกแก้จากที่อื่น — โหลดใหม่แล้วลองอีกครั้ง / project.json was changed elsewhere: reloaded, retry the edit', data);
 }
 
 /** Validate args with the tool's schema and run it (used by the CLI and tests). */
@@ -183,6 +210,140 @@ function asciiSlug(s: string): string {
   let h = 0;
   for (const ch of s) h = (h * 31 + ch.codePointAt(0)!) >>> 0;
   return `${slug || 'comp'}_${h.toString(16)}`;
+}
+
+// ---------- write confinement ----------
+
+function isInside(child: string, parent: string): boolean {
+  const rel = relative(resolve(parent), resolve(child));
+  return rel === '' || (!rel.startsWith('..') && !isAbsolute(rel));
+}
+
+/** Refuse writes into protected trees (built-in live jobs + EDITMCP_PROTECTED_PATHS). */
+function assertWritable(target: string, what: string): void {
+  if (isProtected(target)) throw new ToolError(`ห้ามเขียนในโฟลเดอร์ที่ป้องกันไว้ / refusing to write ${what} inside a protected path`, { path: target });
+}
+
+/** AE outputs must land inside the open project or next to (below the folder of) the source .aep. */
+function assertConfined(state: AppState, target: string, aep: string, what: string): void {
+  const roots = [dirname(aep), ...(state.project ? [state.project.dir] : [])];
+  if (!roots.some((r) => isInside(target, r))) {
+    throw new ToolError(`${what} ต้องอยู่ในโฟลเดอร์โปรเจกต์หรือโฟลเดอร์ของ .aep / ${what} must be inside the project folder or next to the .aep`, { path: target, allowed: roots });
+  }
+  assertWritable(target, what);
+}
+
+// ---------- AE jobs ----------
+
+const AE_WAIT_MS = 20_000;
+
+/**
+ * AE calls run as jobs so they never block the MCP request behind a build's renders. When the job
+ * queue is busy (or wait=false) the job id is returned immediately; otherwise we wait up to ~20 s.
+ */
+async function runAeJob(state: AppState, name: string, wait: boolean | undefined, fn: (ctx: JobContext) => Promise<Record<string, unknown>>): Promise<Record<string, unknown>> {
+  const busy = state.jobs.list().some((j) => j.status === 'running' || j.status === 'queued');
+  const job = state.jobs.start(name, fn);
+  const pending = () => ({
+    ok: true, jobId: job.id, status: state.jobs.get(job.id)?.status ?? job.status, pending: true,
+    hint: 'After Effects กำลังทำงานหรือรอคิว — ดูผลด้วย job_status {id} / AE is busy or queued: poll job_status',
+  });
+  if (!(wait ?? !busy)) return pending();
+  let timer: NodeJS.Timeout | undefined;
+  const info = await Promise.race([
+    state.jobs.wait(job.id),
+    new Promise<undefined>((r) => { timer = setTimeout(() => r(undefined), AE_WAIT_MS); }),
+  ]);
+  clearTimeout(timer);
+  if (!info) return pending();
+  if (info.status === 'done') return { ...(info.result as Record<string, unknown>), jobId: job.id };
+  throw new ToolError(info.error ?? `${name} ${info.status}`, { jobId: job.id, status: info.status });
+}
+
+/** Backends may flag comps whose effect values (Curves, Levels...) are not part of the fingerprint. */
+function isOpaque(res: unknown, comp: string): boolean {
+  if (!res || typeof res !== 'object') return false;
+  const r = res as { opaque?: unknown; opaqueComps?: unknown };
+  return r.opaque === true || (Array.isArray(r.opaqueComps) && r.opaqueComps.includes(comp));
+}
+
+function opaqueHint(state: AppState, aep: string, comp: string) {
+  const ids = state.project ? Object.values(state.project.assets).filter(isAeComp).filter((a) => a.comp === comp && samePath(a.aep, aep)).map((a) => a.id) : [];
+  const forceArg = ids.length ? `build {forceAssets: ${JSON.stringify(ids)}}` : 'build {forceAssets: [<asset id>]}';
+  return {
+    opaque: true,
+    opaqueAssets: ids,
+    opaqueHint: `comp '${comp}' มีค่าเอฟเฟกต์ที่อ่านไม่ได้ (เช่น Curves/Levels) — ถ้าแก้แค่ในนั้น fingerprint จะไม่เปลี่ยน ต้องใช้ build {force: true} หรือ ${forceArg} / opaque effect values are not fingerprinted: force the re-render`,
+  };
+}
+
+/**
+ * build {forceAssets}: drop the render record and move the cached render aside (never deleted) so the
+ * Assembler cannot adopt the same-fingerprint file and has to render the comp again.
+ */
+async function forgetRenders(state: AppState, p: Project, ids: string[], ctx: JobContext): Promise<Record<string, string>> {
+  const moved: Record<string, string> = {};
+  if (!ids.length) return moved;
+  for (const id of ids) {
+    const a = p.assets[id];
+    if (!a || !isAeComp(a)) continue;
+    const old = a.render?.path;
+    if (old && existsSync(old)) {
+      const ext = extname(old);
+      const aside = uniquePath(`${old.slice(0, old.length - ext.length)}_forced${ext}`);
+      await rename(old, aside);
+      moved[id] = aside;
+      ctx.log(`${id}: previous render kept as ${aside}`);
+    }
+    delete a.render;
+  }
+  await state.api.project.saveProject(p);
+  return moved;
+}
+
+// ---------- timeline backups ----------
+
+const BACKUP_RE = /^timeline-(.+)-(\d+)\.json$/;
+
+/** history/timeline-<ISO-safe>-<n>.json; never overwrites. */
+async function backupTimeline(p: Project, reason: string): Promise<string> {
+  const dir = join(p.dir, 'history');
+  await mkdir(dir, { recursive: true });
+  const now = new Date().toISOString();
+  const stamp = now.replace(/[:.]/g, '-');
+  const body = `${JSON.stringify({ savedAt: now, reason, timeline: p.timeline }, null, 2)}\n`;
+  for (let n = 1; ; n++) {
+    const file = join(dir, `timeline-${stamp}-${n}.json`);
+    try {
+      await writeFile(file, body, { encoding: 'utf8', flag: 'wx' });
+      return file;
+    } catch (e) {
+      if ((e as NodeJS.ErrnoException).code !== 'EEXIST') throw e;
+    }
+  }
+}
+
+async function listBackups(p: Project) {
+  const dir = join(p.dir, 'history');
+  const names = existsSync(dir) ? (await readdir(dir)).filter((n) => BACKUP_RE.test(n)) : [];
+  const key = (n: string): [string, number] => { const m = BACKUP_RE.exec(n)!; return [m[1]!, Number(m[2])]; };
+  names.sort((x, y) => { const [a, i] = key(x); const [b, j] = key(y); return a < b ? -1 : a > b ? 1 : i - j; });
+  return Promise.all(names.map(async (name) => {
+    try {
+      const d = JSON.parse(await readFile(join(dir, name), 'utf8')) as { savedAt?: string; reason?: string; timeline?: Timeline };
+      const video = d.timeline?.video ?? [];
+      return { name, savedAt: d.savedAt, reason: d.reason, clips: video.length, frames: video.reduce((s, c) => s + (c.dur > 0 ? c.dur : 0), 0) };
+    } catch {
+      return { name, error: 'unreadable' };
+    }
+  }));
+}
+
+/** Validate a candidate timeline against the project's assets without touching the project. */
+function validateCandidate(state: AppState, p: Project, t: Timeline): { errors: string[]; timeline: Timeline } {
+  const probe: Project = { ...p };
+  state.api.project.setTimeline(probe, t);
+  return { errors: state.api.project.validateTimeline(probe), timeline: probe.timeline };
 }
 
 function assetSummary(a: Asset) {
@@ -377,6 +538,29 @@ export function diffTimelines(a: Timeline, b: Timeline) {
   };
 }
 
+/** One line per change, for a human to approve before `apply`. */
+function summarizeDiff(d: ReturnType<typeof diffTimelines>, fps: number): string[] {
+  const lines: string[] = [];
+  const tc = (f: number) => framesToTc(f, fps);
+  const { before, after } = d.frames;
+  lines.push(before === after ? `ความยาวเท่าเดิม ${before} เฟรม (${tc(before)}) / length unchanged` : `ความยาว / length: ${before} → ${after} เฟรม (${tc(before)} → ${tc(after)})`);
+  if (d.clips.before !== d.clips.after) lines.push(`จำนวนคลิป / clips: ${d.clips.before} → ${d.clips.after}`);
+  const v = (x: unknown) => (x === undefined ? '-' : String(x));
+  for (const c of d.clips.changed) {
+    const at = `#${c.index + 1} '${c.id ?? '?'}'`;
+    if (c.field === 'added') { const n = c.to as Clip; lines.push(`+ เพิ่มคลิป ${at}: src ${n.src}, in ${n.in}, dur ${n.dur}`); }
+    else if (c.field === 'removed') lines.push(`- ลบคลิป ${at}`);
+    else lines.push(`~ คลิป ${at}: ${c.field} ${v(c.from)} → ${v(c.to)}`);
+  }
+  for (const x of d.dissolves) lines.push(`~ dissolve หลัง '${x.after}': ${x.from} → ${x.to} เฟรม`);
+  const a = d.audio;
+  if (a.before.vo !== a.after.vo || a.before.music !== a.after.music || a.before.sfx !== a.after.sfx) {
+    lines.push(`เสียง vo/music/sfx: ${a.before.vo}/${a.before.music}/${a.before.sfx} → ${a.after.vo}/${a.after.music}/${a.after.sfx}`);
+  }
+  if (lines.length === 1 && before === after) lines.push('ไม่มีความต่างในคลิป/dissolve / no clip or dissolve changes');
+  return lines;
+}
+
 function projectStatus(state: AppState, p: Project) {
   const assets = Object.values(p.assets);
   const byKind: Record<string, number> = {};
@@ -426,6 +610,7 @@ export const TOOLS: readonly ToolDef[] = [
     },
     handler: async (a, state) => {
       const dir = resolve(a.dir);
+      assertWritable(dir, 'project_new.dir');
       if (existsSync(join(dir, 'project.json'))) throw new ToolError('มีโปรเจกต์อยู่แล้ว ใช้ project_open / project already exists, use project_open', { dir });
       const p = await state.api.project.createProject(dir, { name: a.name, fps: a.fps, width: a.width, height: a.height });
       state.project = p;
@@ -438,6 +623,7 @@ export const TOOLS: readonly ToolDef[] = [
     description: 'เปิดโปรเจกต์ที่มีอยู่ · Open an existing project folder',
     input: { dir: z.string() },
     handler: async (a, state) => {
+      assertWritable(resolve(a.dir), 'project (opened for editing)');
       const p = await state.api.project.loadProject(resolve(a.dir));
       state.project = p;
       return { ok: true, ...projectStatus(state, p) };
@@ -554,54 +740,84 @@ export const TOOLS: readonly ToolDef[] = [
 
   tool({
     name: 'ae_list_comps',
-    description: 'รายชื่อ comp ใน .aep (เปิด AE แบบ headless) · List comps in an .aep',
-    input: { aep: z.string() },
-    handler: async (a, state) => ({ comps: await state.ae.listComps(resolve(a.aep)) }),
+    description: 'รายชื่อ comp ใน .aep (เปิด AE แบบ headless; job — ถ้าคิวว่างรอผลไม่เกิน ~20 วิ) · List comps in an .aep (job; waits up to ~20 s when idle)',
+    input: { aep: z.string(), wait: z.boolean().optional().describe('wait up to ~20 s for the result (default: only when no other job is queued)') },
+    handler: async (a, state) => {
+      const aep = resolve(a.aep);
+      return runAeJob(state, 'ae_list_comps', a.wait, async () => ({ comps: await state.ae.listComps(aep) }));
+    },
   }),
 
   tool({
     name: 'ae_inspect_comp',
-    description: 'ดู layer ของ comp (ชนิด, in/out, ข้อความ, effects, ขอบเขต) · Inspect a comp\'s layers',
-    input: { aep: z.string(), comp: z.string(), atFrame: frames.min(0).optional() },
-    handler: async (a, state) => state.ae.inspectComp(resolve(a.aep), a.comp, a.atFrame),
+    description: 'ดู layer ของ comp (ชนิด, in/out, ข้อความ, effects, ขอบเขต; job) · Inspect a comp\'s layers (job)',
+    input: { aep: z.string(), comp: z.string(), atFrame: frames.min(0).optional(), wait: z.boolean().optional() },
+    handler: async (a, state) => {
+      const aep = resolve(a.aep);
+      return runAeJob(state, 'ae_inspect_comp', a.wait, async () => {
+        const detail = await state.ae.inspectComp(aep, a.comp, a.atFrame);
+        return { ...detail, ...(isOpaque(detail, a.comp) ? opaqueHint(state, aep, a.comp) : {}) };
+      });
+    },
   }),
 
   tool({
     name: 'ae_edit',
-    description: 'แก้ comp (setText, replaceFootage, shiftLayer, setProperty, addEffect, applyPreset, setLayerEnabled, duplicateComp, script) แล้วบันทึก; render เดิมจะถูกนับว่าเก่า · Edit a comp',
-    input: { aep: z.string(), comp: z.string(), ops: z.array(AeOpSchema).min(1), saveAs: z.string().optional() },
+    description: 'แก้ comp (setText, replaceFootage, shiftLayer, setProperty, addEffect, applyPreset, setLayerEnabled, duplicateComp, script) แล้วบันทึก (job); render เดิมจะถูกนับว่าเก่า · Edit a comp (job)',
+    input: {
+      aep: z.string(), comp: z.string(), ops: z.array(AeOpSchema).min(1),
+      saveAs: z.string().optional().describe('new .aep inside the project folder or next to the source .aep'),
+      wait: z.boolean().optional(),
+    },
     handler: async (a, state) => {
       const aep = resolve(a.aep);
-      const res = await state.ae.edit({ aep, comp: a.comp, ops: a.ops as AeOp[], saveAs: a.saveAs ? resolve(a.saveAs) : undefined });
-      const stale: string[] = [];
-      const p = state.project;
-      if (p && res.ok) {
-        for (const asset of Object.values(p.assets)) {
-          if (isAeComp(asset) && asset.comp === a.comp && samePath(asset.aep, res.savedTo)) {
-            asset.fingerprint = res.fingerprint;
-            stale.push(asset.id);
+      const saveAs = a.saveAs ? resolve(a.saveAs) : undefined;
+      if (saveAs) assertConfined(state, saveAs, aep, 'saveAs');
+      else assertWritable(aep, 'the .aep (in-place edit)');
+      return runAeJob(state, 'ae_edit', a.wait, async () => {
+        const res = await state.ae.edit({ aep, comp: a.comp, ops: a.ops as AeOp[], saveAs });
+        const stale: string[] = [];
+        const p = state.project;
+        if (p && res.ok) {
+          for (const asset of Object.values(p.assets)) {
+            if (isAeComp(asset) && asset.comp === a.comp && samePath(asset.aep, res.savedTo)) {
+              asset.fingerprint = res.fingerprint;
+              stale.push(asset.id);
+            }
           }
+          if (stale.length) await state.api.project.saveProject(p);
         }
-        if (stale.length) await state.api.project.saveProject(p);
-      }
-      return { ...res, staleAssets: stale, hint: stale.length ? 'build จะ render comp นี้ใหม่ / build re-renders these comps' : undefined };
+        return {
+          ...res, staleAssets: stale, hint: stale.length ? 'build จะ render comp นี้ใหม่ / build re-renders these comps' : undefined,
+          ...(isOpaque(res, a.comp) ? opaqueHint(state, res.savedTo, a.comp) : {}),
+        };
+      });
     },
   }),
 
   tool({
     name: 'ae_preview_frame',
-    description: 'render เฟรมเดียวของ comp เป็น PNG · Render one frame of a comp to PNG',
-    input: { aep: z.string(), comp: z.string(), frame: frames.min(0).default(0), out: z.string().optional().describe('png path (default: project review folder)') },
+    description: 'render เฟรมเดียวของ comp เป็น PNG (job) · Render one frame of a comp to PNG (job)',
+    input: {
+      aep: z.string(), comp: z.string(), frame: frames.min(0).default(0),
+      out: z.string().optional().describe('png path inside the project folder or next to the .aep (default: project review folder)'),
+      wait: z.boolean().optional(),
+    },
     handler: async (a, state) => {
+      const aep = resolve(a.aep);
       let out = a.out ? resolve(a.out) : '';
-      if (!out) {
+      if (out) {
+        assertConfined(state, out, aep, 'out');
+        await mkdir(dirname(out), { recursive: true });
+      } else {
         const dir = state.project ? state.api.project.projectPaths(state.project).review : join(os.tmpdir(), 'editmcp');
         await mkdir(dir, { recursive: true });
         out = join(dir, `preview_${asciiSlug(a.comp)}_${a.frame}.png`);
       }
-      out = uniquePath(out);
-      const png = await state.ae.previewFrame(resolve(a.aep), a.comp, a.frame, out);
-      return { ok: true, png };
+      return runAeJob(state, 'ae_preview_frame', a.wait, async () => {
+        const png = await state.ae.previewFrame(aep, a.comp, a.frame, uniquePath(out));
+        return { ok: true, png };
+      });
     },
   }),
 
@@ -610,6 +826,7 @@ export const TOOLS: readonly ToolDef[] = [
     description: 'render เฉพาะที่เปลี่ยน → ต่อท่อน → เสียง → master ProRes → QC → deliverables; คืน job id ทันที · Incremental build (async job)',
     input: {
       force: z.boolean().optional().describe('ignore caches'),
+      forceAssets: z.array(z.string()).optional().describe('aecomp asset ids to re-render even if their fingerprint did not change (e.g. edits only inside Curves/Levels)'),
       skipQc: z.boolean().optional(),
       skipDeliver: z.boolean().optional(),
     },
@@ -620,15 +837,24 @@ export const TOOLS: readonly ToolDef[] = [
       if (running) throw new ToolError(`มี ${running.name} กำลังทำงานอยู่ / a ${running.name} job is already running`, { jobId: running.id });
       const errors = state.api.project.validateTimeline(p);
       if (errors.length) throw new ToolError('timeline ไม่ผ่านการตรวจสอบ / timeline invalid', { errors });
+      const forceAssets = [...new Set(a.forceAssets ?? [])];
+      const notComps = forceAssets.filter((id) => !(p.assets[id] && isAeComp(p.assets[id])));
+      if (notComps.length) throw new ToolError(`forceAssets ต้องเป็น aecomp asset / not aecomp assets: ${notComps.join(', ')}`, { notComps });
       const job = state.jobs.start('build', async (ctx) => {
-        const r = await state.assembler.build(p, {
+        const moved = await forgetRenders(state, p, forceAssets, ctx);
+        const opts: BuildOptions & { forceAssets?: string[] } = {
           force: a.force, skipQc: a.skipQc, skipDeliver: a.skipDeliver, signal: ctx.signal,
+          ...(forceAssets.length ? { forceAssets } : {}),
           onProgress: (pr) => {
             ctx.progress(pr);
             ctx.log(`${pr.stage} ${pr.done}/${pr.total}${pr.message ? ' ' + pr.message : ''}`);
           },
-        });
-        return { version: r.version.id, master: r.version.master, reviewProxy: r.version.reviewProxy, deliverables: r.version.deliverables, qcOk: r.version.qc?.ok, qcIssues: r.version.qc?.issues.length ?? 0, stats: r.stats };
+        };
+        const r = await state.assembler.build(p, opts);
+        return {
+          version: r.version.id, master: r.version.master, reviewProxy: r.version.reviewProxy, deliverables: r.version.deliverables, qcOk: r.version.qc?.ok, qcIssues: r.version.qc?.issues.length ?? 0, stats: r.stats,
+          ...(forceAssets.length ? { forcedAssets: forceAssets, movedRenders: moved } : {}),
+        };
       });
       return { ok: true, jobId: job.id, status: job.status, hint: 'ดูความคืบหน้าด้วย job_status / poll job_status {id}' };
     },
@@ -765,23 +991,61 @@ export const TOOLS: readonly ToolDef[] = [
 
   tool({
     name: 'import_premiere_xml',
-    description: 'นำ FCP7 XML ที่ export จาก Premiere กลับมา: สรุปความต่าง แล้วใช้กับไทม์ไลน์ (ถ้าผ่านการตรวจสอบ) · Import Premiere XML: diff + apply',
-    input: { path: z.string() },
+    description: 'นำ FCP7 XML ที่ export จาก Premiere กลับมา: ค่าเริ่มต้นแค่สรุปความต่าง + คำเตือน (dry run); apply: true เพื่อใช้ (สำรองไทม์ไลน์เดิมไว้ใน history/ ก่อน) · Import Premiere XML: dry-run diff by default, apply: true to commit',
+    input: {
+      path: z.string(),
+      apply: z.boolean().optional().describe('commit the imported timeline (default false = dry run: summary, diff, warnings only)'),
+    },
     handler: async (a, state) => {
       const p = requireProject(state);
       const path = resolve(a.path);
       if (!existsSync(path)) throw new ToolError(`ไม่พบไฟล์ / file not found: ${path}`);
       const r = state.api.xmeml.readXmeml(await readFile(path, 'utf8'), p);
-      const warnings: string[] = [];
+      const warnings: string[] = [...(r.warnings ?? [])];
       if (r.fps !== p.meta.fps) warnings.push(`fps ใน XML = ${r.fps} แต่โปรเจกต์ = ${p.meta.fps}`);
       if (r.width !== p.meta.width || r.height !== p.meta.height) warnings.push(`ขนาดใน XML = ${r.width}x${r.height} แต่โปรเจกต์ = ${p.meta.width}x${p.meta.height}`);
       const diff = diffTimelines(p.timeline, r.timeline);
-      const errors = commitTimeline(state, p, r.timeline);
-      if (errors.length) {
-        throw new ToolError('ไทม์ไลน์จาก XML ไม่ผ่านการตรวจสอบ ไม่ได้บันทึก / imported timeline invalid, not applied', { errors, unresolvedPaths: r.unresolvedPaths, diff, warnings });
+      const summary = summarizeDiff(diff, p.meta.fps);
+      const { errors } = validateCandidate(state, p, r.timeline);
+      const report = { file: basename(path), summary, diff, warnings, unresolvedPaths: r.unresolvedPaths };
+      if (!a.apply) {
+        return {
+          ok: true, dryRun: true, applied: false, valid: errors.length === 0, errors, ...report,
+          hint: errors.length
+            ? 'ไทม์ไลน์จาก XML ยังใช้ไม่ได้ (ดู errors / unresolvedPaths) / imported timeline is invalid'
+            : 'ตรวจสรุปแล้วเรียกซ้ำด้วย apply: true เพื่อใช้ (สำรองไทม์ไลน์เดิมไว้ใน history/) / review, then call again with apply: true',
+        };
       }
-      await state.api.project.saveProject(p);
-      return { ok: true, applied: true, file: basename(path), diff, warnings, unresolvedPaths: r.unresolvedPaths, timeline: timelineSummary(state, p) };
+      if (errors.length) throw new ToolError('ไทม์ไลน์จาก XML ไม่ผ่านการตรวจสอบ ไม่ได้บันทึก / imported timeline invalid, not applied', { errors, ...report });
+      const backup = await backupTimeline(p, `before import_premiere_xml ${basename(path)}`);
+      await commitOrThrow(state, p, r.timeline, 'timeline');
+      return { ok: true, applied: true, backup, ...report, timeline: timelineSummary(state, p), hint: 'ย้อนกลับได้ด้วย timeline_restore / undo with timeline_restore' };
+    },
+  }),
+
+  tool({
+    name: 'timeline_restore',
+    description: 'ดูรายการสำรองไทม์ไลน์ใน history/ หรือย้อนกลับไปฉบับหนึ่ง (สำรองฉบับปัจจุบันก่อนเสมอ) · List timeline backups, or restore one (current timeline is backed up first)',
+    input: { backup: z.string().optional().describe('backup file name from the list; omit to list') },
+    handler: async (a, state) => {
+      const p = requireProject(state);
+      if (!a.backup) return { backups: await listBackups(p), hint: 'timeline_restore {backup: "<name>"} เพื่อย้อนกลับ / pass a name to restore' };
+      if (basename(a.backup) !== a.backup || !BACKUP_RE.test(a.backup)) throw new ToolError(`ชื่อไฟล์สำรองไม่ถูกต้อง / not a timeline backup name: ${a.backup}`);
+      const file = join(p.dir, 'history', a.backup);
+      if (!existsSync(file)) throw new ToolError(`ไม่พบไฟล์สำรอง / backup not found: ${a.backup}`, { backups: (await listBackups(p)).map((b) => b.name) });
+      let next: Timeline | undefined;
+      try {
+        next = (JSON.parse(await readFile(file, 'utf8')) as { timeline?: Timeline }).timeline;
+      } catch (e) {
+        throw new ToolError(`อ่านไฟล์สำรองไม่ได้ / unreadable backup: ${e instanceof Error ? e.message : String(e)}`);
+      }
+      if (!next || typeof next !== 'object') throw new ToolError(`ไฟล์สำรองไม่มี timeline / backup has no timeline: ${a.backup}`);
+      const { errors, timeline: normalized } = validateCandidate(state, p, next);
+      if (errors.length) throw new ToolError('ไทม์ไลน์ในไฟล์สำรองไม่ผ่านการตรวจสอบ ไม่ได้บันทึก / backup timeline invalid, not applied', { errors });
+      const diff = diffTimelines(p.timeline, normalized);
+      const backup = await backupTimeline(p, `before timeline_restore ${a.backup}`);
+      await commitOrThrow(state, p, next, 'timeline');
+      return { ok: true, restored: a.backup, backup, summary: summarizeDiff(diff, p.meta.fps), timeline: timelineSummary(state, p) };
     },
   }),
 

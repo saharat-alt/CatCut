@@ -14,7 +14,8 @@ const SERVER_INFO = { name: 'editmcp', version: '0.1.0' } as const;
 const INSTRUCTIONS = [
   'EDITMCP: headless video editing (After Effects headless + aerender + ffmpeg). ทุกเวลาเป็นเฟรมที่ fps ของโปรเจกต์ (ไม่ใช่วินาที).',
   'Flow: doctor → project_new/project_open → asset_add → timeline_set (or timeline_edit / audio_add) → build (returns job id; poll job_status) → deliver → export_premiere_xml.',
-  'Premiere loop: export_premiere_xml → edit in Premiere → File > Export > Final Cut Pro XML → import_premiere_xml → build.',
+  'Premiere loop: export_premiere_xml → edit in Premiere → File > Export > Final Cut Pro XML → import_premiere_xml (dry run: show the summary to the user) → import_premiere_xml {apply: true} (backs up the timeline; undo with timeline_restore) → build.',
+  'ae_* tools run as jobs: if the result has pending:true, poll job_status. If a tool says the project was changed elsewhere, it has been reloaded: re-issue the edit.',
   'Review: review_open → job_status URL → user selects shots/ranges and annotates → review_notes. Propose edits from submitted notes before applying them.',
   'Builds are incremental: unchanged segments are never re-encoded; outputs are never overwritten (new version each build).',
 ].join('\n');

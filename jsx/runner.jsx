@@ -35,9 +35,13 @@
         if (!f.open("w")) throw new Error("cannot write " + path);
         f.write(stringify(data)); f.close();
     }
+    function displayStartFrame(c) {
+        if (typeof c.displayStartFrame === "number") return c.displayStartFrame;
+        return Math.round((c.displayStartTime || 0) * c.frameRate);
+    }
     function info(c) {
         return { id: c.id, name: c.name, width: c.width, height: c.height, fps: c.frameRate,
-            durationFrames: Math.round(c.duration * c.frameRate), numLayers: c.numLayers };
+            durationFrames: Math.round(c.duration * c.frameRate), displayStartFrame: displayStartFrame(c), numLayers: c.numLayers };
     }
     function findComp(name) {
         var found = null;
@@ -56,16 +60,22 @@
         for (var i = 0; i < names.length; i++) try { out[names[i]] = plain(obj[names[i]]); } catch (e) {}
         return out;
     }
+    // Every document-level field any AE version exposes; unreadable ones are skipped by attrs().
+    var TEXT_FIELDS = ["text", "font", "fontFamily", "fontStyle", "fontLocation", "fontSize", "fillColor", "strokeColor", "strokeWidth", "strokeOverFill",
+        "applyFill", "applyStroke", "justification", "tracking", "leading", "autoLeading", "baselineShift", "horizontalScale", "verticalScale",
+        "fauxBold", "fauxItalic", "allCaps", "smallCaps", "superscript", "subscript", "tsume", "baselineLocs", "boxText", "boxTextSize", "boxTextPos",
+        "pointText", "lineOrientation", "direction", "composerEngine", "digitSet", "lineJustification", "firstLineIndent", "startIndent", "endIndent",
+        "spaceBefore", "spaceAfter", "kerningType", "ligature", "noBreak", "autoHyphenate", "everyLineComposer", "hangingRoman", "paragraphCount"];
     function plain(v) {
         if (v === undefined || v === null) return null;
         if (typeof v !== "object") return v;
         if (v instanceof Array) { var a = []; for (var i = 0; i < v.length; i++) a.push(plain(v[i])); return a; }
         if (v instanceof TextDocument) {
-            var text = attrs(v, ["text", "font", "fontSize", "fillColor", "strokeColor", "strokeWidth", "applyFill", "applyStroke", "justification", "tracking", "leading", "autoLeading", "baselineShift", "horizontalScale", "verticalScale", "fauxBold", "fauxItalic", "allCaps", "smallCaps", "boxText", "boxTextSize"]);
+            var text = attrs(v, TEXT_FIELDS);
             if (typeof v.characterRange === "function") {
                 text.styles = [];
                 for (var j = 0; j < v.text.length; j++) text.styles.push(attrs(v.characterRange(j, j + 1), ["font", "fontSize", "fillColor", "strokeColor", "strokeWidth", "applyFill", "applyStroke", "tracking", "baselineShift", "horizontalScale", "verticalScale", "fauxBold", "fauxItalic"]));
-            } else text.projectDependency = true;
+            } else text.opaque = true; // per-character styles are unreadable before characterRange (AE 24.3)
             return text;
         }
         if (v instanceof Shape) return attrs(v, ["vertices", "inTangents", "outTangents", "closed", "featherSegLocs", "featherRelSegLocs", "featherRadii"]);
@@ -74,16 +84,40 @@
         // AE enum objects must be serialized as their numeric value.
         return String(v);
     }
-    function property(p) {
+    // Frames at which an expression's result is sampled: comp start/end, 8 evenly spaced, every keyframe (capped).
+    function sampleFrames(p, comp) {
+        var last = Math.max(0, Math.round(comp.duration * comp.frameRate) - 1), seen = {}, frames = [], i;
+        function add(n) { n = Math.max(0, Math.min(last, Math.round(n))); if (!seen[n]) { seen[n] = true; frames.push(n); } }
+        add(0); add(last);
+        for (i = 1; i <= 8; i++) add(last * i / 9);
+        for (i = 1; i <= (p.numKeys || 0) && frames.length < 64; i++) add(p.keyTime(i) * comp.frameRate);
+        frames.sort(function (a, b) { return a - b; });
+        return frames;
+    }
+    function property(p, comp) {
         var r = { name: p.name, matchName: p.matchName };
         if (p.propertyType !== PropertyType.PROPERTY) {
             r.enabled = p.enabled;
             r.children = [];
-            for (var i = 1; i <= p.numProperties; i++) r.children.push(property(p.property(i)));
+            for (var i = 1; i <= p.numProperties; i++) r.children.push(property(p.property(i), comp));
         } else {
             r.expression = p.canSetExpression ? p.expression : "";
             r.expressionEnabled = p.canSetExpression ? p.expressionEnabled : false;
-            if (r.expressionEnabled) r.projectDependency = true;
+            if (r.expressionEnabled) {
+                // Text + evaluated results instead of the whole .aep: catches what the expression reads
+                // (other comps, controls) at the sampled frames without re-rendering on every save.
+                r.usesExpression = true;
+                try { r.expressionError = p.expressionError; } catch (e0) {}
+                if (p.propertyValueType === PropertyValueType.CUSTOM_VALUE) r.opaque = true;
+                else if (p.propertyValueType !== PropertyValueType.NO_VALUE) {
+                    r.samples = [];
+                    var frames = sampleFrames(p, comp);
+                    for (var s = 0; s < frames.length; s++) {
+                        try { r.samples.push({ f: frames[s], v: plain(p.valueAtTime(frames[s] / comp.frameRate, false)) }); }
+                        catch (e1) { r.samples.push({ f: frames[s], error: String(e1) }); }
+                    }
+                }
+            }
             r.keys = [];
             if (p.numKeys) {
                 for (var k = 1; k <= p.numKeys; k++) {
@@ -102,8 +136,9 @@
             } else if (p.propertyValueType !== PropertyValueType.NO_VALUE && p.propertyValueType !== PropertyValueType.CUSTOM_VALUE) {
                 r.value = plain(p.valueAtTime(0, true));
             } else if (p.propertyValueType === PropertyValueType.CUSTOM_VALUE) {
-                // Opaque plugin values cannot be inspected safely: changing the project invalidates these comps.
-                r.projectDependency = true;
+                // Curves/Levels data has no scripting API. The effect matchName, its readable siblings and the
+                // layer state are still hashed; the comp is flagged opaque so callers can offer a forced re-render.
+                r.opaque = true;
             }
         }
         return r;
@@ -117,15 +152,17 @@
         }
         return data;
     }
-    function projectDependent(v) {
+    function hasFlag(v, flag) {
         if (!v || typeof v !== "object") return false;
-        if (v.projectDependency) return true;
-        for (var k in v) if (v.hasOwnProperty(k) && projectDependent(v[k])) return true;
+        if (v[flag] === true) return true;
+        for (var k in v) if (v.hasOwnProperty(k) && hasFlag(v[k], flag)) return true;
         return false;
     }
     function fullSnapshot(c) {
         var data = snapshot(c, {});
-        if (projectDependent(data)) {
+        data.opaque = hasFlag(data, "opaque");
+        // Expressions may read any footage (e.g. JSON data files): hash every project source file.
+        if (hasFlag(data, "usesExpression")) {
             data.projectMedia = [];
             for (var i = 1; i <= app.project.numItems; i++) {
                 var item = app.project.item(i);
@@ -139,8 +176,8 @@
         var meta = info(c);
         if (seen[c.id]) return { ref: c.id };
         seen[c.id] = true;
-        meta.settings = attrs(c, ["bgColor", "pixelAspect", "displayStartTime", "shutterAngle", "shutterPhase", "motionBlur", "motionBlurSamplesPerFrame", "motionBlurAdaptiveSampleLimit", "frameBlending", "preserveNestedFrameRate", "preserveNestedResolution", "renderer"]);
-        meta.project = attrs(app.project, ["bitsPerChannel", "workingSpace", "linearizeWorkingSpace", "linearBlending"]);
+        meta.settings = attrs(c, ["bgColor", "pixelAspect", "displayStartTime", "displayStartFrame", "workAreaStart", "workAreaDuration", "shutterAngle", "shutterPhase", "motionBlur", "motionBlurSamplesPerFrame", "motionBlurAdaptiveSampleLimit", "frameBlending", "preserveNestedFrameRate", "preserveNestedResolution", "renderer"]);
+        meta.project = attrs(app.project, ["bitsPerChannel", "workingSpace", "linearizeWorkingSpace", "linearBlending", "framesCountType", "timeDisplayType"]);
         meta.layers = [];
         for (var i = 1; i <= c.numLayers; i++) {
             var l = c.layer(i);
@@ -148,7 +185,7 @@
             layer.parent = l.parent ? l.parent.index : null;
             layer.matte = l.trackMatteLayer ? l.trackMatteLayer.index : null;
             layer.properties = [];
-            for (var j = 1; j <= l.numProperties; j++) layer.properties.push(property(l.property(j)));
+            for (var j = 1; j <= l.numProperties; j++) layer.properties.push(property(l.property(j), c));
             if (l.source instanceof CompItem) layer.source = snapshot(l.source, seen);
             else if (l.source) {
                 layer.source = attrs(l.source, ["name", "width", "height", "pixelAspect", "duration", "frameRate"]);
@@ -237,9 +274,12 @@
     }
 
     var job, result = { ok: false, data: null, log: [] };
-    app.beginSuppressDialogs(); app.saveProjectOnCrash = false;
+    // When the job itself is unreadable, report next to it (<job>.result.json) so the caller still gets an error.
+    var resultPath = String(EDITMCP_JOB).replace(/\.json$/i, "") + ".result.json";
+    try { app.beginSuppressDialogs(); app.saveProjectOnCrash = false; } catch (e0) {}
     try {
         job = read(EDITMCP_JOB);
+        if (job.result) resultPath = job.result;
         if (job.action === "version") result.data = app.version;
         else {
             var aep = new File(job.aep);
@@ -264,8 +304,9 @@
         result.ok = true; app.exitCode = 0;
     } catch (e) { result.error = String(e) + " (line " + e.line + ")"; app.exitCode = 1; }
     finally {
-        try { if (job) write(job.result, result); } catch (e) { app.exitCode = 1; }
-        if (app.project) app.project.close(CloseOptions.DO_NOT_SAVE_CHANGES);
-        app.endSuppressDialogs(false); app.quit();
+        try { write(resultPath, result); } catch (e2) { app.exitCode = 1; }
+        try { if (app.project) app.project.close(CloseOptions.DO_NOT_SAVE_CHANGES); } catch (e3) {}
+        try { app.endSuppressDialogs(false); } catch (e4) {}
+        app.quit();
     }
 })();

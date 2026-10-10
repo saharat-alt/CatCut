@@ -1,11 +1,12 @@
-import { mkdir, mkdtemp, readFile, rm, writeFile, readdir } from 'node:fs/promises';
+import { spawnSync } from 'node:child_process';
+import { mkdir, mkdtemp, readFile, rm, utimes, writeFile, readdir } from 'node:fs/promises';
 import { join } from 'node:path';
 import os from 'node:os';
 import { request } from 'node:http';
 import { afterEach, describe, expect, it } from 'vitest';
 import { captureReviewPlan, createProject } from '../../src/core/project.js';
 import { openReview } from '../../src/review/server.js';
-import { readReviewSession, submitReview } from '../../src/review/session.js';
+import { INTENT_COLORS, readReviewSession, saveReviewSession, submitReview } from '../../src/review/session.js';
 import type { Version } from '../../src/core/types.js';
 
 const cleanup: Array<() => Promise<unknown>> = [];
@@ -96,7 +97,7 @@ describe('local review', () => {
     delete v.reviewPlan;
     await expect(openReview(p, v)).rejects.toThrow(/rebuild/i);
   });
-  it('reports a held or abandoned lock without changing notes or breaking the lock', async () => {
+  it('reports a freshly held lock without changing notes or breaking the lock', async () => {
     const { p, v, dir, url } = await fixture();
     const lock = join(dir, 'review', 'v001', 'session.lock');
     await mkdir(join(dir, 'review', 'v001'), { recursive: true });
@@ -106,5 +107,75 @@ describe('local review', () => {
     expect((await response.json()).error).toContain('session.lock');
     expect(await readFile(lock, 'utf8')).toBe('fixture-lock-owner');
     expect((await readReviewSession(p, v)).revision).toBe(0);
+  });
+  it('reclaims a lock left by a dead process, an expired lock, and a legacy lock file', async () => {
+    const { p, v, dir } = await fixture();
+    const lock = join(dir, 'review', 'v001', 'session.lock');
+    await mkdir(join(dir, 'review', 'v001'), { recursive: true });
+    const deadPid = spawnSync(process.execPath, ['-e', '']).pid!;
+    await writeFile(lock, JSON.stringify({ pid: deadPid, host: os.hostname(), at: Date.now() }));
+    expect((await saveReviewSession(p, v, { revision: 0, notes: [note] })).revision).toBe(1);
+    await writeFile(lock, JSON.stringify({ pid: process.pid, host: os.hostname(), at: Date.now() - 3 * 60_000 }));
+    expect((await saveReviewSession(p, v, { revision: 1, notes: [note] })).revision).toBe(2);
+    await writeFile(lock, 'fixture-lock-owner');
+    const old = new Date(Date.now() - 3 * 60_000);
+    await utimes(lock, old, old);
+    expect((await saveReviewSession(p, v, { revision: 2, notes: [note] })).revision).toBe(3);
+    await expect(readFile(lock, 'utf8')).rejects.toMatchObject({ code: 'ENOENT' });
+    // A fresh lock owned by a live process is respected.
+    const live = JSON.stringify({ pid: process.pid, host: os.hostname(), at: Date.now() });
+    await writeFile(lock, live);
+    await expect(saveReviewSession(p, v, { revision: 3, notes: [] })).rejects.toMatchObject({ status: 423 });
+    expect(await readFile(lock, 'utf8')).toBe(live);
+    expect((await readdir(join(dir, 'review', 'v001'))).filter(f => f.includes('.stale-'))).toHaveLength(0);
+  });
+  it('saves mark-only notes with intent colours and still rejects empty or malformed marks', async () => {
+    const { url, p, v } = await fixture();
+    const send = (body: unknown) => fetch(url + 'session', { method: 'PUT', headers: { 'Content-Type': 'application/json', Origin: new URL(url).origin }, body: JSON.stringify(body) });
+    const circle = { kind: 'circle', points: [[0.2, 0.2], [0.5, 0.6]], intent: 'cut' };
+    const markOnly = { id: 'm1', frame: 20, in: 10, out: 30, intent: 'timing', strokes: [circle, { points: [[0.1, 0.1], [0.2, 0.2]] }] };
+    const res = await send({ revision: 0, notes: [markOnly] });
+    expect(res.status).toBe(200);
+    const saved = (await res.json()).notes[0];
+    expect(saved).toMatchObject({ text: '', intent: 'timing', color: INTENT_COLORS.timing, strokes: [
+      { kind: 'circle', intent: 'cut', color: INTENT_COLORS.cut }, { kind: 'free', intent: 'timing', color: INTENT_COLORS.timing },
+    ] });
+    const empty = await send({ revision: 1, notes: [{ ...markOnly, strokes: [], text: '   ' }] });
+    expect(empty.status).toBe(400);
+    expect((await empty.json()).error).toMatch(/text or a mark/);
+    for (const bad of [
+      { ...markOnly, strokes: [{ ...circle, points: [[0, 0], [0.5, 0.5], [1, 1]] }] },
+      { ...markOnly, strokes: [{ ...circle, kind: 'box' }] },
+      { ...markOnly, intent: 'magic' },
+      { ...markOnly, color: 'red' },
+      { ...markOnly, strokes: [{ ...circle, extra: true }] },
+    ]) expect((await send({ revision: 1, notes: [bad] })).status).toBe(400);
+    expect((await readReviewSession(p, v)).revision).toBe(1);
+  });
+  it('reads legacy session files and fills intent colours for the agent', async () => {
+    const { p, v, dir } = await fixture();
+    await mkdir(join(dir, 'review', 'v001'), { recursive: true });
+    const legacy = { version: 'v001', planHash: 'old-plan', revision: 4, updatedAt: new Date().toISOString(), status: 'draft',
+      notes: [{ ...note, intent: 'audio', status: 'open', shot: 's1', asset: 'title', sourceFrame: 30 }] };
+    await writeFile(join(dir, 'review', 'v001', 'session.json'), JSON.stringify(legacy));
+    const s = await readReviewSession(p, v);
+    expect(s.notes[0]).toMatchObject({ text: note.text, color: INTENT_COLORS.audio, strokes: [{ kind: 'free', intent: 'audio', color: INTENT_COLORS.audio }] });
+  });
+  it('keeps an editor draft on disk across reopen without touching the notes revision', async () => {
+    const { url, p, v, server } = await fixture();
+    const put = (body: unknown, origin = new URL(url).origin) => fetch(url + 'draft', { method: 'PUT', headers: { 'Content-Type': 'application/json', Origin: origin }, body: JSON.stringify(body) });
+    const draft = { frame: 12, in: 10, out: 30, intent: 'cut', text: 'ยังพิมพ์ไม่เสร็จ', strokes: [{ kind: 'arrow', points: [[0.1, 0.1], [0.3, 0.2]], intent: 'cut', color: INTENT_COLORS.cut }] };
+    expect((await put({ draft }, 'https://evil.example')).status).toBe(403);
+    expect((await put({ draft: { ...draft, out: 999 } })).status).toBe(400);
+    expect((await put({ draft: { ...draft, junk: 1 } })).status).toBe(400);
+    expect((await put({ draft })).status).toBe(200);
+    await server.close();
+    const reopened = await openReview(p, v);
+    cleanup.push(() => reopened.close());
+    const data = await fetch(reopened.url + 'data').then(r => r.json());
+    expect(data).toMatchObject({ intents: INTENT_COLORS, draft: { ...draft, version: 'v001' }, session: { revision: 0 } });
+    const cleared = await fetch(reopened.url + 'draft', { method: 'PUT', headers: { 'Content-Type': 'application/json', Origin: new URL(reopened.url).origin }, body: JSON.stringify({ draft: null }) });
+    expect(await cleared.json()).toEqual({ draft: null });
+    expect((await fetch(reopened.url + 'data').then(r => r.json())).draft).toBeNull();
   });
 });

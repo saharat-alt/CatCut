@@ -1,6 +1,7 @@
 import { randomBytes } from 'node:crypto';
-import { existsSync, mkdirSync } from 'node:fs';
+import { existsSync, mkdirSync, realpathSync } from 'node:fs';
 import { mkdir, readFile, rename, rm, stat, writeFile } from 'node:fs/promises';
+import os from 'node:os';
 import path from 'node:path';
 import type {
   AeCompAsset,
@@ -35,6 +36,7 @@ export async function createProject(
   meta: { name: string; fps?: number; width?: number; height?: number },
 ): Promise<Project> {
   const abs = path.resolve(dir);
+  assertNotProtected(abs);
   const file = path.join(abs, PROJECT_FILE);
   const name = meta.name?.trim();
   if (!name) throw new Error('project name is required');
@@ -72,6 +74,12 @@ export async function loadProject(dir: string): Promise<Project> {
   } catch {
     throw new Error(`no ${PROJECT_FILE} in ${abs}`);
   }
+  const p = parseProject(raw, abs, file);
+  remember(p, raw);
+  return p;
+}
+
+function parseProject(raw: string, abs: string, file: string): Project {
   let data: Partial<Project>;
   try {
     data = JSON.parse(raw) as Partial<Project>;
@@ -89,18 +97,302 @@ export async function loadProject(dir: string): Promise<Project> {
   };
 }
 
-/** Atomic: writes a temp file next to project.json then renames over it. `dir` is not persisted. */
-export async function saveProject(p: Project): Promise<void> {
-  const file = path.join(p.dir, PROJECT_FILE);
-  const tmp = path.join(p.dir, `.${PROJECT_FILE}.${process.pid}.${randomBytes(4).toString('hex')}.tmp`);
-  const { dir: _dir, ...persisted } = p;
-  await mkdir(p.dir, { recursive: true });
-  await writeFile(tmp, `${JSON.stringify(persisted, null, 2)}\n`, 'utf8');
+// ---------- optimistic concurrency ----------
+// Every loaded/saved Project remembers the exact project.json text it was based on. A save that finds
+// different text on disk (another process — CLI build, a second MCP server — saved in between) does a
+// three-way merge: non-conflicting changes from both sides are kept, real conflicts throw.
+
+export class ProjectConflictError extends Error {
+  constructor(public readonly conflicts: string[], public readonly file: string) {
+    super(`โปรเจกต์ถูกแก้จากที่อื่น — โหลดใหม่แล้วลองอีกครั้ง / ${PROJECT_FILE} was changed by another process; conflicting: ${conflicts.join(', ')}`);
+    this.name = 'ProjectConflictError';
+  }
+}
+
+export class ProjectLockedError extends Error {
+  constructor(public readonly lockFile: string, holder: string) {
+    super(`โปรเจกต์ถูกล็อกโดยโปรเซสอื่น (${holder}) — ลองใหม่อีกครั้ง / ${lockFile} is held by another process`);
+    this.name = 'ProjectLockedError';
+  }
+}
+
+type Persisted = Omit<Project, 'dir'>;
+
+interface Base {
+  raw: string;
+  snapshot: Persisted;
+  revision: number;
+}
+
+const bases = new WeakMap<Project, Base>();
+
+function persistedOf(p: Project): Persisted {
+  const { meta, assets, timeline, delivery, versions } = p;
+  return JSON.parse(JSON.stringify({ meta, assets, timeline, delivery, versions })) as Persisted;
+}
+
+function revisionOf(raw: string): number {
   try {
-    await renameWithRetry(tmp, file);
+    const r = (JSON.parse(raw) as { revision?: unknown }).revision;
+    return typeof r === 'number' && Number.isInteger(r) ? r : 0;
+  } catch {
+    return 0;
+  }
+}
+
+function remember(p: Project, raw: string): void {
+  bases.set(p, { raw, snapshot: persistedOf(parseProject(raw, p.dir, PROJECT_FILE)), revision: revisionOf(raw) });
+}
+
+const isObj = (v: unknown): v is Record<string, unknown> => !!v && typeof v === 'object' && !Array.isArray(v);
+const same = (a: unknown, b: unknown): boolean => hashJson(a) === hashJson(b);
+
+/** Whole values: a change on both sides is a conflict even if it touches different sub-fields. */
+function isAtomic(at: string[]): boolean {
+  if (at.length === 1) return at[0] === 'meta' || at[0] === 'timeline' || at[0] === 'delivery';
+  if (at[0] === 'assets' && at.length === 3) return at[2] === 'render' || at[2] === 'probe';
+  if (at[0] === 'versions' && at.length === 3) return at[2] === 'reviewPlan' || at[2] === 'qc' || at[2] === 'stats';
+  return false;
+}
+
+/** Derived caches and build artifacts: when both sides changed them, ours (the newer work) wins. */
+function oursWins(at: string[]): boolean {
+  if (at[0] === 'assets' && at.length >= 3) return ['render', 'probe', 'fingerprint', 'hash'].includes(at[2] as string);
+  return at[0] === 'versions' && at.length >= 3;
+}
+
+function assign(live: Record<string, unknown>, k: string, v: unknown): void {
+  if (v === undefined) delete live[k];
+  else live[k] = structuredClone(v);
+}
+
+/** Merge `theirs` into the live object in place (keeps object identity for code holding references). */
+function merge3(live: Record<string, unknown>, base: unknown, ours: unknown, theirs: unknown, at: string[], conflicts: string[]): void {
+  const b = isObj(base) ? base : {};
+  const o = isObj(ours) ? ours : {};
+  const t = isObj(theirs) ? theirs : {};
+  for (const k of new Set([...Object.keys(b), ...Object.keys(o), ...Object.keys(t)])) {
+    const here = [...at, k];
+    if (here.length === 1 && k === 'versions') {
+      mergeVersions(live, b[k], o[k], t[k], conflicts);
+      continue;
+    }
+    const bv = b[k];
+    const ov = o[k];
+    const tv = t[k];
+    if (same(ov, tv) || same(bv, tv)) continue;
+    const lv = live[k];
+    if (!isAtomic(here) && isObj(ov) && isObj(tv) && isObj(lv)) {
+      merge3(lv, bv, ov, tv, here, conflicts);
+      continue;
+    }
+    if (same(bv, ov)) assign(live, k, tv);
+    else if (!oursWins(here)) conflicts.push(here.join('.'));
+  }
+}
+
+function versionNo(id: unknown): number {
+  const m = /^v(\d+)$/.exec(String(id));
+  return m ? parseInt(m[1] as string, 10) : Number.MAX_SAFE_INTEGER;
+}
+
+/** Versions are keyed by id: versions appended by either side are all kept. */
+function mergeVersions(live: Record<string, unknown>, base: unknown, ours: unknown, theirs: unknown, conflicts: string[]): void {
+  const byId = (v: unknown): Map<string, Record<string, unknown>> =>
+    new Map((Array.isArray(v) ? v : []).filter(isObj).filter((x) => typeof x['id'] === 'string').map((x) => [x['id'] as string, x]));
+  const bm = byId(base);
+  const om = byId(ours);
+  const tm = byId(theirs);
+  if (!Array.isArray(live['versions'])) live['versions'] = [];
+  const arr = live['versions'] as Array<Record<string, unknown>>;
+  let inserted = false;
+  for (const id of new Set([...bm.keys(), ...om.keys(), ...tm.keys()])) {
+    const b = bm.get(id);
+    const o = om.get(id);
+    const t = tm.get(id);
+    if (same(o, t) || same(b, t)) continue;
+    if (!o && t) {
+      if (b) conflicts.push(`versions.${id}`); // we removed it, they changed it
+      else { arr.push(structuredClone(t)); inserted = true; }
+      continue;
+    }
+    if (o && !t) {
+      if (b && same(b, o)) arr.splice(arr.findIndex((v) => v['id'] === id), 1);
+      else if (b) conflicts.push(`versions.${id}`);
+      continue;
+    }
+    const lv = arr.find((v) => v['id'] === id);
+    if (!b || !lv) { conflicts.push(`versions.${id}`); continue; } // both created a different version with this id
+    merge3(lv, b, o, t, ['versions', id], conflicts);
+  }
+  if (inserted) arr.sort((x, y) => versionNo(x['id']) - versionNo(y['id']));
+}
+
+// ---------- protected paths ----------
+
+const BUILTIN_PROTECTED = ['D:\\261009_STB50Y_THAI-WORLD_CSR'];
+
+/** Built-in live production folders + EDITMCP_PROTECTED_PATHS (';'-separated). Nothing may be written inside them. */
+function protectedPaths(): string[] {
+  const extra = (process.env['EDITMCP_PROTECTED_PATHS'] ?? '').split(';').map((s) => s.trim()).filter(Boolean);
+  return [...BUILTIN_PROTECTED, ...extra];
+}
+
+function pathKey(p: string): string {
+  const r = path.resolve(p).replace(/[\\/]+$/, '');
+  return process.platform === 'win32' ? r.toLowerCase() : r;
+}
+
+function under(target: string, root: string): boolean {
+  const t = pathKey(target);
+  const r = pathKey(root);
+  return t === r || t.startsWith(r + path.sep) || (process.platform === 'win32' && t.startsWith(r + '/'));
+}
+
+/** Real path of the nearest existing ancestor + the rest (defeats junctions/symlinks into a protected tree). */
+function realish(p: string): string {
+  let cur = path.resolve(p);
+  const rest: string[] = [];
+  for (;;) {
+    if (existsSync(cur)) {
+      try {
+        return path.join(realpathSync.native(cur), ...rest.reverse());
+      } catch {
+        return path.resolve(p);
+      }
+    }
+    const parent = path.dirname(cur);
+    if (parent === cur) return path.resolve(p);
+    rest.push(path.basename(cur));
+    cur = parent;
+  }
+}
+
+/** True when `target` is (inside) a protected path. Lexical check first, so a protected tree is never even stat'ed. */
+export function isProtected(target: string): boolean {
+  const roots = protectedPaths();
+  if (roots.some((r) => under(target, r))) return true;
+  const real = realish(target);
+  return roots.some((r) => under(real, r));
+}
+
+function assertNotProtected(target: string): void {
+  if (isProtected(target)) throw new Error(`ห้ามเขียนในโฟลเดอร์ที่ป้องกันไว้ / refusing to write inside a protected path: ${target}`);
+}
+
+// ---------- cross-process lock ----------
+
+const LOCK_FILE = 'project.lock';
+const LOCK_TIMEOUT_MS = 15_000;
+const LOCK_STALE_MS = 2 * 60_000;
+
+export interface SaveOptions {
+  /** how long to wait for another process's project.lock (default 15 s) */
+  lockTimeoutMs?: number;
+  /** a lock older than this is reclaimed even if its pid is alive (default 2 min) */
+  staleLockMs?: number;
+}
+
+interface LockInfo { pid: number; host: string; at: string; token: string }
+
+function pidAlive(pid: number): boolean {
+  try {
+    process.kill(pid, 0);
+    return true;
   } catch (e) {
-    await rm(tmp, { force: true });
-    throw e;
+    return (e as NodeJS.ErrnoException).code === 'EPERM';
+  }
+}
+
+async function acquireLock(dir: string, opts: SaveOptions): Promise<() => Promise<void>> {
+  const file = path.join(dir, LOCK_FILE);
+  const token = randomBytes(8).toString('hex');
+  const staleMs = opts.staleLockMs ?? LOCK_STALE_MS;
+  const deadline = Date.now() + (opts.lockTimeoutMs ?? LOCK_TIMEOUT_MS);
+  const mine: LockInfo = { pid: process.pid, host: os.hostname(), at: '', token };
+  for (let attempt = 0; ; attempt++) {
+    try {
+      await writeFile(file, JSON.stringify({ ...mine, at: new Date().toISOString() }), { encoding: 'utf8', flag: 'wx' });
+      break;
+    } catch (e) {
+      if ((e as NodeJS.ErrnoException).code !== 'EEXIST') throw e;
+    }
+    const raw = await readFile(file, 'utf8').catch(() => undefined);
+    if (raw === undefined) continue; // released between our attempts
+    let holder: LockInfo | undefined;
+    try { holder = JSON.parse(raw) as LockInfo; } catch { holder = undefined; }
+    const ageMs = holder ? Date.now() - Date.parse(holder.at) : Date.now() - ((await stat(file).catch(() => undefined))?.mtimeMs ?? Date.now());
+    const stale = holder
+      ? !(ageMs <= staleMs) || (holder.host === os.hostname() && !pidAlive(holder.pid))
+      : ageMs > 5_000; // half-written lock left by a crash
+    if (stale) {
+      // Re-read right before removing so we never delete a lock someone else just took.
+      if ((await readFile(file, 'utf8').catch(() => undefined)) === raw) await rm(file, { force: true });
+      continue;
+    }
+    if (Date.now() >= deadline) throw new ProjectLockedError(file, holder ? `pid ${holder.pid}@${holder.host}` : 'unknown');
+    await new Promise((r) => setTimeout(r, Math.min(25 * (attempt + 1), 250)));
+  }
+  return async () => {
+    const raw = await readFile(file, 'utf8').catch(() => undefined);
+    try {
+      if (raw !== undefined && (JSON.parse(raw) as LockInfo).token === token) await rm(file, { force: true });
+    } catch { /* not ours / unreadable: leave it */ }
+  };
+}
+
+/** One save at a time per project folder inside this process (the lockfile serializes across processes). */
+const saveQueues = new Map<string, Promise<unknown>>();
+
+/**
+ * Atomic (temp file + rename) and concurrency-safe: under project.lock, re-reads project.json; if another
+ * process saved since this object was loaded/saved, merges both (see merge3) and adopts their changes in
+ * place, or throws ProjectConflictError without writing. `dir` is not persisted.
+ */
+export async function saveProject(p: Project, opts: SaveOptions = {}): Promise<void> {
+  assertNotProtected(p.dir);
+  const key = pathKey(p.dir);
+  const prev = saveQueues.get(key) ?? Promise.resolve();
+  const run = prev.catch(() => undefined).then(() => saveLocked(p, opts));
+  saveQueues.set(key, run);
+  try {
+    await run;
+  } finally {
+    if (saveQueues.get(key) === run) saveQueues.delete(key);
+  }
+}
+
+async function saveLocked(p: Project, opts: SaveOptions): Promise<void> {
+  const file = path.join(p.dir, PROJECT_FILE);
+  await mkdir(p.dir, { recursive: true });
+  const release = await acquireLock(p.dir, opts);
+  try {
+    const disk = await readFile(file, 'utf8').catch(() => undefined);
+    const base = bases.get(p);
+    let revision = (base?.revision ?? 0) + 1;
+    if (disk !== undefined && base && disk !== base.raw) {
+      const theirs = persistedOf(parseProject(disk, p.dir, file));
+      const ours = persistedOf(p);
+      const conflicts: string[] = [];
+      merge3(structuredClone(ours) as unknown as Record<string, unknown>, base.snapshot, ours, theirs, [], conflicts); // dry run
+      if (conflicts.length) throw new ProjectConflictError(conflicts, file);
+      merge3(p as unknown as Record<string, unknown>, base.snapshot, ours, theirs, [], conflicts);
+      revision = Math.max(revision, revisionOf(disk) + 1);
+    } else if (disk !== undefined && !base) {
+      revision = revisionOf(disk) + 1; // object not from loadProject: plain overwrite (legacy behaviour)
+    }
+    const text = `${JSON.stringify({ ...persistedOf(p), revision }, null, 2)}\n`;
+    const tmp = path.join(p.dir, `.${PROJECT_FILE}.${process.pid}.${randomBytes(4).toString('hex')}.tmp`);
+    await writeFile(tmp, text, 'utf8');
+    try {
+      await renameWithRetry(tmp, file);
+    } catch (e) {
+      await rm(tmp, { force: true });
+      throw e;
+    }
+    remember(p, text);
+  } finally {
+    await release();
   }
 }
 

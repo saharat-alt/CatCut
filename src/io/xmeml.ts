@@ -1,9 +1,10 @@
 /**
  * FCP7 XML (xmeml v5) writer + reader — the Premiere hand-tweak loop.
  *
- * Layout (details in docs/xmeml-notes.md):
- *   V1 = the cut · A1/A2 = clip audio linked to V1 · A3 = vo · A4 = music · A5 = sfx ·
- *   A6+ = overflow lanes when clips of one role overlap.
+ * Layout (details in docs/xmeml-notes.md): every audio lane is a Premiere "exploded" stereo pair
+ * (two tracks, premiereTrackType="Stereo", left clipitem sourcetrack 1 + right sourcetrack 2, linked):
+ *   V1 = the cut · A1/A2 = clip audio linked to V1 · A3/A4 = vo · A5/A6 = music · A7/A8 = sfx ·
+ *   A9+ = named overflow pairs ("VO 2", "SFX 2"…) when clips of one role overlap.
  * Dissolve N at cut C covers [C-a, C+b), a = floor(N/2): the transitionitem has exactly that
  * start/end, touching clip edges are written as -1 (FCP7 convention) and in/out are extended by
  * the halves. Clip ids travel in <name> (Premiere preserves it), file ids derive from asset ids.
@@ -103,15 +104,18 @@ function baseName(p: string): string {
   return i >= 0 ? s.slice(i + 1) : s;
 }
 
-/** Absolute path -> `file:///D:/…` (UNC: `file://server/share/…`). Every segment is percent-encoded UTF-8, so Thai survives. */
+/**
+ * Absolute path -> Premiere's own form `file://localhost/D%3a/…` (UNC: `file://server/share/…`).
+ * Every segment is percent-encoded UTF-8, so Thai survives.
+ */
 export function pathToUrl(abs: string): string {
   const s = abs.normalize('NFC').replace(/\\/g, '/');
   const enc = (segs: string[]): string => segs.map((x) => encodeURIComponent(x)).join('/');
   const unc = /^\/\/([^/]+)\/(.*)$/.exec(s);
   if (unc) return `file://${unc[1]}/${enc((unc[2] ?? '').split('/'))}`;
-  const drv = /^([A-Za-z]:)(?:\/(.*))?$/.exec(s);
-  if (drv) return `file:///${drv[1]}/${enc((drv[2] ?? '').split('/'))}`;
-  return `file://${enc((s.startsWith('/') ? s : `/${s}`).split('/'))}`;
+  const drv = /^([A-Za-z]):(?:\/(.*))?$/.exec(s);
+  if (drv) return `file://localhost/${drv[1]}%3a/${enc((drv[2] ?? '').split('/'))}`;
+  return `file://localhost${enc((s.startsWith('/') ? s : `/${s}`).split('/'))}`;
 }
 
 function decodeSafe(s: string): string {
@@ -157,6 +161,27 @@ interface PlacedAudio {
   at: Frames;
   in: Frames;
   dur: Frames;
+}
+
+interface RoleLane {
+  name: string;
+  lane: PlacedAudio[];
+}
+
+/** Track names written as MZ.TrackName; the reader prefers them over track positions. */
+const ROLE_TRACK_NAME: Record<string, string> = { vo: 'VO', music: 'Music', sfx: 'SFX' };
+const CLIP_AUDIO_TRACK_NAME = 'Clip Audio';
+
+/** Premiere's exploded stereo track: two xmeml tracks, left (index 0) and right (index 1). */
+function stereoTrack(items: XNode[], side: 0 | 1, name: string): XNode {
+  return ela(
+    'track',
+    { currentExplodedTrackIndex: String(side), totalExplodedTrackCount: '2', premiereTrackType: 'Stereo', 'MZ.TrackName': name },
+    ...items,
+    el('enabled', 'TRUE'),
+    el('locked', 'FALSE'),
+    el('outputchannelindex', side + 1),
+  );
 }
 
 /** First-fit lanes: overlapping clips of one role go to extra tracks instead of colliding. */
@@ -227,7 +252,6 @@ function levelsFilter(c: AudioClip, xmlIn: Frames, xmlOut: Frames): XNode | unde
 }
 
 function transitionNode(rate: XNode, start: Frames, end: Frames, audio: boolean): XNode {
-  const name = audio ? 'Cross Fade (+3dB)' : 'Cross Dissolve';
   return el(
     'transitionitem',
     rate,
@@ -236,8 +260,8 @@ function transitionNode(rate: XNode, start: Frames, end: Frames, audio: boolean)
     el('alignment', 'center'),
     el(
       'effect',
-      el('name', name),
-      el('effectid', name),
+      el('name', audio ? 'Cross Fade (+3dB)' : 'Cross Dissolve'),
+      el('effectid', audio ? 'KGAudioTransCrossFade3dB' : 'Cross Dissolve'),
       el('effectcategory', 'Dissolve'),
       el('effecttype', 'transition'),
       el('mediatype', audio ? 'audio' : 'video'),
@@ -310,11 +334,10 @@ export function writeXmeml(p: Project, opts: XmemlWriteOptions): string {
     return id;
   };
   const vId = clips.map((c) => xmlId('clipitem', c.id));
+  // Clip audio is a stereo pair on A1/A2 (a mono source feeds both sides from its channel 1).
   const audioLanesOf: number[][] = clips.map((c) => {
     if (!useClipAudio) return [];
-    const a = assetOf(c.src, `clip '${c.id}'`);
-    if (!assetHasAudio(a)) return [];
-    return assetChannels(a) === 2 ? [0, 1] : [0];
+    return assetHasAudio(assetOf(c.src, `clip '${c.id}'`)) ? [0, 1] : [];
   });
   const lanesOf = (i: number): number[] => audioLanesOf[i] ?? [];
   const aId = clips.map((c, i) => lanesOf(i).map((L) => xmlId('clipitem', `${c.id}-a${L + 1}`)));
@@ -357,15 +380,17 @@ export function writeXmeml(p: Project, opts: XmemlWriteOptions): string {
     ['music', tl.audio.music ?? []],
     ['sfx', tl.audio.sfx ?? []],
   ];
-  const mainLanes: PlacedAudio[][] = [];
-  const extraLanes: PlacedAudio[][] = [];
-  for (const [, list] of roles) {
+  // One stereo pair per lane: vo, music, sfx always (fixed positions), then named overflow lanes.
+  const mainLanes: RoleLane[] = [];
+  const extraLanes: RoleLane[] = [];
+  for (const [role, list] of roles) {
     const [first, ...rest] = placeLanes(list.map(resolveAudio));
-    mainLanes.push(first ?? []);
-    extraLanes.push(...rest);
+    mainLanes.push({ name: ROLE_TRACK_NAME[role] ?? role, lane: first ?? [] });
+    rest.forEach((lane, k) => extraLanes.push({ name: `${ROLE_TRACK_NAME[role] ?? role} ${k + 2}`, lane }));
   }
-  const audioItemId = new Map<AudioClip, string>();
-  for (const lane of [...mainLanes, ...extraLanes]) for (const pa of lane) audioItemId.set(pa.clip, xmlId('clipitem', pa.clip.id));
+  const roleLanes = [...mainLanes, ...extraLanes];
+  const audioItemId = new Map<AudioClip, [string, string]>();
+  for (const { lane } of roleLanes) for (const pa of lane) audioItemId.set(pa.clip, [xmlId('clipitem', pa.clip.id), xmlId('clipitem', `${pa.clip.id}-r`)]);
 
   // --- file elements: full definition on first use, id reference afterwards
   const fileIds = new Map<string, string>();
@@ -477,7 +502,7 @@ export function writeXmeml(p: Project, opts: XmemlWriteOptions): string {
       lane.push(
         ela(
           'clipitem',
-          { id: aId[i]?.[L] ?? '' },
+          { id: aId[i]?.[L] ?? '', premiereChannelType: 'stereo' },
           el('name', c.id),
           el('enabled', 'TRUE'),
           el('duration', fileDuration(a, c.src)),
@@ -487,7 +512,7 @@ export function writeXmeml(p: Project, opts: XmemlWriteOptions): string {
           el('in', xIn),
           el('out', xIn + hp + c.dur + hn),
           fileRef(c.src),
-          el('sourcetrack', el('mediatype', 'audio'), el('trackindex', L + 1)),
+          el('sourcetrack', el('mediatype', 'audio'), el('trackindex', assetChannels(a) === 1 ? 1 : L + 1)),
           ...linksFor(i),
         ),
       );
@@ -499,13 +524,15 @@ export function writeXmeml(p: Project, opts: XmemlWriteOptions): string {
     }
   });
 
-  // --- vo / music / sfx nodes
-  const audioItem = (pa: PlacedAudio): XNode => {
+  // --- vo / music / sfx nodes: each clip is a left/right clipitem pair (sourcetrack 1/2) linked to each other.
+  // Lane j sits on audio tracks 3+2j (left) and 4+2j (right); clipindex counts clipitems on the track.
+  const audioItem = (pa: PlacedAudio, side: 0 | 1, laneNo: number, k: number): XNode => {
     const a = assetOf(pa.clip.src, `audio clip '${pa.clip.id}'`);
     const xOut = pa.in + pa.dur;
+    const [left, right] = audioItemId.get(pa.clip) ?? ['', ''];
     return ela(
       'clipitem',
-      { id: audioItemId.get(pa.clip) ?? '' },
+      { id: side === 0 ? left : right, premiereChannelType: 'stereo' },
       el('name', pa.clip.id),
       el('enabled', 'TRUE'),
       el('duration', fileDuration(a, pa.clip.src)),
@@ -515,17 +542,19 @@ export function writeXmeml(p: Project, opts: XmemlWriteOptions): string {
       el('in', pa.in),
       el('out', xOut),
       fileRef(pa.clip.src),
-      el('sourcetrack', el('mediatype', 'audio'), el('trackindex', 1)),
+      el('sourcetrack', el('mediatype', 'audio'), el('trackindex', side === 1 && assetChannels(a) === 2 ? 2 : 1)),
       levelsFilter(pa.clip, pa.in, xOut),
+      linkNode(left, 'audio', 3 + 2 * laneNo, k + 1),
+      linkNode(right, 'audio', 4 + 2 * laneNo, k + 1),
     );
   };
-  const audioTrack = (items: XNode[], outputChannel?: number): XNode =>
-    el('track', ...items, el('enabled', 'TRUE'), el('locked', 'FALSE'), outputChannel !== undefined && el('outputchannelindex', outputChannel));
   const audioTracks: XNode[] = [
-    audioTrack(clipAudioItems[0] ?? [], 1),
-    audioTrack(clipAudioItems[1] ?? [], 2),
-    ...mainLanes.map((lane) => audioTrack(lane.map(audioItem))),
-    ...extraLanes.map((lane) => audioTrack(lane.map(audioItem))),
+    stereoTrack(clipAudioItems[0] ?? [], 0, CLIP_AUDIO_TRACK_NAME),
+    stereoTrack(clipAudioItems[1] ?? [], 1, CLIP_AUDIO_TRACK_NAME),
+    ...roleLanes.flatMap(({ name, lane }, j) => [
+      stereoTrack(lane.map((pa, k) => audioItem(pa, 0, j, k)), 0, name),
+      stereoTrack(lane.map((pa, k) => audioItem(pa, 1, j, k)), 1, name),
+    ]),
   ];
 
   // --- sequence markers at clip starts
@@ -784,6 +813,106 @@ function readLevels(clipNode: PNode, xmlIn: Frames, xmlOut: Frames): Pick<AudioC
   return res;
 }
 
+type AudioRole = 'clip' | 'vo' | 'music' | 'sfx';
+
+interface TrackRole {
+  role: AudioRole | undefined; // undefined = extra track the layout cannot place
+  why: string;
+}
+
+function roleFromName(name: string | undefined): AudioRole | undefined {
+  if (!name) return undefined;
+  const n = name.normalize('NFC');
+  if (/clip audio|camera|\bsync\b|เสียงกล้อง/i.test(n)) return 'clip';
+  if (/\b(vo|v\.o\.|voice(?:over)?|narrat\w*|dialog\w*)\b|พากย์|บรรยาย|เสียงพูด/i.test(n)) return 'vo';
+  if (/\b(music|mx|bgm|score|song)\b|เพลง|ดนตรี/i.test(n)) return 'music';
+  if (/\b(sfx|fx|effects?|foley)\b|เอฟเฟกต์|เสียงประกอบ/i.test(n)) return 'sfx';
+  return undefined;
+}
+
+/**
+ * Role of every audio track. A recognisable track name (MZ.TrackName / <name>) wins. Otherwise the
+ * position: with Premiere's exploded-track attributes, logical (stereo-pair) tracks 1..4 are clip audio,
+ * vo, music, sfx; without them the legacy single-track layout A1/A2 clip audio, A3 vo, A4 music, A5 sfx.
+ */
+function audioTrackRoles(tracks: PNode[]): TrackRole[] {
+  const num = (t: PNode | undefined, a: string): number | undefined => {
+    const v = t ? attrOf(t, a) : undefined;
+    return v === undefined ? undefined : Number(v);
+  };
+  const exploded = tracks.some((t) => attrOf(t, 'premiereTrackType') !== undefined || attrOf(t, 'totalExplodedTrackCount') !== undefined);
+  const byPos: Array<AudioRole | undefined> = exploded ? ['clip', 'vo', 'music', 'sfx'] : ['clip', 'clip', 'vo', 'music', 'sfx'];
+  const out: TrackRole[] = [];
+  for (let i = 0, logical = 0; i < tracks.length; logical++) {
+    let size = 1;
+    const total = num(tracks[i], 'totalExplodedTrackCount') ?? 1;
+    if (exploded && total > 1 && (num(tracks[i], 'currentExplodedTrackIndex') ?? 0) === 0) {
+      // a following track without exploded attributes is taken as the missing side
+      while (size < total && i + size < tracks.length) {
+        const cur = num(tracks[i + size], 'currentExplodedTrackIndex');
+        if (cur !== undefined && (cur !== size || num(tracks[i + size], 'totalExplodedTrackCount') !== total)) break;
+        size++;
+      }
+    }
+    for (let k = 0; k < size; k++) {
+      const t = tracks[i + k] as PNode;
+      const nm = attrOf(t, 'MZ.TrackName') ?? childText(t, 'name');
+      const fromName = roleFromName(nm);
+      out.push({ role: fromName ?? byPos[logical], why: fromName ? `name '${nm}'` : nm ? `unrecognised name '${nm}'` : 'no track name' });
+    }
+    i += size;
+  }
+  return out;
+}
+
+/**
+ * Stereo (or wider) audio arrives as one clipitem per channel, linked only to each other, with the
+ * same file and the same start/end/in/out. Keep the one on the lowest track; return the others.
+ */
+function mergeStereoPairs(trackItems: RItem[][], layout: TrackRole[], warn: Warn): Set<RItem> {
+  interface AItem { it: RItem; ti: number; id: string; refs: string[] }
+  const all: AItem[] = [];
+  const byId = new Map<string, AItem>();
+  trackItems.forEach((items, ti) => {
+    for (const it of items) {
+      if (it.kind !== 'clip') continue;
+      const links = children(it.node, 'link');
+      if (links.some((l) => childText(l, 'mediatype') === 'video')) continue;
+      const id = attrOf(it.node, 'id');
+      if (!id) continue;
+      const refs = [...new Set(links.map((l) => childText(l, 'linkclipref') ?? '').filter((r) => r !== '' && r !== id))];
+      const a: AItem = { it, ti, id, refs };
+      all.push(a);
+      byId.set(id, a);
+    }
+  });
+  const sameFile = (x?: FileRec, y?: FileRec): boolean => x === y || (!!x && !!y && (x.id === y.id || (!!x.pathurl && x.pathurl === y.pathurl)));
+  const dropped = new Set<RItem>();
+  const seen = new Set<AItem>();
+  for (const a of all) {
+    if (seen.has(a) || a.refs.length === 0) continue;
+    seen.add(a);
+    const partners = a.refs.map((r) => byId.get(r));
+    if (partners.some((g) => g === undefined)) continue;
+    const group = partners as AItem[];
+    for (const g of group) seen.add(g);
+    const members = new Set([a.id, ...a.refs]);
+    const closed = group.every((g) => g.refs.every((r) => members.has(r)));
+    const sameSpan = group.every((g) => sameFile(g.it.file, a.it.file) && g.it.start === a.it.start && g.it.end === a.it.end && g.it.in === a.it.in && g.it.out === a.it.out);
+    if (!closed || !sameSpan) {
+      warn(`A${a.ti + 1}: linked audio '${a.it.name}' and its partner(s) differ in file/position/links; kept as separate clips`);
+      continue;
+    }
+    const role = layout[a.ti]?.role;
+    for (const g of group) {
+      dropped.add(g.it);
+      const other = layout[g.ti]?.role;
+      if (other !== role) warn(`A${a.ti + 1}/A${g.ti + 1}: stereo pair '${a.it.name}' spans tracks read as ${role ?? 'extra'} and ${other ?? 'extra'}; treated as ${role === 'vo' || role === 'music' ? role : 'sfx'} (ambiguous)`);
+    }
+  }
+  return dropped;
+}
+
 export function readXmeml(xml: string, p?: Project, opts: XmemlReadOptions = {}): XmemlReadResultEx {
   const warnings: string[] = [];
   const warn: Warn = (s) => {
@@ -959,7 +1088,7 @@ export function readXmeml(xml: string, p?: Project, opts: XmemlReadOptions = {})
     target.clip.marker = m.name;
   }
 
-  // --- audio: A1/A2 linked clip audio is implied by the video; A3 vo, A4 music, A5+ sfx
+  // --- audio: linked clip audio is implied by the video; roles from track names, else from the layout
   const audioNode = descend(seq, 'media', 'audio');
   const aTracks = audioNode ? children(audioNode, 'track') : [];
   const vo: AudioClip[] = [];
@@ -967,19 +1096,25 @@ export function readXmeml(xml: string, p?: Project, opts: XmemlReadOptions = {})
   const sfx: AudioClip[] = [];
   const audioIds = new Set<string>();
   let linkedClipAudio = 0;
-  aTracks.forEach((trk, ti) => {
+  const layout = audioTrackRoles(aTracks);
+  const trackItems = aTracks.map((trk, ti) => readItems(trk, `A${ti + 1}`, fps, fileOf, warn));
+  const dropped = mergeStereoPairs(trackItems, layout, warn);
+  aTracks.forEach((_trk, ti) => {
     const idx = ti + 1;
     const label = `A${idx}`;
-    const role = idx === 3 ? 'vo' : idx === 4 ? 'music' : 'sfx';
+    const { role: placed, why } = layout[ti] ?? { role: undefined, why: 'position' };
+    const role: 'vo' | 'music' | 'sfx' = placed === 'vo' || placed === 'music' ? placed : 'sfx';
     const list = role === 'vo' ? vo : role === 'music' ? music : sfx;
-    const tItems = readItems(trk, label, fps, fileOf, warn);
+    const tItems = trackItems[ti] ?? [];
     tItems.forEach((it, k) => {
       if (it.kind !== 'clip') return;
       if (children(it.node, 'link').some((l) => childText(l, 'mediatype') === 'video')) {
         linkedClipAudio++;
         return;
       }
-      if (idx <= 2 || idx > 5) warn(`${label}: '${it.name}' is not on a vo/music/sfx track; treated as ${role}`);
+      if (dropped.has(it)) return;
+      if (placed === 'clip') warn(`${label}: '${it.name}' is not on a vo/music/sfx track; treated as sfx`);
+      else if (placed === undefined) warn(`${label}: '${it.name}' is on an extra track without a recognisable name (${why}); treated as sfx (ambiguous)`);
       const prev = tItems[k - 1];
       const next = tItems[k + 1];
       const prevT = prev?.kind === 'trans' && tItems[k - 2]?.kind === 'clip' ? prev : undefined;

@@ -21,32 +21,42 @@
       </div>
       <div class="transport">
         <div class="playback"><button id="prev" aria-label="ย้อนหนึ่งเฟรม"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 5v14M18 5l-9 7 9 7Z"/></svg></button><button id="play" aria-label="เล่นวิดีโอ">▶</button><button id="next" aria-label="ถัดไปหนึ่งเฟรม"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M18 5v14M6 5l9 7-9 7Z"/></svg></button><output id="timecode">00:00:00:00</output></div>
-        <div class="drawing-tools"><button id="pen" aria-pressed="false">✎ วงจุดแก้</button><button id="undo" disabled>ย้อนเส้น</button><button id="clear" disabled>ล้างเส้น</button></div>
+        <div class="drawing-tools" id="tools" role="toolbar" aria-label="เครื่องมือวงบนภาพ">
+          <span class="pen-color"><i aria-hidden="true"></i><span id="pen-label">ข้อความ/กราฟิก</span></span>
+          <button id="pen" class="tool" aria-pressed="false" aria-label="ปากกาวาดอิสระ (P)" title="ปากกา · P"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 20c3-1 5-3 7-6l7-7a2 2 0 0 0-3-3l-7 7c-3 2-5 4-6 7Z"/></svg></button>
+          <button id="tool-circle" class="tool" aria-pressed="false" aria-label="วงกลม (C)" title="วงกลม · C"><svg viewBox="0 0 24 24" aria-hidden="true"><ellipse cx="12" cy="12" rx="8.5" ry="7"/></svg></button>
+          <button id="tool-arrow" class="tool" aria-pressed="false" aria-label="ลูกศร (A)" title="ลูกศร · A"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 19 19 5M10 5h9v9"/></svg></button>
+          <button id="undo" disabled>ย้อนเส้น</button><button id="clear" disabled>ล้างเส้น</button>
+          <button id="mark-away" class="mark-away" hidden></button>
+        </div>
       </div>
       <input id="scrub" type="range" min="0" max="0" value="0" step="1" aria-label="เลื่อนไปยังเฟรม">
+      <div id="range-bar" class="range-bar" title="ลากเพื่อเลือกช่วง · คลิกเพื่อเลือกทั้งช็อต" aria-hidden="true"><div id="range-ticks"></div><div class="range-fill"></div></div>
       <div class="timeline-heading"><h2>ช็อตในไทม์ไลน์</h2><span id="duration"></span></div>
       <div class="shots" id="shots" aria-label="ช็อตในเวอร์ชันนี้"></div>
       <div class="selection"><div><span class="muted">ช่วงที่เลือก</span><output id="range-label">—</output></div><div class="range-actions"><button id="mark-in">ตั้งจุดเข้า <kbd>I</kbd></button><button id="mark-out">ตั้งจุดออก <kbd>O</kbd></button><button id="whole-shot">ทั้งช็อต</button></div></div>
-      <p class="keyboard-help"><kbd>←</kbd> <kbd>→</kbd> ทีละเฟรม <span>·</span> <kbd>J</kbd> ถอยหลัง <kbd>K</kbd> หยุด <kbd>L</kbd> เล่น <span>·</span> วงบนเฟรมที่หยุดอยู่</p>
+      <p class="keyboard-help"><kbd>←</kbd> <kbd>→</kbd> ทีละเฟรม <span>·</span> <kbd>J</kbd> <kbd>K</kbd> <kbd>L</kbd> เล่น/หยุด <span>·</span> <kbd>P</kbd> <kbd>C</kbd> <kbd>A</kbd> ปากกา/วงกลม/ลูกศร <span>·</span> <kbd>1</kbd>–<kbd>6</kbd> สี <span>·</span> ลากบนแถบใต้ไทม์ไลน์เพื่อเลือกช่วง</p>
       <details class="qc"><summary id="qc-summary">ผลตรวจวิดีโอ</summary><ul id="qc-issues"></ul><img id="contact" alt="ภาพรวมเฟรมของเวอร์ชันนี้" hidden></details>
     </section>
     <aside class="notes-panel" aria-label="โน้ตแก้ไข">
       <div class="notes-heading"><div><span class="eyebrow">REVIEW NOTES</span><h2>จุดที่อยากแก้</h2></div><span id="note-count">0 จุด</span></div>
       <form id="note-form">
-        <fieldset><legend>ประเภทการแก้</legend><div class="intents">
-          <label class="intent cut"><input type="radio" name="intent" value="cut"><span>ตัดออก</span></label>
-          <label class="intent timing"><input type="radio" name="intent" value="timing"><span>ไทม์มิ่ง</span></label>
-          <label class="intent text"><input type="radio" name="intent" value="text" checked><span>ข้อความ</span></label>
-          <label class="intent color"><input type="radio" name="intent" value="color"><span>สี / แสง</span></label>
+        <fieldset><legend>สีปากกา = ประเภทการแก้</legend><div class="intents">
+          <label class="intent cut"><input type="radio" name="intent" value="cut"><span>ตัด/สั้นลง</span></label>
+          <label class="intent timing"><input type="radio" name="intent" value="timing"><span>ไทม์มิ่ง/ขยับ</span></label>
+          <label class="intent text"><input type="radio" name="intent" value="text" checked><span>ข้อความ/กราฟิก</span></label>
+          <label class="intent color"><input type="radio" name="intent" value="color"><span>สี/แสง</span></label>
           <label class="intent audio"><input type="radio" name="intent" value="audio"><span>เสียง</span></label>
+          <label class="intent other"><input type="radio" name="intent" value="other"><span>อื่น ๆ</span></label>
         </div></fieldset>
-        <label class="text-label" for="note-text">อยากให้แก้อะไร</label>
-        <textarea id="note-text" rows="4" maxlength="5000" placeholder="เช่น ชื่อสะกดผิด ใช้คำว่า ‘ธนาคาร’" required></textarea>
+        <label class="text-label" for="note-text">โน้ต <span>(ไม่บังคับ · วงอย่างเดียวก็ได้)</span></label>
+        <textarea id="note-text" rows="3" maxlength="5000" placeholder="เช่น ชื่อสะกดผิด ใช้คำว่า ‘ธนาคาร’"></textarea>
         <div class="form-actions"><button id="add-note" class="primary" type="submit" disabled>เพิ่มโน้ต</button><button id="new-note" type="button">โน้ตใหม่</button></div>
-        <p class="form-hint">บันทึกอัตโนมัติเมื่อเพิ่มโน้ต</p>
+        <p class="form-hint" id="draft-state" role="status" aria-live="polite">ร่างถูกเก็บอัตโนมัติ · กดเพิ่มโน้ตเพื่อให้ agent เห็น</p>
       </form>
       <div id="note-list" class="note-list"></div>
       <p class="review-hint">เมื่อดูครบ กดส่งรีวิวให้ agent เพื่ออ่านโน้ตและเสนอแผนแก้</p>
     </aside>
   </main>
+  <div id="confirm" class="confirm" hidden><div class="confirm-card" role="alertdialog" aria-modal="true" aria-labelledby="confirm-text"><p id="confirm-text"></p><div class="confirm-actions"><button id="confirm-cancel">ยกเลิก</button><button id="confirm-ok" class="danger"></button></div></div></div>
 </body></html>

@@ -6,6 +6,7 @@
  */
 import { existsSync, mkdirSync } from 'node:fs';
 import { mkdtemp, readFile, rm, writeFile } from 'node:fs/promises';
+import os from 'node:os';
 import { join } from 'node:path';
 import { execa } from 'execa';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
@@ -20,6 +21,13 @@ import { applyEditOps, callTool, diffTimelines, toolResultData, TOOLS, uniquePat
 
 const TMP_ROOT = join(process.cwd(), 'tmp', 'mcp-test');
 const MEDIA_DIR = join(process.cwd(), 'tmp', 'test-media');
+
+// doctor launches After Effects only when EDITMCP_ALLOW_AE=1: never let a developer's shell enable that here.
+const savedAllowAe = process.env['EDITMCP_ALLOW_AE'];
+delete process.env['EDITMCP_ALLOW_AE'];
+afterAll(() => {
+  if (savedAllowAe !== undefined) process.env['EDITMCP_ALLOW_AE'] = savedAllowAe;
+});
 
 // ---------- fakes for the process-spawning modules ----------
 
@@ -103,7 +111,7 @@ async function call(client: Client, name: string, args: Record<string, unknown> 
 const EXPECTED_TOOLS = [
   'project_new', 'project_open', 'project_status', 'asset_add', 'asset_list', 'timeline_set', 'timeline_edit', 'audio_add',
   'ae_list_comps', 'ae_inspect_comp', 'ae_edit', 'ae_preview_frame', 'build', 'deliver', 'job_status', 'job_list',
-  'qc_report', 'export_premiere_xml', 'import_premiere_xml', 'doctor',
+  'qc_report', 'export_premiere_xml', 'import_premiere_xml', 'timeline_restore', 'doctor',
   'preview', 'review_open', 'review_notes', 'review_submit', 'review_close',
 ];
 
@@ -290,25 +298,75 @@ describe('mcp server (real core, fake engines)', () => {
     expect(xbad.isError).toBe(true);
   });
 
-  it('import_premiere_xml reports a diff and applies a valid timeline', async () => {
+  it('import_premiere_xml is a dry run by default; apply backs up the timeline first; timeline_restore undoes it', async () => {
     const p = state.project!;
+    const original: Timeline = structuredClone(p.timeline);
     const edited: Timeline = structuredClone(p.timeline);
     edited.video[0]!.dur = 45;
     edited.cuts = [{ after: 's1', dissolve: 13 }];
     const file = join(dir, 'from_premiere.xml');
     await writeFile(file, JSON.stringify(edited), 'utf8');
-    const r = await call(client, 'import_premiere_xml', { path: file });
-    expect(r.isError).toBe(false);
-    const diff = r.data['diff'] as Body;
+    const dry = await call(client, 'import_premiere_xml', { path: file });
+    expect(dry.isError).toBe(false);
+    expect(dry.data).toMatchObject({ dryRun: true, applied: false, valid: true });
+    const diff = dry.data['diff'] as Body;
     expect((diff['clips'] as Body)['changed']).toEqual([{ index: 0, id: 's1', field: 'dur', from: 50, to: 45 }]);
     expect(diff['dissolves']).toEqual([{ after: 's1', from: 10, to: 13 }]);
+    const summary = (dry.data['summary'] as string[]).join('\n');
+    expect(summary).toContain("คลิป #1 's1': dur 50 → 45");
+    expect(summary).toContain("dissolve หลัง 's1': 10 → 13");
+    expect(p.timeline.video[0]!.dur).toBe(50); // untouched
+    expect(existsSync(join(p.dir, 'history'))).toBe(false);
+
+    const r = await call(client, 'import_premiere_xml', { path: file, apply: true });
+    expect(r.isError).toBe(false);
+    expect(r.data['applied']).toBe(true);
     expect(p.timeline.video[0]!.dur).toBe(45);
+    const backup = String(r.data['backup']);
+    expect(backup).toMatch(/[\\/]history[\\/]timeline-\d{4}-\d{2}-\d{2}T[\d-]+Z-1\.json$/);
+    expect((JSON.parse(await readFile(backup, 'utf8')) as { timeline: Timeline }).timeline).toEqual(original);
 
     edited.video[0]!.src = 'MISSING';
     await writeFile(file, JSON.stringify(edited), 'utf8');
-    const bad = await call(client, 'import_premiere_xml', { path: file });
+    const badDry = await call(client, 'import_premiere_xml', { path: file });
+    expect(badDry.isError).toBe(false);
+    expect(badDry.data['valid']).toBe(false);
+    const bad = await call(client, 'import_premiere_xml', { path: file, apply: true });
     expect(bad.isError).toBe(true);
     expect(p.timeline.video[0]!.src).toBe('A01');
+
+    const list = await call(client, 'timeline_restore', {});
+    const backups = list.data['backups'] as Body[];
+    expect(backups).toHaveLength(1);
+    expect(backups[0]).toMatchObject({ clips: 3, frames: original.video.reduce((s, c) => s + c.dur, 0) });
+    const traversal = await call(client, 'timeline_restore', { backup: '../project.json' });
+    expect(traversal.isError).toBe(true);
+    const restored = await call(client, 'timeline_restore', { backup: String(backups[0]!['name']) });
+    expect(restored.isError).toBe(false);
+    expect(state.project!.timeline).toEqual(original);
+    expect(((await call(client, 'timeline_restore', {})).data['backups'] as Body[])).toHaveLength(2); // the restore backed up first
+    expect(((JSON.parse(await readFile(join(p.dir, 'project.json'), 'utf8')) as Project).timeline.video[0]!.dur)).toBe(50);
+  });
+
+  it('surfaces a conflicting save from another process and reloads so the retry works', async () => {
+    const pdir = state.project!.dir;
+    const other = await projectApi.loadProject(pdir); // e.g. the CLI in another terminal
+    other.timeline.video[2]!.dur = 20;
+    await projectApi.saveProject(other);
+    const r = await call(client, 'timeline_edit', { ops: [{ op: 'trim', id: 's3', dur: 22 }] });
+    expect(r.isError).toBe(true);
+    expect(String(r.data['error'])).toContain('โปรเจกต์ถูกแก้จากที่อื่น — โหลดใหม่แล้วลองอีกครั้ง');
+    expect(r.data).toMatchObject({ conflicts: ['timeline'], reloaded: true });
+    expect(state.project!.timeline.video[2]!.dur).toBe(20); // the other process's edit is kept
+    const retry = await call(client, 'timeline_edit', { ops: [{ op: 'trim', id: 's3', dur: 22 }] });
+    expect(retry.isError).toBe(false);
+    // a version appended elsewhere is merged, not overwritten
+    const other2 = await projectApi.loadProject(pdir);
+    other2.versions.push({ ...other2.versions[0]!, id: 'v050' });
+    await projectApi.saveProject(other2);
+    expect((await call(client, 'timeline_edit', { ops: [{ op: 'trim', id: 's3', dur: 25 }] })).isError).toBe(false);
+    expect(state.project!.versions.map((v) => v.id)).toContain('v050');
+    expect((JSON.parse(await readFile(join(pdir, 'project.json'), 'utf8')) as Project).versions.map((v) => v.id)).toContain('v050');
   });
 
   it('ae_edit marks matching aecomp assets stale; ae_preview_frame never overwrites', async () => {
@@ -339,6 +397,113 @@ describe('mcp server (real core, fake engines)', () => {
     expect((r.data['timeline'] as Body)['clips']).toHaveLength(3);
     const bad = await call(client, 'project_open', { dir: join(dir, 'nowhere') });
     expect(bad.isError).toBe(true);
+  });
+});
+
+describe('AE jobs, write confinement and forceAssets', () => {
+  let dir: string;
+  beforeAll(async () => {
+    mkdirSync(TMP_ROOT, { recursive: true });
+    dir = await mkdtemp(join(TMP_ROOT, 'ae-'));
+  });
+  afterAll(async () => { await rm(dir, { recursive: true, force: true }); });
+
+  async function withProject(name: string) {
+    const st = await fakeState();
+    st.project = await projectApi.createProject(join(dir, name), { name });
+    const aep = join(dir, `${name}.aep`);
+    await writeFile(aep, '');
+    return { st, aep };
+  }
+
+  it('AE tools return a job id at once while the job queue is busy; job_status gets the result later', async () => {
+    const { st, aep } = await withProject('busy');
+    let finish!: () => void;
+    const blocker = st.jobs.start('build', () => new Promise<void>((r) => { finish = r; }));
+    const t0 = Date.now();
+    const r = toolResultData(await callTool(st, 'ae_list_comps', { aep }));
+    expect(Date.now() - t0).toBeLessThan(2_000);
+    expect(r).toMatchObject({ ok: true, pending: true, status: 'queued' });
+    const id = String(r['jobId']);
+    finish();
+    await st.jobs.wait(blocker.id);
+    const done = await st.jobs.wait(id);
+    expect(done.status).toBe('done');
+    expect((done.result as Body)['comps']).toEqual([expect.objectContaining({ name: 'Title_01' })]);
+    // idle queue: waits and returns the result inline; wait:false never waits
+    const inline = toolResultData(await callTool(st, 'ae_inspect_comp', { aep, comp: 'Title_01' }));
+    expect(inline).toMatchObject({ name: 'Title_01', fingerprint: 'fp1' });
+    expect(inline['jobId']).toMatch(/^job-/);
+    const nowait = toolResultData(await callTool(st, 'ae_list_comps', { aep, wait: false }));
+    expect(nowait['pending']).toBe(true);
+    await st.jobs.wait(String(nowait['jobId']));
+  });
+
+  it('surfaces opaque comps with a force hint when the backend reports them', async () => {
+    const { st, aep } = await withProject('opaque');
+    st.api.project.addAeComp(st.project!, aep, 'Title_01', 'C_t');
+    const inspect = st.ae.inspectComp.bind(st.ae);
+    st.ae.inspectComp = async (a, c, f) => ({ ...(await inspect(a, c, f)), opaque: true }) as Awaited<ReturnType<AeBackend['inspectComp']>>;
+    const r = toolResultData(await callTool(st, 'ae_inspect_comp', { aep, comp: 'Title_01' }));
+    expect(r).toMatchObject({ opaque: true, opaqueAssets: ['C_t'] });
+    expect(String(r['opaqueHint'])).toContain('build {forceAssets: ["C_t"]}');
+    const plain = toolResultData(await callTool(st, 'ae_edit', { aep, comp: 'Title_01', ops: [{ op: 'setText', layer: 1, text: 'x' }] }));
+    expect(plain['opaque']).toBeUndefined(); // backend did not flag the edit result
+  });
+
+  it('confines ae_preview_frame.out / ae_edit.saveAs and refuses protected paths everywhere', async () => {
+    const { st, aep } = await withProject('confine');
+    const outside = join(TMP_ROOT, 'not-here.png');
+    const r1 = toolResultData(await callTool(st, 'ae_preview_frame', { aep, comp: 'Title_01', out: outside }));
+    expect(String(r1['error'])).toMatch(/project folder or next to the \.aep/);
+    const inside = toolResultData(await callTool(st, 'ae_preview_frame', { aep, comp: 'Title_01', out: join(st.project!.dir, 'stills', 'f.png'), wait: true }));
+    expect(String(inside['png'])).toContain('stills');
+    const r2 = toolResultData(await callTool(st, 'ae_edit', { aep, comp: 'Title_01', ops: [{ op: 'setText', layer: 1, text: 'x' }], saveAs: join(os.tmpdir(), 'x.aep') }));
+    expect(String(r2['error'])).toMatch(/saveAs/);
+    const prev = process.env['EDITMCP_PROTECTED_PATHS'];
+    const locked = join(dir, 'locked');
+    process.env['EDITMCP_PROTECTED_PATHS'] = locked;
+    try {
+      const n = await callTool(st, 'project_new', { dir: join(locked, 'p'), name: 'x' });
+      expect(n.isError).toBe(true);
+      expect(toolResultData(n)['error']).toMatch(/protected/);
+      expect(existsSync(locked)).toBe(false);
+      expect((await callTool(st, 'project_new', { dir: 'D:\\261009_STB50Y_THAI-WORLD_CSR\\editmcp', name: 'x' })).isError).toBe(true);
+      process.env['EDITMCP_PROTECTED_PATHS'] = dir; // now the open project itself is protected
+      const e = await callTool(st, 'timeline_edit', { ops: [{ op: 'remove_audio', id: 'none' }] });
+      expect(toolResultData(e)['error']).toMatch(/protected/);
+      expect((await callTool(st, 'ae_edit', { aep, comp: 'Title_01', ops: [{ op: 'setText', layer: 1, text: 'x' }] })).isError).toBe(true);
+    } finally {
+      if (prev === undefined) delete process.env['EDITMCP_PROTECTED_PATHS'];
+      else process.env['EDITMCP_PROTECTED_PATHS'] = prev;
+    }
+  });
+
+  it('build {forceAssets} drops the render record and keeps the old render file aside', async () => {
+    const { st, aep } = await withProject('force');
+    const p = st.project!;
+    const asset = st.api.project.addAeComp(p, aep, 'Title_01', 'C_t');
+    const render = join(p.dir, 'cache', 'renders', 'C_t_abcdef12.mov');
+    mkdirSync(join(p.dir, 'cache', 'renders'), { recursive: true });
+    await writeFile(render, 'old render');
+    asset.fingerprint = 'abcdef12';
+    asset.render = { path: render, frames: 100, fingerprint: 'abcdef12', renderedAt: 'then' };
+    asset.probe = { durationFrames: 100, hasVideo: true, hasAudio: false };
+    p.timeline.video = [{ id: 's1', src: 'C_t', in: 0, dur: 50 }];
+    await st.api.project.saveProject(p);
+    const bad = await callTool(st, 'build', { forceAssets: ['nope'] });
+    expect(toolResultData(bad)['error']).toMatch(/aecomp/);
+    let seen: unknown;
+    const build = st.assembler.build.bind(st.assembler);
+    st.assembler.build = async (proj, opts) => { seen = { render: (proj.assets['C_t'] as { render?: unknown }).render, forceAssets: (opts as { forceAssets?: string[] }).forceAssets }; return build(proj, opts); };
+    const r = toolResultData(await callTool(st, 'build', { forceAssets: ['C_t'] }));
+    const info = await st.jobs.wait(String(r['jobId']));
+    expect(info.status).toBe('done');
+    expect(seen).toEqual({ render: undefined, forceAssets: ['C_t'] });
+    expect(existsSync(render)).toBe(false);
+    const moved = ((info.result as Body)['movedRenders'] as Record<string, string>)['C_t']!;
+    expect(moved).toMatch(/C_t_abcdef12_forced\.mov$/);
+    expect(await readFile(moved, 'utf8')).toBe('old render');
   });
 });
 

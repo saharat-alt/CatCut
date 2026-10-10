@@ -372,3 +372,39 @@ web search / ดูคลิปสอน (skill `watch`) → สกัดเป�
 - ทุกงานหนักเป็น background job (ตอบ job id ทันที, `job_status`), โหมด low-priority เมื่อผู้ใช้กำลังใช้เครื่อง, watchdog
 - orchestrator ไม่โหลดวิดีโอเข้า RAM; cache อยู่บนดิสก์
 - แนะนำอัป RAM เป็น 32–64 GB — ช่วย AE มากกว่าการเลือกภาษาใด ๆ
+
+---
+
+## 13. บทเรียนจากงานจริง STB50Y CSR (อ่านประวัติเซสชัน 2026-10-10) → backlog
+
+ที่มา: ประวัติเซสชัน "MCP ติดตั้งสำหรับ Premier Pro" (ข้อความผู้ใช้ 268 ข้อความ, 07:20–21:22) งานนี้คือเหตุผลที่ EDITMCP เกิดขึ้น
+
+### 13.1 สิ่งที่ยืนยันว่าแผนเดิมถูก
+- export ผ่าน Dynamic Link ~0.1× realtime (30–35 นาที / 3 นาที) vs aerender ขนาน + ประกอบ ~10 นาที → §5.2 ถูกทาง
+- ~15 เวอร์ชัน export เต็ม (3 GB) และผู้ใช้บอก "ไม่ต้อง export… แก้ลงมาในไทม์ไลน์ก็พอ" → incremental + cache
+- bridge panel หลุด, AE ค้างหลัง dialog ที่มองไม่เห็น, Premiere ปิดกลาง export, render ทับไฟล์ที่ถูกล็อก, comp ที่ลบแล้วสร้างใหม่กลายเป็น Media Offline → headless + never-overwrite
+- ผู้ใช้ส่งโน้ต ~20 ครั้งเป็น "ไทม์โค้ด + แคปจอ + ข้อความยาว" → Smart Edit (§7.5)
+- multi-agent (director / art director / motion / QA) วางแผนแต่ละท่อนแล้วผู้ใช้ "ลุย" ได้ผลดี → ใช้เป็นรูปแบบของ Creative Director
+
+### 13.2 สิ่งที่ยังไม่มีในแผน/โค้ด (เรียงตามผลกระทบ)
+| # | ปัญหาที่เกิดจริง (หลักฐาน) | สิ่งที่จะเพิ่ม |
+|---|---|---|
+| 1 | ทำตามบอร์ดผิดฉบับ ~1.5 ชม.; บอร์ดขัดกันเอง; ช็อตหลุดจากบอร์ด ("ช็อต 4 สวยๆ ก็หายไป", "ในบอร์ดไม่มีบอกให้รวม element อื่น"); chapter เลื่อน ~20 วิ | **`board_import`** → `board.json` {slot, chapter, boardTime, sourceFile, sourceTC, onScreenText, thumb} + ตรวจความขัดแย้งในบอร์ด + ตรวจว่าโฟลเดอร์ฟุตเทจตรงกับ slot; clip ผูก `slot`; **รายงานบอร์ด-vs-คัท** แบบภาพคู่ + chapter timing diff; **fit-to-duration** กระจาย slack |
+| 2 | เฟรมหลุด/ช็อตข้างเคียงแวบ 1–3 เฟรม, ตัดกลางโลโก้, เนื้อหาซ้ำที่รอยต่อ (00:00:18:23, 00:00:19:02) | **shot index ต่อไฟล์ต้นทาง** (`scdet`, cache) → `timeline_edit` snap/เตือนเมื่อ in/out ห่างรอยตัดต้นทาง < k เฟรม; QC: flash frame (< N เฟรม), "ท้ายคลิปข้ามรอยตัด", ช่วงต้นทางซ้ำกันระหว่างช็อตติดกัน |
+| 3 | กลุ่ม "ค้าง/กระตุก" ~7 ครั้ง: handle เป็นภาพนิ่ง, แอนิเมชันจบก่อนการ์ดยาวขึ้น (00:00:34:23), slow-mo มีเฟรมซ้ำ (00:02:38:22), speed ramp กระโดด 50→100% (00:00:11:22), ฟุตเทจนิ่งเกิน (18:11–24:02) | QC: **duplicate-frame/cadence** (mpdecimate), "นิ่งเกิน N วิ" (advisory); `Clip.speed` + ramp ease + interpolation (blend / minterpolate); **comp lint**: keyframe สุดท้าย/layer/precomp จบก่อน out point หลังยืด, พื้นหลังหมดก่อน comp จบ |
+| 4 | รสนิยมแกว่ง (เทาเรียบ = สไลด์โชว์ ↔ particle = รก ↔ light streak น่ารำคาญ); กฎที่ผู้ใช้สั่งถูกลืม/ใช้เกินขอบเขต (ปิด CC Lens ที่เป็นไฮไลต์) | **`constraints.json` ต่อโปรเจกต์** (เช่น ใช้เฉพาะ element ในบอร์ด, ห้ามบังภาพ, minimal, โลโก้นิ่ง, ไม่ใช้ลูกเล่นซ้ำ) agent ตรวจทุก build; taste profile ผูก **effect + บริบท** ไม่ใช่ global; พรีวิว A/B/C 3–5 วิ ก่อน render เต็ม |
+| 5 | "จะมนก็มนให้หมด" — แก้ 1 จุดแต่รายงานว่าแก้ครบ 4 จุด | **`styleRules`** ใน project.json (radius, safe margin 5%, palette, ความยาว dissolve ตามชนิดรอยต่อ) + lint ทุก comp; **ต้องแนบเฟรมของทุก instance ก่อนรายงานว่าแก้แล้ว** |
+| 6 | ใช้ template ที่ซื้อมาไม่ถูก (สร้างแอนิเมชันเอง, ปิดส่วนที่สวย), template เป็น luma matte, text ผูก expression ที่ Controls layer, Square animator ทำคำเด้ง | **`template_scan`**: scene/placeholder/ฟอนต์/ความยาว, ชนิด (precomp ขยับตามกรอบ vs matte นิ่ง), property ที่ถูก expression ล็อก, preview strip; ตาราง "ช็อตไหนมาจาก template ไหน"; slot→placeholder mapper; cover-crop/fit-into-card helper + ตรวจ pillarbox (cropdetect) |
+| 7 | ข้อความไทย: animator รายคำทำบรรทัดไทยแตก, เส้นใต้ชนสระล่าง (+12 px), ซับไทยบางเกิน; ชื่อไฟล์ไทยจาก zip เป็น mojibake | **Thai typography lint** (ขนาด/น้ำหนักขั้นต่ำ ≥60% cap height semibold, ระยะสระล่าง, animate ทีละบรรทัด); `scan_footage` แก้ mojibake (cp437→utf8) + **font audit** (ดึงชื่อฟอนต์จาก .aep เทียบที่ติดตั้ง) |
+| 8 | AE disk cache 37.7 GB ทำ C: เต็ม; aerender crash ตอนเริ่ม | `doctor`/`build`: เช็คพื้นที่ว่าง + ขนาด cache, purge cache AE หลังแต่ละ batch, retry aerender 1 ครั้งเมื่อ crash ตอนเริ่ม, watchdog AE ค้างตอนเปิด; รายงาน/ล้าง cache เก่า (ลบเมื่อผู้ใช้อนุมัติเท่านั้น) |
+| 9 | "อันก่อนสวยกว่าอีก", "ยังไม่ต้องแก้" | ย้อนเฉพาะช็อต (เก็บ comp params + render รายช็อตต่อเวอร์ชัน); โน้ตสถานะ "พักไว้"; A/B before-after |
+| 10 | รอยต่อ: blue→blue dissolve 0.3–0.5 วิ, footage↔การ์ด 0.4 วิ, footage→footage คัตตรง | **join policy ตามชนิดขอบ** ใน skill `edit-csr` + รายงานรอยต่อทุก build |
+| 11 | ผู้ใช้ถามว่าเครื่องมือเสียเงินไหม, ไม่อยากให้ยึดหน้าจอ | แสดงค่าใช้จ่ายก่อนเรียกบริการที่เสียเงิน; headless เป็นค่าเริ่มต้น (ทำแล้ว) |
+
+### 13.3 ลำดับที่จะทำต่อ (หลังชุดแก้บั๊กปัจจุบัน)
+1. `board_import` + slot model + board-vs-cut report
+2. shot index + snap + QC flash/duplicate/cadence + comp lint
+3. `constraints.json` + `styleRules` + lint ทุก instance
+4. disk/cache preflight + purge + retry
+5. `scan_footage` (mojibake, font audit, pillarbox) + `template_scan`
+6. speed/ramp, ย้อนรายช็อต, A/B compare

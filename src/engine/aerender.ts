@@ -23,6 +23,11 @@ export type SpawnFn = typeof execa;
 export interface AerenderRequest extends RenderRequest {
   omTemplate: string;
   rsTemplate: string;
+  /**
+   * Comp displayStartFrame. startFrame/endFrame are 0-based comp frames; aerender's -s/-e are
+   * numbered from the comp's display start, so the offset is added when building args.
+   */
+  frameOffset?: Frames;
   /** omTemplate is a non-ProRes fallback ('Lossless'): transcode the result to ProRes 422 HQ with ffmpeg. */
   fallback?: boolean;
   timeoutMs?: number;
@@ -35,6 +40,40 @@ export interface AerenderOptions {
   spawn?: SpawnFn;
   /** Max parallel aerender processes (default 1, or EDITMCP_AE_PARALLEL). */
   maxParallel?: number;
+}
+
+export type AerenderFailure = 'exit' | 'timeout' | 'abort' | 'output' | 'frames';
+
+/** Structured aerender failure: callers decide on fallbacks from `reason` + aerender's own error lines. */
+export class AerenderError extends Error {
+  constructor(message: string, readonly reason: AerenderFailure, readonly errors: string[]) {
+    super(message);
+    this.name = 'AerenderError';
+  }
+}
+
+/**
+ * True only when aerender exited reporting that the requested output-module template does not exist.
+ * Matches aerender's ERROR lines (never the echoed command line), with quoted text and the given
+ * user strings (comp name, project path, template name) removed first so names cannot trigger it.
+ */
+export function isMissingOmTemplate(error: unknown, userStrings: string[] = []): boolean {
+  if (!(error instanceof AerenderError) || error.reason !== 'exit') return false;
+  return error.errors.some((line) => {
+    let l = line;
+    for (const s of userStrings) if (s) l = l.split(s).join(' ');
+    l = l.replace(/"[^"]*"|'[^']*'|“[^”]*”/g, ' ');
+    return /output[- ]module template/i.test(l)
+      && /\bno output[- ]module template\b|\b(?:not|never) (?:been )?found\b|could not be found|does not exist|unable to find/i.test(l);
+  });
+}
+
+/** -mfr percentage for builds: 90 per the design, scaled down when free RAM is low. */
+export function defaultMfrPercent(freeGb: number = os.freemem() / 2 ** 30): number {
+  if (freeGb >= 16) return 90;
+  if (freeGb >= 8) return 70;
+  if (freeGb >= 4) return 50;
+  return 25;
 }
 
 const IMAGE_EXT = new Set(['.png', '.tif', '.tiff', '.jpg', '.jpeg', '.psd', '.exr', '.dpx', '.tga', '.bmp']);
@@ -111,11 +150,18 @@ export async function probeFrameCount(tools: ToolPaths, path: string, spawn: Spa
   return n;
 }
 
-/** Full comp render: ProRes 422 HQ with optional PCM audio; segment assembly strips audio later. */
+/**
+ * Full comp render: ProRes 422 HQ with optional PCM audio; segment assembly strips audio later.
+ * AE's Lossless output is RGB: convert with the BT.709 matrix into limited range and tag the stream,
+ * otherwise swscale defaults to BT.601 and players shift every hue.
+ */
 export async function transcodeToProres(tools: ToolPaths, src: string, dst: string, spawn: SpawnFn = execa, signal?: AbortSignal): Promise<void> {
   const r = await spawn(tools.ffmpeg, [
     '-hide_banner', '-nostdin', '-n', '-i', src, '-map', '0:v:0', '-map', '0:a:0?', '-c:a', 'pcm_s24le', '-ar', '48000', '-ac', '2',
+    // setparams tags the frames themselves; newer ffmpeg takes stream color info from frames over -color_* flags.
+    '-vf', 'scale=out_color_matrix=bt709:out_range=tv,format=yuv422p10le,setparams=range=tv:color_primaries=bt709:color_trc=bt709:colorspace=bt709',
     '-c:v', 'prores_ks', '-profile:v', '3', '-vendor', 'apl0', '-pix_fmt', 'yuv422p10le',
+    '-colorspace', 'bt709', '-color_primaries', 'bt709', '-color_trc', 'bt709', '-color_range', 'tv',
     dst,
   ], { reject: false, windowsHide: true, timeout: 4 * 60 * 60_000, cancelSignal: signal });
   if (r.exitCode !== 0 || !existsSync(dst)) throw new Error(`ffmpeg ProRes transcode failed: ${r.stderr}`);
@@ -189,9 +235,10 @@ export function createProgressParser(knownTotal?: number): ProgressParser {
 // ---------- main ----------
 
 function buildArgs(req: AerenderRequest, tmpOut: string): string[] {
-  const args = ['-project', req.aep, '-comp', req.comp, '-RStemplate', req.rsTemplate, '-OMtemplate', req.omTemplate, '-output', tmpOut];
-  if (req.startFrame !== undefined) args.push('-s', String(req.startFrame));
-  if (req.endFrame !== undefined) args.push('-e', String(req.endFrame));
+  // Always an explicit range: otherwise the RS template's time span (often "Work Area Only") decides.
+  const offset = req.frameOffset ?? 0;
+  const args = ['-project', req.aep, '-comp', req.comp, '-RStemplate', req.rsTemplate, '-OMtemplate', req.omTemplate, '-output', tmpOut,
+    '-s', String(offset + req.startFrame!), '-e', String(offset + req.endFrame!)];
   if (req.mfrPercent !== undefined) args.push('-mfr', 'ON', String(Math.max(1, Math.min(100, Math.round(req.mfrPercent)))));
   args.push('-close', 'DO_NOT_SAVE_CHANGES', '-sound', 'OFF');
   return args;
@@ -210,23 +257,43 @@ function findRenderedFile(tmp: string, prefix: string, dir: string): string | un
   return cands[0];
 }
 
+/** Delete every partial aer_<random>_* file of a failed render (AE may still hold it briefly). */
+async function removeTempOutputs(dir: string, prefix: string): Promise<void> {
+  let names: string[];
+  try { names = readdirSync(dir).filter((f) => f.startsWith(prefix)); } catch { return; }
+  for (const name of names) {
+    for (let attempt = 0; attempt < 5; attempt++) {
+      try { await unlink(join(dir, name)); break; } catch (e) {
+        const code = (e as NodeJS.ErrnoException).code;
+        if (code === 'ENOENT' || attempt === 4) break;
+        await new Promise((r) => setTimeout(r, 200));
+      }
+    }
+  }
+}
+
 /**
  * Render with aerender. Resolves to the final (renamed) path; rejects loudly when the exit code,
  * the output file or the frame count is not what was asked for.
+ * startFrame/endFrame (0-based, inclusive) are required: the expected frame count comes from the
+ * caller's comp duration, never from aerender's own "Duration" line.
  */
 export async function aerender(tools: ToolPaths, req: AerenderRequest, opts: AerenderOptions = {}): Promise<RenderResult> {
   const spawn: SpawnFn = opts.spawn ?? execa;
   if (!tools.aerender) throw new Error('aerender.exe not found (ToolPaths.aerender). Install After Effects or set EDITMCP_AE_DIR.');
   if (!existsSync(req.aep)) throw new Error(`project not found: ${req.aep}`);
-  if (req.startFrame !== undefined && req.endFrame !== undefined && req.endFrame < req.startFrame) {
-    throw new Error(`endFrame ${req.endFrame} < startFrame ${req.startFrame}`);
+  const { startFrame, endFrame } = req;
+  if (startFrame === undefined || endFrame === undefined || !Number.isInteger(startFrame) || !Number.isInteger(endFrame) || startFrame < 0) {
+    throw new Error('aerender needs an explicit non-negative integer startFrame/endFrame (0-based comp frames)');
   }
+  if (endFrame < startFrame) throw new Error(`endFrame ${endFrame} < startFrame ${startFrame}`);
 
   const maxParallel = opts.maxParallel ?? Math.max(1, parseInt(process.env['EDITMCP_AE_PARALLEL'] ?? '1', 10) || 1);
   const release = await gate(maxParallel).acquire();
   const t0 = Date.now();
   const log: string[] = [];
   const pushLog = (l: string) => { if (log.length < MAX_LOG_LINES) log.push(l); };
+  let temp: { dir: string; prefix: string } | undefined;
 
   try {
     req.signal?.throwIfAborted();
@@ -239,11 +306,11 @@ export async function aerender(tools: ToolPaths, req: AerenderRequest, opts: Aer
     }
 
     const { tmp, sequence, prefix, dir } = asciiTempPath(req.outPath);
+    temp = { dir, prefix };
     const args = buildArgs(req, tmp);
     pushLog(`$ aerender ${args.map((a) => (/\s/.test(a) ? `"${a}"` : a)).join(' ')}`);
 
-    const expected: Frames | undefined =
-      req.startFrame !== undefined && req.endFrame !== undefined ? req.endFrame - req.startFrame + 1 : undefined;
+    const expected: Frames = endFrame - startFrame + 1;
     const parser = createProgressParser(expected);
     const onLine = (line: string) => {
       pushLog(line);
@@ -251,6 +318,7 @@ export async function aerender(tools: ToolPaths, req: AerenderRequest, opts: Aer
       if (p) req.onProgress?.(p);
     };
 
+    // Arguments are an array and no shell is used, so Thai comp names / project paths pass through verbatim.
     const child = spawn(tools.aerender, args, {
       reject: false, windowsHide: true, timeout: 0, stripFinalNewline: false,
     }) as unknown as PromiseLike<{ exitCode?: number; stdout?: unknown; stderr?: unknown; timedOut?: boolean; isCanceled?: boolean }>
@@ -292,9 +360,11 @@ export async function aerender(tools: ToolPaths, req: AerenderRequest, opts: Aer
         if (typeof text === 'string') for (const line of text.split(/\r?\n/)) onLine(line);
       }
     }
-    if (killed) throw new Error(`aerender ${killed === 'timeout' ? `timed out after ${timeoutMs} ms` : 'aborted'} (process tree killed)\n${tail(log)}`);
+    if (killed) {
+      throw new AerenderError(`aerender ${killed === 'timeout' ? `timed out after ${timeoutMs} ms` : 'aborted'} (process tree killed)\n${tail(log)}`, killed, parser.errors);
+    }
     if (res.exitCode !== 0) {
-      throw new Error(`aerender exited with code ${res.exitCode}${parser.errors.length ? ': ' + parser.errors.join(' | ') : ''}\n${tail(log)}`);
+      throw new AerenderError(`aerender exited with code ${res.exitCode}${parser.errors.length ? ': ' + parser.errors.join(' | ') : ''}\n${tail(log)}`, 'exit', parser.errors);
     }
 
     // Locate what AE wrote.
@@ -302,28 +372,24 @@ export async function aerender(tools: ToolPaths, req: AerenderRequest, opts: Aer
     let frames: Frames;
     if (sequence) {
       const files = findSequenceFiles(dir, prefix);
-      if (files.length === 0) throw new Error(`aerender produced no frames in ${dir}\n${tail(log)}`);
-      if (files.length > 1) {
-        // Only single-frame sequences are supported here (previewFrame). Keep the first, drop the rest.
-        for (const f of files.slice(1)) await unlink(f).catch(() => undefined);
-      }
+      if (files.length === 0) throw new AerenderError(`aerender produced no frames in ${dir}\n${tail(log)}`, 'output', parser.errors);
+      if (files.length !== expected) throw new AerenderError(`aerender frame count mismatch: got ${files.length} images, expected ${expected} (${req.comp})\n${tail(log)}`, 'frames', parser.errors);
+      if (files.length > 1) throw new AerenderError('image-sequence output supports a single frame only', 'output', parser.errors);
       produced = files[0]!;
       frames = 1;
     } else {
       produced = findRenderedFile(tmp, prefix, dir);
-      if (!produced) throw new Error(`aerender produced no output file (${tmp})${parser.errors.length ? ': ' + parser.errors.join(' | ') : ''}\n${tail(log)}`);
+      if (!produced) throw new AerenderError(`aerender produced no output file (${tmp})${parser.errors.length ? ': ' + parser.errors.join(' | ') : ''}\n${tail(log)}`, 'output', parser.errors);
       if (req.fallback) {
         const prores = join(dir, `${prefix}_prores.mov`);
-        pushLog(`fallback: transcoding ${basename(produced)} → ProRes 422 HQ`);
+        pushLog(`fallback: transcoding ${basename(produced)} → ProRes 422 HQ (BT.709)`);
         await transcodeToProres(tools, produced, prores, spawn, req.signal);
         await unlink(produced).catch(() => undefined);
         produced = prores;
       }
       frames = await probeFrameCount(tools, produced, spawn, req.signal);
-      const want = expected ?? parser.total;
-      if (want !== undefined && frames !== want) {
-        await unlink(produced).catch(() => undefined);
-        throw new Error(`aerender frame count mismatch: got ${frames}, expected ${want} (${req.comp})\n${tail(log)}`);
+      if (frames !== expected) {
+        throw new AerenderError(`aerender frame count mismatch: got ${frames}, expected ${expected} (${req.comp})\n${tail(log)}`, 'frames', parser.errors);
       }
     }
 
@@ -338,6 +404,9 @@ export async function aerender(tools: ToolPaths, req: AerenderRequest, opts: Aer
     await moveFile(produced, finalPath);
     pushLog(`→ ${finalPath} (${frames} frames, ${statSync(finalPath).size} bytes)`);
     return { path: finalPath, frames, elapsedMs: Date.now() - t0, usedFallback: !!req.fallback, log: log.join('\n') };
+  } catch (error) {
+    if (temp) await removeTempOutputs(temp.dir, temp.prefix);
+    throw error;
   } finally {
     release();
   }
