@@ -425,11 +425,11 @@ var require_codegen = __commonJS({
         const rhs = this.rhs === void 0 ? "" : ` = ${this.rhs}`;
         return `${varKind} ${this.name}${rhs};` + _n;
       }
-      optimizeNames(names, constants8) {
+      optimizeNames(names, constants9) {
         if (!names[this.name.str])
           return;
         if (this.rhs)
-          this.rhs = optimizeExpr(this.rhs, names, constants8);
+          this.rhs = optimizeExpr(this.rhs, names, constants9);
         return this;
       }
       get names() {
@@ -446,10 +446,10 @@ var require_codegen = __commonJS({
       render({ _n }) {
         return `${this.lhs} = ${this.rhs};` + _n;
       }
-      optimizeNames(names, constants8) {
+      optimizeNames(names, constants9) {
         if (this.lhs instanceof code_1.Name && !names[this.lhs.str] && !this.sideEffects)
           return;
-        this.rhs = optimizeExpr(this.rhs, names, constants8);
+        this.rhs = optimizeExpr(this.rhs, names, constants9);
         return this;
       }
       get names() {
@@ -510,8 +510,8 @@ var require_codegen = __commonJS({
       optimizeNodes() {
         return `${this.code}` ? this : void 0;
       }
-      optimizeNames(names, constants8) {
-        this.code = optimizeExpr(this.code, names, constants8);
+      optimizeNames(names, constants9) {
+        this.code = optimizeExpr(this.code, names, constants9);
         return this;
       }
       get names() {
@@ -540,12 +540,12 @@ var require_codegen = __commonJS({
         }
         return nodes.length > 0 ? this : void 0;
       }
-      optimizeNames(names, constants8) {
+      optimizeNames(names, constants9) {
         const { nodes } = this;
         let i2 = nodes.length;
         while (i2--) {
           const n2 = nodes[i2];
-          if (n2.optimizeNames(names, constants8))
+          if (n2.optimizeNames(names, constants9))
             continue;
           subtractNames(names, n2.names);
           nodes.splice(i2, 1);
@@ -598,12 +598,12 @@ var require_codegen = __commonJS({
           return void 0;
         return this;
       }
-      optimizeNames(names, constants8) {
+      optimizeNames(names, constants9) {
         var _a;
-        this.else = (_a = this.else) === null || _a === void 0 ? void 0 : _a.optimizeNames(names, constants8);
-        if (!(super.optimizeNames(names, constants8) || this.else))
+        this.else = (_a = this.else) === null || _a === void 0 ? void 0 : _a.optimizeNames(names, constants9);
+        if (!(super.optimizeNames(names, constants9) || this.else))
           return;
-        this.condition = optimizeExpr(this.condition, names, constants8);
+        this.condition = optimizeExpr(this.condition, names, constants9);
         return this;
       }
       get names() {
@@ -626,10 +626,10 @@ var require_codegen = __commonJS({
       render(opts) {
         return `for(${this.iteration})` + super.render(opts);
       }
-      optimizeNames(names, constants8) {
-        if (!super.optimizeNames(names, constants8))
+      optimizeNames(names, constants9) {
+        if (!super.optimizeNames(names, constants9))
           return;
-        this.iteration = optimizeExpr(this.iteration, names, constants8);
+        this.iteration = optimizeExpr(this.iteration, names, constants9);
         return this;
       }
       get names() {
@@ -665,10 +665,10 @@ var require_codegen = __commonJS({
       render(opts) {
         return `for(${this.varKind} ${this.name} ${this.loop} ${this.iterable})` + super.render(opts);
       }
-      optimizeNames(names, constants8) {
-        if (!super.optimizeNames(names, constants8))
+      optimizeNames(names, constants9) {
+        if (!super.optimizeNames(names, constants9))
           return;
-        this.iterable = optimizeExpr(this.iterable, names, constants8);
+        this.iterable = optimizeExpr(this.iterable, names, constants9);
         return this;
       }
       get names() {
@@ -710,11 +710,11 @@ var require_codegen = __commonJS({
         (_b = this.finally) === null || _b === void 0 ? void 0 : _b.optimizeNodes();
         return this;
       }
-      optimizeNames(names, constants8) {
+      optimizeNames(names, constants9) {
         var _a, _b;
-        super.optimizeNames(names, constants8);
-        (_a = this.catch) === null || _a === void 0 ? void 0 : _a.optimizeNames(names, constants8);
-        (_b = this.finally) === null || _b === void 0 ? void 0 : _b.optimizeNames(names, constants8);
+        super.optimizeNames(names, constants9);
+        (_a = this.catch) === null || _a === void 0 ? void 0 : _a.optimizeNames(names, constants9);
+        (_b = this.finally) === null || _b === void 0 ? void 0 : _b.optimizeNames(names, constants9);
         return this;
       }
       get names() {
@@ -1015,7 +1015,7 @@ var require_codegen = __commonJS({
     function addExprNames(names, from) {
       return from instanceof code_1._CodeOrName ? addNames(names, from.names) : names;
     }
-    function optimizeExpr(expr, names, constants8) {
+    function optimizeExpr(expr, names, constants9) {
       if (expr instanceof code_1.Name)
         return replaceName(expr);
       if (!canOptimize(expr))
@@ -1030,14 +1030,14 @@ var require_codegen = __commonJS({
         return items;
       }, []));
       function replaceName(n2) {
-        const c3 = constants8[n2.str];
+        const c3 = constants9[n2.str];
         if (c3 === void 0 || names[n2.str] !== 1)
           return n2;
         delete names[n2.str];
         return c3;
       }
       function canOptimize(e) {
-        return e instanceof code_1._Code && e._items.some((c3) => c3 instanceof code_1.Name && names[c3.str] === 1 && constants8[c3.str] !== void 0);
+        return e instanceof code_1._Code && e._items.some((c3) => c3 instanceof code_1.Name && names[c3.str] === 1 && constants9[c3.str] !== void 0);
       }
     }
     function subtractNames(names, from) {
@@ -2999,7 +2999,7 @@ var require_compile = __commonJS({
       const schOrFunc = root.refs[ref];
       if (schOrFunc)
         return schOrFunc;
-      let _sch = resolve9.call(this, root, ref);
+      let _sch = resolve10.call(this, root, ref);
       if (_sch === void 0) {
         const schema = (_a = root.localRefs) === null || _a === void 0 ? void 0 : _a[ref];
         const { schemaId } = this.opts;
@@ -3026,7 +3026,7 @@ var require_compile = __commonJS({
     function sameSchemaEnv(s1, s2) {
       return s1.schema === s2.schema && s1.root === s2.root && s1.baseId === s2.baseId;
     }
-    function resolve9(root, ref) {
+    function resolve10(root, ref) {
       let sch;
       while (typeof (sch = this.refs[ref]) == "string")
         ref = sch;
@@ -3856,7 +3856,7 @@ var require_fast_uri = __commonJS({
       }
       return uri;
     }
-    function resolve9(baseURI, relativeURI, options) {
+    function resolve10(baseURI, relativeURI, options) {
       const schemelessOptions = options ? Object.assign({ scheme: "null" }, options) : { scheme: "null" };
       const {
         parsed: baseParsed,
@@ -4225,7 +4225,7 @@ var require_fast_uri = __commonJS({
     var fastUri = {
       SCHEMES,
       normalize,
-      resolve: resolve9,
+      resolve: resolve10,
       resolveComponent,
       equal,
       serialize: serialize3,
@@ -8285,12 +8285,12 @@ var require_isexe = __commonJS({
         if (typeof Promise !== "function") {
           throw new TypeError("callback not provided");
         }
-        return new Promise(function(resolve9, reject) {
+        return new Promise(function(resolve10, reject) {
           isexe(path12, options || {}, function(er, is) {
             if (er) {
               reject(er);
             } else {
-              resolve9(is);
+              resolve10(is);
             }
           });
         });
@@ -8356,27 +8356,27 @@ var require_which = __commonJS({
         opt = {};
       const { pathEnv, pathExt, pathExtExe } = getPathInfo(cmd, opt);
       const found = [];
-      const step = (i2) => new Promise((resolve9, reject) => {
+      const step = (i2) => new Promise((resolve10, reject) => {
         if (i2 === pathEnv.length)
-          return opt.all && found.length ? resolve9(found) : reject(getNotFoundError(cmd));
+          return opt.all && found.length ? resolve10(found) : reject(getNotFoundError(cmd));
         const ppRaw = pathEnv[i2];
         const pathPart = /^".*"$/.test(ppRaw) ? ppRaw.slice(1, -1) : ppRaw;
         const pCmd = path12.join(pathPart, cmd);
         const p = !pathPart && /^\.[\\\/]/.test(cmd) ? cmd.slice(0, 2) + pCmd : pCmd;
-        resolve9(subStep(p, i2, 0));
+        resolve10(subStep(p, i2, 0));
       });
-      const subStep = (p, i2, ii) => new Promise((resolve9, reject) => {
+      const subStep = (p, i2, ii) => new Promise((resolve10, reject) => {
         if (ii === pathExt.length)
-          return resolve9(step(i2 + 1));
+          return resolve10(step(i2 + 1));
         const ext = pathExt[ii];
         isexe(p + ext, { pathExt: pathExtExe }, (er, is) => {
           if (!er && is) {
             if (opt.all)
               found.push(p + ext);
             else
-              return resolve9(p + ext);
+              return resolve10(p + ext);
           }
-          return resolve9(subStep(p, i2, ii + 1));
+          return resolve10(subStep(p, i2, ii + 1));
         });
       });
       return cb ? step(0).then((res) => cb(null, res), cb) : step(0);
@@ -9456,8 +9456,8 @@ var init_deferred = __esm({
   "../../../node_modules/execa/lib/utils/deferred.js"() {
     createDeferred = () => {
       const methods = {};
-      const promise = new Promise((resolve9, reject) => {
-        Object.assign(methods, { resolve: resolve9, reject });
+      const promise = new Promise((resolve10, reject) => {
+        Object.assign(methods, { resolve: resolve10, reject });
       });
       return Object.assign(promise, methods);
     };
@@ -14755,11 +14755,11 @@ var init_concurrent = __esm({
       const promises = weakMap.get(stream);
       const promise = createDeferred();
       promises.push(promise);
-      const resolve9 = promise.resolve.bind(promise);
-      return { resolve: resolve9, promises };
+      const resolve10 = promise.resolve.bind(promise);
+      return { resolve: resolve10, promises };
     };
-    waitForConcurrentStreams = async ({ resolve: resolve9, promises }, subprocess) => {
-      resolve9();
+    waitForConcurrentStreams = async ({ resolve: resolve10, promises }, subprocess) => {
+      resolve10();
       const [isSubprocessExit] = await Promise.race([
         Promise.allSettled([true, subprocess]),
         Promise.all([false, ...promises])
@@ -24967,7 +24967,7 @@ var init_jobs = __esm({
         const e = this.entries.get(id);
         if (!e) return Promise.reject(new Error(`unknown job: ${id}`));
         if (FINAL.has(e.info.status)) return Promise.resolve(snapshot(e.info));
-        return new Promise((resolve9) => e.waiters.push(resolve9));
+        return new Promise((resolve10) => e.waiters.push(resolve10));
       }
       pump() {
         while (this.running < this.maxConcurrent && this.queue.length > 0) {
@@ -25026,12 +25026,339 @@ var init_jobs = __esm({
   }
 });
 
+// src/engine/effectcraft.ts
+var effectcraft_exports = {};
+__export(effectcraft_exports, {
+  createEffectCraftBackend: () => createEffectCraftBackend,
+  createMotionBackend: () => createMotionBackend,
+  isEcProject: () => isEcProject
+});
+import { constants as constants7, existsSync as existsSync7 } from "node:fs";
+import { copyFile as copyFile4, mkdir as mkdir5, mkdtemp as mkdtemp2, readFile as readFile4, rename as rename4, rm as rm4, writeFile as writeFile4 } from "node:fs/promises";
+import os5 from "node:os";
+import { basename as basename4, dirname as dirname4, extname as extname4, join as join5, resolve as resolve3 } from "node:path";
+import { fileURLToPath as fileURLToPath4 } from "node:url";
+import { randomUUID as randomUUID2 } from "node:crypto";
+async function readProject(ecproj) {
+  let raw;
+  try {
+    raw = await readFile4(ecproj, "utf8");
+  } catch {
+    throw new Error(`project not found: ${ecproj}`);
+  }
+  try {
+    return JSON.parse(raw.replace(/^﻿/, ""));
+  } catch (e) {
+    throw new Error(`not an EffectCraft project (${ecproj}): ${e.message}`);
+  }
+}
+function fpsOf2(c3) {
+  const r = c3.kind?.frame_rate;
+  return r && r.num > 0 && r.den > 0 ? r.num / r.den : 25;
+}
+function compInfo(c3) {
+  const fps = fpsOf2(c3);
+  return {
+    id: c3.id,
+    name: c3.name,
+    width: c3.kind?.width ?? 0,
+    height: c3.kind?.height ?? 0,
+    fps: Math.round(fps * 1e3) / 1e3,
+    durationFrames: Math.round((c3.kind?.duration ?? 0) * fps / TICKS_PER_SECOND),
+    numLayers: c3.kind?.layers?.length ?? 0
+  };
+}
+function findComp(j, name) {
+  const hits = compsOf(j).filter((c3) => c3.name === name);
+  if (hits.length === 0) throw new Error(`comp not found: ${name}`);
+  if (hits.length > 1) throw new Error(`ambiguous comp name: ${name}`);
+  return hits[0];
+}
+async function fingerprintComp(j, comp) {
+  const items = j.items ?? {};
+  const byName = /* @__PURE__ */ new Map();
+  for (const it of Object.values(items)) byName.set(it.name, [...byName.get(it.name) ?? [], it]);
+  const seen = /* @__PURE__ */ new Map();
+  const visit = (it) => {
+    if (!it || seen.has(it.id)) return;
+    seen.set(it.id, it);
+    for (const l of it.kind?.layers ?? []) if (typeof l.source?.item === "number") visit(items[String(l.source.item)]);
+    for (const m of JSON.stringify(it.kind ?? {}).matchAll(/comp\(\s*(?:\\"|')([^"'\\]+)(?:\\"|')\s*\)/g)) for (const ref of byName.get(m[1] ?? "") ?? []) visit(ref);
+  };
+  visit(comp);
+  const media2 = {};
+  for (const it of seen.values()) {
+    const p = it.kind?.path;
+    if (typeof p === "string" && !(p in media2)) media2[p] = await hashFile(p).catch(() => "missing");
+  }
+  const closure = [...seen.values()].sort((a2, b) => a2.id - b.id);
+  return hashJson({ host: "effectcraft", settings: j.settings ?? null, closure, media: media2 });
+}
+function serial2(fn) {
+  const result = queue2.then(fn);
+  queue2 = result.catch(() => void 0);
+  return result;
+}
+function createEffectCraftBackend(tools, opts = {}) {
+  const spawn2 = opts.spawn ?? execa;
+  const runnerPath = fileURLToPath4(new URL("../../jsx/ec-runner.jsx", import.meta.url));
+  const shortTimeout = opts.timeoutMs ?? 12e4;
+  const scriptTimeout = opts.scriptTimeoutMs ?? Math.max(shortTimeout, 6e5);
+  async function cli(args, timeoutMs, what, signal) {
+    const exe = tools.effectcraftCli;
+    if (!exe) throw new Error("effectcraft-cli not found; install EffectCraft or set EDITMCP_EFFECTCRAFT_DIR");
+    const minRam = opts.minFreeRamGb ?? 0.75;
+    if (os5.freemem() / 2 ** 30 < minRam) throw new Error(`not enough free RAM for EffectCraft (need ${minRam} GB)`);
+    if (signal?.aborted) throw new Error("aborted");
+    const child2 = spawn2(exe, args, { reject: false, windowsHide: true, timeout: 0, stdin: "ignore" });
+    let timedOut = false;
+    const kill = () => {
+      void killTree(child2.pid, spawn2, child2);
+    };
+    const timer = setTimeout(() => {
+      timedOut = true;
+      kill();
+    }, timeoutMs);
+    signal?.addEventListener("abort", kill, { once: true });
+    let out2;
+    try {
+      out2 = await child2;
+    } finally {
+      clearTimeout(timer);
+      signal?.removeEventListener("abort", kill);
+    }
+    if (timedOut) throw new Error(`EffectCraft ${what} timed out after ${timeoutMs} ms (process tree killed)`);
+    if (signal?.aborted) throw new Error("aborted");
+    const stdout = String(out2.stdout ?? "");
+    if (out2.exitCode !== 0) throw new Error(`EffectCraft ${what} failed (${out2.exitCode}): ${(String(out2.stderr ?? "") || stdout).trim().slice(-2e3)}`);
+    return stdout;
+  }
+  async function tempDir(prefix) {
+    const root = os5.tmpdir();
+    if (!isAscii(root)) throw new Error("EffectCraft renders go through an ASCII TEMP directory; set TEMP/TMP to an ASCII path");
+    return mkdtemp2(join5(root, prefix));
+  }
+  async function runner(job, project2) {
+    const dir = await tempDir("catcut-ec-");
+    try {
+      const launch = join5(dir, "launch.jsx");
+      const literal2 = JSON.stringify(job).split(String.fromCharCode(8232)).join("\\u2028").split(String.fromCharCode(8233)).join("\\u2029");
+      await writeFile4(launch, `var CATCUT_JOB = ${literal2};
+${await readFile4(runnerPath, "utf8")}`, "utf8");
+      const args = ["script", launch];
+      if (project2.open) args.push(project2.open);
+      else args.push("--empty");
+      if (project2.save) args.push("--save");
+      if (project2.saveAs) args.push("--save-as", project2.saveAs);
+      const timeout = job["action"] === "inspect" ? shortTimeout : scriptTimeout;
+      const stdout = await cli(args, timeout, String(job["action"]));
+      const line = stdout.split(/\r?\n/).reverse().find((l) => l.startsWith(MARK));
+      if (!line) throw new Error(`EffectCraft ${String(job["action"])}: no result from the runner: ${stdout.trim().slice(-1e3)}`);
+      const res = JSON.parse(line.slice(MARK.length));
+      if (res.ok !== true) throw new Error(`EffectCraft: ${res.error ?? "job failed"}`);
+      return res;
+    } finally {
+      await rm4(dir, { recursive: true, force: true });
+    }
+  }
+  async function edit(req) {
+    const source = resolve3(req.aep);
+    const savedTo = req.saveAs ? resolve3(req.saveAs) : source;
+    if (req.saveAs && !isEcProject(savedTo)) throw new Error("saveAs must be a .ecproj path");
+    if (req.saveAs && savedTo.toLowerCase() === source.toLowerCase()) throw new Error("saveAs must differ from the source; omit it for an in-place edit with backup");
+    if (req.saveAs && existsSync7(savedTo)) throw new Error(`refusing to overwrite ${savedTo}`);
+    const before = await hashFile(source);
+    const working = join5(dirname4(source), `.catcut-${randomUUID2()}.ecproj`);
+    await copyFile4(source, working, constants7.COPYFILE_EXCL);
+    try {
+      const res = await runner({ action: "edit", comp: req.comp, ops: req.ops }, { open: working, save: true });
+      const j = await readProject(working);
+      const fingerprint = await fingerprintComp(j, findComp(j, req.comp));
+      const changed = "source .ecproj changed during edit; original preserved, retry against the new version";
+      if (await hashFile(source) !== before) throw new Error(changed);
+      const log = res.log ?? [];
+      if (req.saveAs) {
+        await copyFile4(working, savedTo, constants7.COPYFILE_EXCL);
+      } else {
+        log.push("note: an EffectCraft window with this project open would overwrite this edit on its next save / \u0E16\u0E49\u0E32\u0E40\u0E1B\u0E34\u0E14\u0E42\u0E1B\u0E23\u0E40\u0E08\u0E01\u0E15\u0E4C\u0E19\u0E35\u0E49\u0E43\u0E19 EffectCraft \u0E2D\u0E22\u0E39\u0E48 \u0E43\u0E2B\u0E49\u0E1B\u0E34\u0E14\u0E42\u0E14\u0E22\u0E44\u0E21\u0E48 save \u0E41\u0E25\u0E49\u0E27\u0E40\u0E1B\u0E34\u0E14\u0E43\u0E2B\u0E21\u0E48");
+        const backup = uniqueOutputPath(join5(dirname4(source), `${basename4(source, extname4(source))}_backup_${Date.now()}.ecproj`));
+        await copyFile4(source, backup, constants7.COPYFILE_EXCL);
+        log.push(`backup: ${backup}`);
+        if (await hashFile(source) !== before) {
+          await rm4(backup, { force: true });
+          throw new Error(changed);
+        }
+        await rename4(working, source);
+      }
+      return { ok: true, savedTo, fingerprint, log };
+    } finally {
+      await rm4(working, { force: true });
+    }
+  }
+  async function create(req) {
+    const savedTo = resolve3(req.saveAs);
+    if (!isEcProject(savedTo)) throw new Error("saveAs must be a .ecproj path");
+    if (existsSync7(savedTo)) throw new Error(`refusing to overwrite ${savedTo}`);
+    await mkdir5(dirname4(savedTo), { recursive: true });
+    const working = join5(dirname4(savedTo), `.catcut-${randomUUID2()}.ecproj`);
+    try {
+      const res = await runner({ action: "create", jsx: req.jsx, ...req.scriptDir ? { scriptDir: resolve3(req.scriptDir) } : {} }, { saveAs: working });
+      if (!existsSync7(working)) throw new Error("EffectCraft did not save the new project");
+      await copyFile4(working, savedTo, constants7.COPYFILE_EXCL);
+      return { savedTo, comps: compsOf(await readProject(savedTo)).map(compInfo), log: res.log ?? [] };
+    } finally {
+      await rm4(working, { force: true });
+    }
+  }
+  async function render2(req) {
+    const ecproj = resolve3(req.aep);
+    const comp = findComp(await readProject(ecproj), req.comp);
+    const { durationFrames, fps } = compInfo(comp);
+    const rate2 = fpsOf2(comp);
+    if (!(durationFrames > 0)) throw new Error(`comp has no frames: ${req.comp}`);
+    const startFrame = req.startFrame ?? 0;
+    const endFrame = req.endFrame ?? durationFrames - 1;
+    if (startFrame < 0 || endFrame < startFrame) throw new Error(`bad frame range ${startFrame}..${endFrame}`);
+    if (endFrame >= durationFrames) throw new Error(`endFrame ${endFrame} is past the end of ${req.comp} (${durationFrames} frames)`);
+    const frames3 = endFrame - startFrame + 1;
+    const dir = await tempDir("catcut-ecr-");
+    const t0 = Date.now();
+    try {
+      const tmp = join5(dir, "render.mov");
+      const sec2 = (f) => (Math.max(0, f) / rate2).toFixed(6);
+      req.onProgress?.({ stage: "effectcraft", done: 0, total: frames3, message: req.comp });
+      const log = await cli(
+        [
+          "render",
+          "--project",
+          ecproj,
+          "--comp",
+          comp.name,
+          "--out",
+          tmp,
+          "--format",
+          "prores",
+          "--prores",
+          "hq",
+          "--audio",
+          "off",
+          "--start",
+          sec2(startFrame - 0.5),
+          "--end",
+          sec2(endFrame + 0.5)
+        ],
+        Math.min(36e5, 3e5 + frames3 * 2e3),
+        "render",
+        req.signal
+      );
+      if (!existsSync7(tmp)) throw new Error(`EffectCraft render wrote no file: ${log.trim().slice(-500)}`);
+      const out2 = uniqueOutputPath(resolve3(req.outPath));
+      await moveFile(tmp, out2);
+      req.onProgress?.({ stage: "effectcraft", done: frames3, total: frames3, message: req.comp });
+      return { path: out2, frames: frames3, elapsedMs: Date.now() - t0, usedFallback: false, log: `EffectCraft ${fps} fps ProRes 422 HQ
+${log.trim()}` };
+    } finally {
+      await rm4(dir, { recursive: true, force: true });
+    }
+  }
+  async function previewFrame(aep, comp, frame2, outPng) {
+    if (!Number.isInteger(frame2) || frame2 < 0) throw new Error("frame must be a non-negative integer");
+    const ecproj = resolve3(aep);
+    const c3 = findComp(await readProject(ecproj), comp);
+    const { durationFrames } = compInfo(c3);
+    if (frame2 >= durationFrames) throw new Error(`frame ${frame2} is past the end of ${comp} (${durationFrames} frames)`);
+    const dir = await tempDir("catcut-ecp-");
+    try {
+      const tmp = join5(dir, "frame.png");
+      await cli(["render-frame", "--project", ecproj, "--comp", String(c3.id), "--frame", String(frame2), "--out", tmp], shortTimeout, "preview");
+      if (!existsSync7(tmp)) throw new Error("EffectCraft preview wrote no file");
+      const out2 = uniqueOutputPath(resolve3(outPng));
+      await moveFile(tmp, out2);
+      return out2;
+    } finally {
+      await rm4(dir, { recursive: true, force: true });
+    }
+  }
+  return {
+    kind: "effectcraft",
+    listComps: async (aep) => compsOf(await readProject(resolve3(aep))).map(compInfo),
+    inspectComp: (aep, comp, atFrame = 0) => serial2(async () => {
+      if (!Number.isInteger(atFrame) || atFrame < 0) throw new Error("atFrame must be a non-negative integer");
+      const ecproj = resolve3(aep);
+      const { data } = await runner({ action: "inspect", comp, atFrame }, { open: ecproj });
+      const j = await readProject(ecproj);
+      return { ...data, fingerprint: await fingerprintComp(j, findComp(j, comp)) };
+    }),
+    fingerprint: async (aep, comps) => {
+      const j = await readProject(resolve3(aep));
+      const out2 = {};
+      for (const c3 of compsOf(j)) {
+        if (comps && !comps.includes(c3.name)) continue;
+        if (out2[c3.name] !== void 0) throw new Error(`ambiguous comp name: ${c3.name}`);
+        out2[c3.name] = await fingerprintComp(j, c3);
+      }
+      return out2;
+    },
+    edit: (req) => serial2(() => edit(req)),
+    create: (req) => serial2(() => create(req)),
+    render: (req) => serial2(() => render2(req)),
+    previewFrame: (aep, comp, frame2, outPng) => serial2(() => previewFrame(aep, comp, frame2, outPng)),
+    version: () => serial2(async () => (await cli(["--version"], shortTimeout, "version")).trim())
+  };
+}
+function createMotionBackend(ae, ec) {
+  const pick2 = (path12) => isEcProject(path12) ? ec : ae;
+  const aeOnly = (what, path12) => {
+    if (isEcProject(path12)) throw new Error(`${what} is not available for EffectCraft projects yet (${basename4(path12)})`);
+  };
+  const routed = {
+    kind: ae.kind,
+    listComps: (aep) => pick2(aep).listComps(aep),
+    inspectComp: (aep, comp, atFrame) => pick2(aep).inspectComp(aep, comp, atFrame),
+    fingerprint: (aep, comps) => pick2(aep).fingerprint(aep, comps),
+    edit: (req) => pick2(req.aep).edit(req),
+    render: (req) => pick2(req.aep).render(req),
+    previewFrame: (aep, comp, frame2, outPng) => pick2(aep).previewFrame(aep, comp, frame2, outPng),
+    version: () => ae.version(),
+    create: (req) => {
+      const b = pick2(req.saveAs);
+      if (!b.create) throw new Error("this backend cannot create projects");
+      return b.create(req);
+    }
+  };
+  const out2 = { ...routed };
+  for (const key of /* @__PURE__ */ new Set([...Object.keys(ae), ...Object.getOwnPropertyNames(Object.getPrototypeOf(ae) ?? {})])) {
+    if (key in out2 || key === "constructor") continue;
+    const v = ae[key];
+    if (typeof v !== "function") continue;
+    out2[key] = (...args) => {
+      if (typeof args[0] === "string") aeOnly(key, args[0]);
+      return v.apply(ae, args);
+    };
+  }
+  return out2;
+}
+var TICKS_PER_SECOND, MARK, isEcProject, compsOf, queue2;
+var init_effectcraft = __esm({
+  "src/engine/effectcraft.ts"() {
+    "use strict";
+    init_execa();
+    init_hash();
+    init_aerender();
+    TICKS_PER_SECOND = 254016e6;
+    MARK = "@@CATCUT@@";
+    isEcProject = (path12) => extname4(path12).toLowerCase() === ".ecproj";
+    compsOf = (j) => Object.values(j.items ?? {}).filter((it) => it.kind?.type === "Comp");
+    queue2 = Promise.resolve();
+  }
+});
+
 // src/mcp/cli.ts
 import { parseArgs } from "node:util";
 
 // src/mcp/server.ts
-import { resolve as resolve8 } from "node:path";
-import { fileURLToPath as fileURLToPath4 } from "node:url";
+import { resolve as resolve9 } from "node:path";
+import { fileURLToPath as fileURLToPath5 } from "node:url";
 
 // ../../../node_modules/zod/v3/external.js
 var external_exports = {};
@@ -37162,7 +37489,7 @@ var Protocol = class {
           return;
         }
         const pollInterval = task2.pollInterval ?? this._options?.defaultTaskPollInterval ?? 1e3;
-        await new Promise((resolve9) => setTimeout(resolve9, pollInterval));
+        await new Promise((resolve10) => setTimeout(resolve10, pollInterval));
         options?.signal?.throwIfAborted();
       }
     } catch (error2) {
@@ -37179,7 +37506,7 @@ var Protocol = class {
    */
   request(request, resultSchema, options) {
     const { relatedRequestId, resumptionToken, onresumptiontoken, task, relatedTask } = options ?? {};
-    return new Promise((resolve9, reject) => {
+    return new Promise((resolve10, reject) => {
       const earlyReject = (error2) => {
         reject(error2);
       };
@@ -37257,7 +37584,7 @@ var Protocol = class {
           if (!parseResult.success) {
             reject(parseResult.error);
           } else {
-            resolve9(parseResult.data);
+            resolve10(parseResult.data);
           }
         } catch (error2) {
           reject(error2);
@@ -37519,12 +37846,12 @@ var Protocol = class {
       }
     } catch {
     }
-    return new Promise((resolve9, reject) => {
+    return new Promise((resolve10, reject) => {
       if (signal.aborted) {
         reject(new McpError(ErrorCode.InvalidRequest, "Request cancelled"));
         return;
       }
-      const timeoutId = setTimeout(resolve9, interval);
+      const timeoutId = setTimeout(resolve10, interval);
       signal.addEventListener("abort", () => {
         clearTimeout(timeoutId);
         reject(new McpError(ErrorCode.InvalidRequest, "Request cancelled"));
@@ -38655,7 +38982,7 @@ var McpServer = class {
     let task = createTaskResult.task;
     const pollInterval = task.pollInterval ?? 5e3;
     while (task.status !== "completed" && task.status !== "failed" && task.status !== "cancelled") {
-      await new Promise((resolve9) => setTimeout(resolve9, pollInterval));
+      await new Promise((resolve10) => setTimeout(resolve10, pollInterval));
       const updatedTask = await extra.taskStore.getTask(taskId);
       if (!updatedTask) {
         throw new McpError(ErrorCode.InternalError, `Task ${taskId} not found during polling`);
@@ -39319,19 +39646,19 @@ var StdioServerTransport = class {
     this.onclose?.();
   }
   send(message) {
-    return new Promise((resolve9) => {
+    return new Promise((resolve10) => {
       const json3 = serializeMessage(message);
       if (this._stdout.write(json3)) {
-        resolve9();
+        resolve10();
       } else {
-        this._stdout.once("drain", resolve9);
+        this._stdout.once("drain", resolve10);
       }
     });
   }
 };
 
 // src/mcp/state.ts
-import os5 from "node:os";
+import os6 from "node:os";
 
 // src/core/tools.ts
 init_execa();
@@ -39462,9 +39789,9 @@ async function safeEnvironment() {
     const env = {
       tools: { ffmpeg: "", ffprobe: "" },
       encoders: { h264_nvenc: false, h264_qsv: false, hevc_nvenc: false, libx264: false, prores_ks: false, dnxhd: false, mpeg2video: false },
-      totalRamGb: os5.totalmem() / 2 ** 30,
-      freeRamGb: os5.freemem() / 2 ** 30,
-      cpuThreads: os5.cpus().length
+      totalRamGb: os6.totalmem() / 2 ** 30,
+      freeRamGb: os6.freemem() / 2 ** 30,
+      cpuThreads: os6.cpus().length
     };
     return { env, problems: [err2 instanceof Error ? err2.message : String(err2)] };
   }
@@ -39479,7 +39806,8 @@ async function createAppState(opts = {}) {
     Promise.resolve().then(() => (init_ae(), ae_exports)),
     Promise.resolve().then(() => (init_jobs(), jobs_exports))
   ]);
-  const ae = aeMod.createAeBackend(env.tools);
+  const { createEffectCraftBackend: createEffectCraftBackend2, createMotionBackend: createMotionBackend2 } = await Promise.resolve().then(() => (init_effectcraft(), effectcraft_exports));
+  const ae = createMotionBackend2(aeMod.createAeBackend(env.tools), createEffectCraftBackend2(env.tools));
   const assembler = new ffmpegMod.Assembler({ tools: env.tools, env, ae, qc: qcMod.runQc });
   const state = {
     env,
@@ -39511,34 +39839,34 @@ function compsNeedingRender(p) {
 }
 
 // src/mcp/tools.ts
-import { existsSync as existsSync17 } from "node:fs";
-import { mkdir as mkdir15, readdir as readdir7, readFile as readFile11, rename as rename9, writeFile as writeFile12 } from "node:fs/promises";
-import os7 from "node:os";
-import { basename as basename10, dirname as dirname6, extname as extname9, isAbsolute as isAbsolute2, join as join15, relative as relative3, resolve as resolve7 } from "node:path";
+import { existsSync as existsSync18 } from "node:fs";
+import { mkdir as mkdir16, readdir as readdir7, readFile as readFile12, rename as rename10, writeFile as writeFile13 } from "node:fs/promises";
+import os8 from "node:os";
+import { basename as basename11, dirname as dirname7, extname as extname10, isAbsolute as isAbsolute2, join as join16, relative as relative3, resolve as resolve8 } from "node:path";
 init_project();
 init_timecode();
 
 // src/review/server.ts
 import { randomBytes as randomBytes4 } from "node:crypto";
 import { createReadStream as createReadStream2 } from "node:fs";
-import { existsSync as existsSync8 } from "node:fs";
-import { readFile as readFile5, stat as stat5 } from "node:fs/promises";
+import { existsSync as existsSync9 } from "node:fs";
+import { readFile as readFile6, stat as stat5 } from "node:fs/promises";
 import { createServer } from "node:http";
 
 // src/review/compare.ts
 init_execa();
 init_timecode();
-import { existsSync as existsSync7 } from "node:fs";
-import { mkdir as mkdir6, mkdtemp as mkdtemp2, readdir as readdir2, realpath, rm as rm5, writeFile as writeFile5 } from "node:fs/promises";
-import os6 from "node:os";
-import { basename as basename4, dirname as dirname4, extname as extname4, isAbsolute, join as join6, relative } from "node:path";
+import { existsSync as existsSync8 } from "node:fs";
+import { mkdir as mkdir7, mkdtemp as mkdtemp3, readdir as readdir2, realpath, rm as rm6, writeFile as writeFile6 } from "node:fs/promises";
+import os7 from "node:os";
+import { basename as basename5, dirname as dirname5, extname as extname5, isAbsolute, join as join7, relative } from "node:path";
 
 // src/review/session.ts
-import { randomUUID as randomUUID2 } from "node:crypto";
-import { mkdir as mkdir5, open as open2, readFile as readFile4, rename as rename4, rm as rm4, stat as stat4, writeFile as writeFile4 } from "node:fs/promises";
+import { randomUUID as randomUUID3 } from "node:crypto";
+import { mkdir as mkdir6, open as open2, readFile as readFile5, rename as rename5, rm as rm5, stat as stat4, writeFile as writeFile5 } from "node:fs/promises";
 import { hostname as hostname2 } from "node:os";
 import { setTimeout as delay } from "node:timers/promises";
-import { join as join5 } from "node:path";
+import { join as join6 } from "node:path";
 init_project();
 var INTENT_COLORS = {
   cut: "#ff5a52",
@@ -39621,12 +39949,12 @@ function versionPlan(p, v) {
 }
 function sessionDir(p, v) {
   if (!/^v\d+$/.test(v.id)) throw new ReviewError("Invalid version id");
-  return join5(projectPaths(p).review, v.id);
+  return join6(projectPaths(p).review, v.id);
 }
 async function readReviewSession(p, v) {
-  const file = join5(sessionDir(p, v), "session.json");
+  const file = join6(sessionDir(p, v), "session.json");
   try {
-    const s = sessionSchema.parse(JSON.parse(await readFile4(file, "utf8")));
+    const s = sessionSchema.parse(JSON.parse(await readFile5(file, "utf8")));
     if (s.version !== v.id || s.planHash !== v.planHash) throw new ReviewError("Review belongs to a different build", 409);
     return s;
   } catch (error2) {
@@ -39646,13 +39974,13 @@ function serialize2(key, fn) {
   return result;
 }
 async function persist(dir, name, value) {
-  await mkdir5(dir, { recursive: true });
-  const tmp = join5(dir, `${name}-${randomUUID2()}.tmp`);
+  await mkdir6(dir, { recursive: true });
+  const tmp = join6(dir, `${name}-${randomUUID3()}.tmp`);
   try {
-    await writeFile4(tmp, JSON.stringify(value, null, 2) + "\n", { encoding: "utf8", flag: "wx" });
-    await rename4(tmp, join5(dir, `${name}.json`));
+    await writeFile5(tmp, JSON.stringify(value, null, 2) + "\n", { encoding: "utf8", flag: "wx" });
+    await rename5(tmp, join6(dir, `${name}.json`));
   } finally {
-    await rm4(tmp, { force: true });
+    await rm5(tmp, { force: true });
   }
 }
 var LOCK_STALE_MS2 = 2 * 6e4;
@@ -39667,7 +39995,7 @@ function pidAlive2(pid) {
 async function staleLock(lockPath) {
   let content, mtime;
   try {
-    [content, mtime] = await Promise.all([readFile4(lockPath, "utf8"), stat4(lockPath).then((s) => s.mtimeMs)]);
+    [content, mtime] = await Promise.all([readFile5(lockPath, "utf8"), stat4(lockPath).then((s) => s.mtimeMs)]);
   } catch {
     return void 0;
   }
@@ -39688,26 +40016,26 @@ async function staleLock(lockPath) {
   return void 0;
 }
 async function reclaim(lockPath, staleContent) {
-  const aside = `${lockPath}.stale-${randomUUID2()}`;
+  const aside = `${lockPath}.stale-${randomUUID3()}`;
   try {
-    await rename4(lockPath, aside);
+    await rename5(lockPath, aside);
   } catch {
     return;
   }
-  const moved = await readFile4(aside, "utf8").catch(() => staleContent);
+  const moved = await readFile5(aside, "utf8").catch(() => staleContent);
   if (moved !== staleContent) {
     try {
       await open2(lockPath, "wx").then((h2) => h2.writeFile(moved).finally(() => h2.close()));
     } catch {
     }
   }
-  await rm4(aside, { force: true });
+  await rm5(aside, { force: true });
 }
 async function locked(dir, fn) {
-  await mkdir5(dir, { recursive: true });
-  const lockPath = join5(dir, "session.lock");
+  await mkdir6(dir, { recursive: true });
+  const lockPath = join6(dir, "session.lock");
   const deadline = Date.now() + 2e3;
-  const token = JSON.stringify({ pid: process.pid, host: hostname2(), at: Date.now(), id: randomUUID2() });
+  const token = JSON.stringify({ pid: process.pid, host: hostname2(), at: Date.now(), id: randomUUID3() });
   let lock;
   for (; ; ) {
     try {
@@ -39729,7 +40057,7 @@ async function locked(dir, fn) {
     return await fn();
   } finally {
     await lock.close();
-    if (await readFile4(lockPath, "utf8").catch(() => void 0) === token) await rm4(lockPath, { force: true });
+    if (await readFile5(lockPath, "utf8").catch(() => void 0) === token) await rm5(lockPath, { force: true });
   }
 }
 function saveReviewSession(p, v, input) {
@@ -39790,17 +40118,17 @@ function submitReview(p, v, revision) {
     if (parsed.data.revision !== previous.revision) throw new ReviewError("Notes changed in another window. Reload before submitting.", 409);
     if (!previous.notes.length) throw new ReviewError("Add a note before submitting");
     const s = { ...previous, revision: previous.revision + 1, updatedAt: (/* @__PURE__ */ new Date()).toISOString(), status: "submitted" };
-    await mkdir5(dir, { recursive: true });
-    const file = join5(dir, `submitted-${randomUUID2()}.json`);
+    await mkdir6(dir, { recursive: true });
+    const file = join6(dir, `submitted-${randomUUID3()}.json`);
     const agent = agentReview(s);
-    await writeFile4(file, JSON.stringify({ ...s, ...agent }, null, 2) + "\n", { encoding: "utf8", flag: "wx" });
+    await writeFile5(file, JSON.stringify({ ...s, ...agent }, null, 2) + "\n", { encoding: "utf8", flag: "wx" });
     await persist(dir, "session", s);
     return { session: s, path: file, ...agent };
   }));
 }
 async function readReviewDraft(p, v) {
   try {
-    const d = storedDraft.parse(JSON.parse(await readFile4(join5(sessionDir(p, v), "draft.json"), "utf8")));
+    const d = storedDraft.parse(JSON.parse(await readFile5(join6(sessionDir(p, v), "draft.json"), "utf8")));
     return d.version === v.id && d.planHash === v.planHash ? d : null;
   } catch {
     return null;
@@ -39817,7 +40145,7 @@ function saveReviewDraft(p, v, input) {
   const dir = sessionDir(p, v);
   return serialize2(`${dir}#draft`, async () => {
     if (!d) {
-      await rm4(join5(dir, "draft.json"), { force: true });
+      await rm5(join6(dir, "draft.json"), { force: true });
       return null;
     }
     const stored = { ...d, version: v.id, planHash: v.planHash, updatedAt: (/* @__PURE__ */ new Date()).toISOString() };
@@ -39906,12 +40234,12 @@ var WINDOWS_FONT2 = "C:/Windows/Fonts/arial.ttf";
 async function run3(file, args, timeoutMs, signal) {
   const r = await execa(file, args, { reject: false, windowsHide: true, stdin: "ignore", timeout: timeoutMs, cancelSignal: signal, forceKillAfterDelay: 2e3, maxBuffer: 16 * 2 ** 20 });
   if (r.isCanceled) throw new Error("compare sheet cancelled");
-  if (r.timedOut) throw new Error(`compare sheet: ${basename4(file)} timed out after ${timeoutMs} ms`);
+  if (r.timedOut) throw new Error(`compare sheet: ${basename5(file)} timed out after ${timeoutMs} ms`);
   return { exitCode: r.exitCode ?? -1, stderr: String(r.stderr ?? "") };
 }
 function freePath(p) {
-  const ext = extname4(p), stem = join6(dirname4(p), basename4(p, ext));
-  const free = (c3) => !existsSync7(c3) && !existsSync7(c3.slice(0, -ext.length) + ".json");
+  const ext = extname5(p), stem = join7(dirname5(p), basename5(p, ext));
+  const free = (c3) => !existsSync8(c3) && !existsSync8(c3.slice(0, -ext.length) + ".json");
   if (free(p)) return p;
   for (let i2 = 2; i2 < 1e4; i2++) if (free(`${stem}_${i2}${ext}`)) return `${stem}_${i2}${ext}`;
   throw new Error(`cannot find a free name next to ${p}`);
@@ -39919,8 +40247,8 @@ function freePath(p) {
 async function grab(tools, side, frames3, dir, height, timeoutMs, signal) {
   const select = frames3.map((f) => `eq(n\\,${f})`).join("+");
   const vf = `select='${select}',scale=${THUMB_W}:${height}:force_original_aspect_ratio=decrease,pad=${THUMB_W}:${height}:(ow-iw)/2:(oh-ih)/2:color=0x101010,setsar=1`;
-  const r = await run3(tools.ffmpeg, ["-hide_banner", "-nostats", "-nostdin", "-n", "-i", side.media, "-map", "0:v:0", "-vf", vf, "-fps_mode", "passthrough", "-frames:v", String(frames3.length), join6(dir, "f%04d.png")], timeoutMs, signal);
-  const files = (await readdir2(dir)).filter((f) => /^f\d{4}\.png$/.test(f)).sort().map((f) => join6(dir, f));
+  const r = await run3(tools.ffmpeg, ["-hide_banner", "-nostats", "-nostdin", "-n", "-i", side.media, "-map", "0:v:0", "-vf", vf, "-fps_mode", "passthrough", "-frames:v", String(frames3.length), join7(dir, "f%04d.png")], timeoutMs, signal);
+  const files = (await readdir2(dir)).filter((f) => /^f\d{4}\.png$/.test(f)).sort().map((f) => join7(dir, f));
   if (r.exitCode !== 0 || files.length !== frames3.length) throw new Error(`could not read frames from ${side.id}: ${r.stderr.trim().split(/\r?\n/).slice(-3).join(" ")}`);
   return files;
 }
@@ -39931,23 +40259,23 @@ async function renderCompareSheet(opts) {
   if (!pairs.length) throw new Error("no frames to compare");
   const timeoutMs = opts.timeoutMs ?? 10 * 6e4;
   const height = Math.max(2, Math.round(THUMB_W * a2.plan.height / a2.plan.width / 2) * 2);
-  const tmp = await mkdtemp2(join6(os6.tmpdir(), "editmcp-compare-"));
+  const tmp = await mkdtemp3(join7(os7.tmpdir(), "editmcp-compare-"));
   try {
     const files = /* @__PURE__ */ new Map();
     for (const [key, side, list] of [["a", a2, pairs.map((x) => x.a)], ["b", b, pairs.map((x) => x.b)]]) {
       const unique = [...new Set(list)].sort((x, y) => x - y);
-      const dir = join6(tmp, key);
-      await mkdir6(dir);
+      const dir = join7(tmp, key);
+      await mkdir7(dir);
       const grabbed = await grab(tools, side, unique, dir, height, timeoutMs, opts.signal);
       unique.forEach((f, i2) => files.set(`${key}${f}`, grabbed[i2]));
     }
     const target = freePath(opts.outPath);
-    await mkdir6(dirname4(target), { recursive: true });
+    await mkdir7(dirname5(target), { recursive: true });
     const inputs = pairs.flatMap((x) => ["-i", files.get(`a${x.a}`), "-i", files.get(`b${x.b}`)]);
     const tc = (f) => framesToTc(f, a2.plan.fps).replace(/:/g, "\\:");
     const label = (font, text2) => `,drawtext=${font}:fontsize=18:fontcolor=white:box=1:boxcolor=black@0.6:boxborderw=4:x=8:y=8:text='${text2}'`;
     const fonts = [];
-    if (existsSync7(WINDOWS_FONT2)) fonts.push(`fontfile='${WINDOWS_FONT2.replace(":", "\\:")}'`);
+    if (existsSync8(WINDOWS_FONT2)) fonts.push(`fontfile='${WINDOWS_FONT2.replace(":", "\\:")}'`);
     fonts.push("font=Sans", void 0);
     let lastErr = "";
     for (const font of fonts) {
@@ -39960,28 +40288,28 @@ async function renderCompareSheet(opts) {
       const rows = pairs.map((_, i2) => `[r${i2}]`).join("");
       graph.push(pairs.length > 1 ? `${rows}vstack=inputs=${pairs.length}[out]` : `${rows}null[out]`);
       const r = await run3(tools.ffmpeg, ["-hide_banner", "-nostats", "-nostdin", "-n", ...inputs, "-filter_complex", graph.join(";"), "-map", "[out]", "-frames:v", "1", "-update", "1", target], timeoutMs, opts.signal);
-      if (r.exitCode === 0 && existsSync7(target)) {
+      if (r.exitCode === 0 && existsSync8(target)) {
         const result = {
           path: target,
-          sidecar: target.slice(0, -extname4(target).length) + ".json",
+          sidecar: target.slice(0, -extname5(target).length) + ".json",
           labelled: !!font,
           method: opts.map.method,
           ...opts.map.warning ? { warning: opts.map.warning } : {},
           pairs: pairs.map((x) => ({ ...x.clipId ? { clipId: x.clipId } : {}, a: { version: a2.id, frame: x.a, tc: framesToTc(x.a, a2.plan.fps) }, b: { version: b.id, frame: x.b, tc: framesToTc(x.b, b.plan.fps) } }))
         };
-        await writeFile5(result.sidecar, JSON.stringify({ versionA: a2.id, versionB: b.id, ...result }, null, 2) + "\n", { encoding: "utf8", flag: "wx" });
+        await writeFile6(result.sidecar, JSON.stringify({ versionA: a2.id, versionB: b.id, ...result }, null, 2) + "\n", { encoding: "utf8", flag: "wx" });
         return result;
       }
       lastErr = r.stderr.trim().split(/\r?\n/).slice(-3).join(" ");
     }
     throw new Error(`compare sheet failed: ${lastErr}`);
   } finally {
-    await rm5(tmp, { recursive: true, force: true });
+    await rm6(tmp, { recursive: true, force: true });
   }
 }
 function sheetMedia(v) {
-  if (v.master && existsSync7(v.master)) return v.master;
-  if (v.reviewProxy && existsSync7(v.reviewProxy)) return v.reviewProxy;
+  if (v.master && existsSync8(v.master)) return v.master;
+  if (v.reviewProxy && existsSync8(v.reviewProxy)) return v.reviewProxy;
   throw new ReviewError(`${v.id} has no master or review proxy on disk`);
 }
 
@@ -40059,9 +40387,9 @@ async function openReview(p, v) {
     ["app.js", "app.js", "text/javascript"],
     ["style.css", "style.css", "text/css"],
     ["fonts/NotoSansThai.ttf", "fonts/NotoSansThai.ttf", "font/ttf"]
-  ]) assets.set(route, { body: await readFile5(new URL(`../../web/review/${file}`, import.meta.url)), type });
+  ]) assets.set(route, { body: await readFile6(new URL(`../../web/review/${file}`, import.meta.url)), type });
   const logo = new URL("../../web/review/logo.svg", import.meta.url);
-  if (existsSync8(logo)) assets.set("logo.svg", { body: await readFile5(logo), type: "image/svg+xml" });
+  if (existsSync9(logo)) assets.set("logo.svg", { body: await readFile6(logo), type: "image/svg+xml" });
   let origin = "";
   const server = createServer((req, res) => {
     res.setHeader("Cache-Control", "no-store");
@@ -40112,7 +40440,7 @@ async function openReview(p, v) {
       }
       if (route === "contact" && v.qc?.contactSheet) {
         res.writeHead(200, { "Content-Type": "image/png" });
-        return res.end(await readFile5(v.qc.contactSheet));
+        return res.end(await readFile6(v.qc.contactSheet));
       }
       const asset = assets.get(route);
       if (!asset) throw new ReviewError("Not found", 404);
@@ -40128,19 +40456,19 @@ async function openReview(p, v) {
   });
   server.requestTimeout = 1e4;
   server.headersTimeout = 1e4;
-  await new Promise((resolve9, reject) => {
+  await new Promise((resolve10, reject) => {
     server.once("error", reject);
-    server.listen(0, "127.0.0.1", resolve9);
+    server.listen(0, "127.0.0.1", resolve10);
   });
   const address = server.address();
   if (!address || typeof address === "string") throw new Error("No review port");
   origin = `http://127.0.0.1:${address.port}`;
-  return { url: origin + prefix, close: () => new Promise((resolve9, reject) => {
+  return { url: origin + prefix, close: () => new Promise((resolve10, reject) => {
     if (!server.listening) {
-      resolve9();
+      resolve10();
       return;
     }
-    server.close((error2) => error2 ? reject(error2) : resolve9());
+    server.close((error2) => error2 ? reject(error2) : resolve10());
     server.closeAllConnections();
   }) };
 }
@@ -40149,8 +40477,8 @@ async function openReview(p, v) {
 init_hash();
 init_project();
 import { randomBytes as randomBytes5 } from "node:crypto";
-import { existsSync as existsSync9, realpathSync as realpathSync2 } from "node:fs";
-import { lstat, mkdir as mkdir7, opendir, readdir as readdir3, readFile as readFile6, rename as rename5, rmdir, statfs as fsStatfs2, unlink as unlink2, writeFile as writeFile6 } from "node:fs/promises";
+import { existsSync as existsSync10, realpathSync as realpathSync2 } from "node:fs";
+import { lstat, mkdir as mkdir8, opendir, readdir as readdir3, readFile as readFile7, rename as rename6, rmdir, statfs as fsStatfs2, unlink as unlink2, writeFile as writeFile7 } from "node:fs/promises";
 import path9 from "node:path";
 var GB2 = 1024 ** 3;
 var DISK_ERROR_BYTES = 5 * GB2;
@@ -40160,7 +40488,7 @@ var MIN_AGE_MS = 60 * 6e4;
 var CONFIRM_TOKENS = /* @__PURE__ */ new Set(["\u0E25\u0E1A", "delete"]);
 async function freeSpace(target, statfs) {
   let p = path9.resolve(target);
-  while (!existsSync9(p)) {
+  while (!existsSync10(p)) {
     const up = path9.dirname(p);
     if (up === p) break;
     p = up;
@@ -40214,7 +40542,7 @@ async function findAeDiskCache(env = process.env) {
       const files = (await readdir3(dir).catch(() => [])).filter((f) => /^Adobe After Effects .*Prefs.*\.txt$/i.test(f)).sort();
       for (const f of files) {
         const file = path9.join(dir, f);
-        const prefs = parseAePrefs(await readFile6(file, "utf8").catch(() => ""));
+        const prefs = parseAePrefs(await readFile7(file, "utf8").catch(() => ""));
         let folder;
         let maxSizeGb;
         const dc = prefs.get("Disk Cache Controls");
@@ -40234,7 +40562,7 @@ async function findAeDiskCache(env = process.env) {
     }
   }
   const local = env["LOCALAPPDATA"];
-  if (local && existsSync9(path9.join(local, "Temp"))) return { folder: path9.join(local, "Temp"), source: "default" };
+  if (local && existsSync10(path9.join(local, "Temp"))) return { folder: path9.join(local, "Temp"), source: "default" };
   return { source: "unknown" };
 }
 async function aeCacheDirs(folder) {
@@ -40429,7 +40757,7 @@ async function gcPlan(p, opts = {}) {
   const segDir = path9.join(p.dir, "cache", "segments");
   let manifest = {};
   try {
-    const m = JSON.parse(await readFile6(path9.join(segDir, "manifest.json"), "utf8"));
+    const m = JSON.parse(await readFile7(path9.join(segDir, "manifest.json"), "utf8"));
     manifest = m.entries ?? {};
   } catch {
   }
@@ -40484,8 +40812,8 @@ async function gcPlan(p, opts = {}) {
     keptUnknown
   };
   const plan = { ...body2, hash: hashJson(body2) };
-  await mkdir7(planDir(p), { recursive: true });
-  await writeFile6(path9.join(planDir(p), `plan-${planId}.json`), `${JSON.stringify(plan, null, 2)}
+  await mkdir8(planDir(p), { recursive: true });
+  await writeFile7(path9.join(planDir(p), `plan-${planId}.json`), `${JSON.stringify(plan, null, 2)}
 `, { encoding: "utf8", flag: "wx" });
   return plan;
 }
@@ -40508,7 +40836,7 @@ async function gcApply(p, planId, confirm, opts = {}) {
   const file = path9.join(planDir(p), `plan-${planId}.json`);
   let plan;
   try {
-    plan = JSON.parse(await readFile6(file, "utf8"));
+    plan = JSON.parse(await readFile7(file, "utf8"));
   } catch {
     throw new Error(`\u0E44\u0E21\u0E48\u0E1E\u0E1A\u0E41\u0E1C\u0E19 ${planId} (\u0E2B\u0E23\u0E37\u0E2D\u0E43\u0E0A\u0E49\u0E44\u0E1B\u0E41\u0E25\u0E49\u0E27) \u2014 \u0E40\u0E23\u0E35\u0E22\u0E01 cache_gc_plan \u0E43\u0E2B\u0E21\u0E48 / plan not found or already applied`);
   }
@@ -40569,18 +40897,18 @@ async function gcApply(p, planId, confirm, opts = {}) {
     }
   }
   const histDir = path9.join(p.dir, "history");
-  await mkdir7(histDir, { recursive: true });
+  await mkdir8(histDir, { recursive: true });
   const stamp = now.toISOString().replace(/[-:]/g, "").replace(/\..*$/, "");
   let log = path9.join(histDir, `gc-${stamp}.log`);
-  for (let i2 = 2; existsSync9(log); i2++) log = path9.join(histDir, `gc-${stamp}_${i2}.log`);
+  for (let i2 = 2; existsSync10(log); i2++) log = path9.join(histDir, `gc-${stamp}_${i2}.log`);
   const lines = [
     `# gc plan ${planId} applied ${now.toISOString()} (confirm: ${confirm})`,
     ...deleted.map((d) => `DELETED	${d.bytes}	${d.path}`),
     ...skipped.map((s) => `SKIPPED	${s.reason}	${s.path}`)
   ];
-  await writeFile6(log, `${lines.join("\n")}
+  await writeFile7(log, `${lines.join("\n")}
 `, { encoding: "utf8", flag: "wx" });
-  await rename5(file, path9.join(planDir(p), `plan-${planId}.applied.json`));
+  await rename6(file, path9.join(planDir(p), `plan-${planId}.applied.json`));
   return { planId, deleted, skipped, freedBytes: deleted.reduce((s, d) => s + d.bytes, 0), purgedVersions, log };
 }
 
@@ -40612,15 +40940,15 @@ function fail(err2) {
 
 // src/mcp/tools-board.ts
 init_execa();
-import { existsSync as existsSync10 } from "node:fs";
-import { mkdir as mkdir8, readFile as readFile8, rename as rename6, rm as rm6, writeFile as writeFile7 } from "node:fs/promises";
-import { basename as basename5, extname as extname5, join as join7, resolve as resolve3 } from "node:path";
+import { existsSync as existsSync11 } from "node:fs";
+import { mkdir as mkdir9, readFile as readFile9, rename as rename7, rm as rm7, writeFile as writeFile8 } from "node:fs/promises";
+import { basename as basename6, extname as extname6, join as join8, resolve as resolve4 } from "node:path";
 import { randomBytes as randomBytes6 } from "node:crypto";
 init_timecode();
 
 // src/io/board.ts
 import { createHash as createHash2 } from "node:crypto";
-import { readdir as readdir4, readFile as readFile7, stat as stat6 } from "node:fs/promises";
+import { readdir as readdir4, readFile as readFile8, stat as stat6 } from "node:fs/promises";
 import { createRequire } from "node:module";
 import path10 from "node:path";
 init_project();
@@ -41088,7 +41416,7 @@ async function importBoardFile(file, fps, opts = {}) {
   const abs = path10.resolve(file);
   const st = await stat6(abs).catch(() => void 0);
   if (!st?.isFile()) throw new Error(`\u0E44\u0E21\u0E48\u0E1E\u0E1A\u0E44\u0E1F\u0E25\u0E4C / file not found: ${abs}`);
-  const buf = await readFile7(abs);
+  const buf = await readFile8(abs);
   const info = {
     path: abs,
     name: path10.basename(abs),
@@ -41710,10 +42038,10 @@ function proposeFit(p, opts) {
 // src/mcp/tools-board.ts
 var BOARD_FILE = "board.json";
 async function readBoardFile(p) {
-  const file = join7(p.dir, BOARD_FILE);
-  if (!existsSync10(file)) return void 0;
+  const file = join8(p.dir, BOARD_FILE);
+  if (!existsSync11(file)) return void 0;
   try {
-    const d = JSON.parse(await readFile8(file, "utf8"));
+    const d = JSON.parse(await readFile9(file, "utf8"));
     return d.board && Array.isArray(d.board.slots) ? d : void 0;
   } catch {
     return void 0;
@@ -41731,15 +42059,15 @@ async function requireBoard(p) {
   return b;
 }
 async function writeHistory(p, prefix, body2) {
-  const dir = join7(p.dir, "history");
-  await mkdir8(dir, { recursive: true });
+  const dir = join8(p.dir, "history");
+  await mkdir9(dir, { recursive: true });
   const stamp = (/* @__PURE__ */ new Date()).toISOString().replace(/[:.]/g, "-");
   const text2 = `${JSON.stringify(body2, null, 2)}
 `;
   for (let n2 = 1; ; n2++) {
-    const file = join7(dir, `${prefix}-${stamp}-${n2}.json`);
+    const file = join8(dir, `${prefix}-${stamp}-${n2}.json`);
     try {
-      await writeFile7(file, text2, { encoding: "utf8", flag: "wx" });
+      await writeFile8(file, text2, { encoding: "utf8", flag: "wx" });
       return file;
     } catch (e) {
       if (e.code !== "EEXIST") throw e;
@@ -41755,14 +42083,14 @@ async function storeBoard(state, p, board, reason, src) {
   const body2 = { schema: 1, savedAt: (/* @__PURE__ */ new Date()).toISOString(), reason, board };
   if (src?.sha256) body2.sourceSha256 = src.sha256;
   if (src?.modified) body2.sourceModified = src.modified;
-  const file = join7(p.dir, BOARD_FILE);
-  const tmp = join7(p.dir, `.${BOARD_FILE}.${process.pid}.${randomBytes6(4).toString("hex")}.tmp`);
-  await writeFile7(tmp, `${JSON.stringify(body2, null, 2)}
+  const file = join8(p.dir, BOARD_FILE);
+  const tmp = join8(p.dir, `.${BOARD_FILE}.${process.pid}.${randomBytes6(4).toString("hex")}.tmp`);
+  await writeFile8(tmp, `${JSON.stringify(body2, null, 2)}
 `, "utf8");
   try {
-    await rename6(tmp, file);
+    await rename7(tmp, file);
   } catch (e) {
-    await rm6(tmp, { force: true });
+    await rm7(tmp, { force: true });
     throw e;
   }
   p.board = board;
@@ -41782,7 +42110,7 @@ function boardSummary(b, fps) {
     target: b.targetFrames !== void 0 ? { frames: b.targetFrames, tc: framesToTc(b.targetFrames, fps) } : null
   };
 }
-var samePath3 = (a2, b) => process.platform === "win32" ? resolve3(a2).toLowerCase() === resolve3(b).toLowerCase() : resolve3(a2) === resolve3(b);
+var samePath3 = (a2, b) => process.platform === "win32" ? resolve4(a2).toLowerCase() === resolve4(b).toLowerCase() : resolve4(a2) === resolve4(b);
 var MAX_LINES_PER_PAGE = 400;
 function resolveShots(p, board, shots) {
   const how = { clip: 0, timeline: 0, marker: 0, source: 0, none: 0 };
@@ -41830,14 +42158,14 @@ async function grabFrame(state, master, frame2, fps, out2, signal) {
     "-n",
     out2
   ], { windowsHide: true, timeout: 6e4, forceKillAfterDelay: 3e3, reject: false, stdin: "ignore", cancelSignal: signal });
-  return r.exitCode === 0 && existsSync10(out2);
+  return r.exitCode === 0 && existsSync11(out2);
 }
 async function uniqueDir(base) {
   for (let n2 = 1; ; n2++) {
     const d = n2 === 1 ? base : `${base}_${n2}`;
-    if (existsSync10(d)) continue;
+    if (existsSync11(d)) continue;
     try {
-      await mkdir8(d);
+      await mkdir9(d);
       return d;
     } catch (e) {
       if (e.code !== "EEXIST") throw e;
@@ -41845,12 +42173,12 @@ async function uniqueDir(base) {
   }
 }
 async function writeUnique(base, text2) {
-  const ext = extname5(base);
+  const ext = extname6(base);
   const stem = base.slice(0, base.length - ext.length);
   for (let n2 = 1; ; n2++) {
     const file = n2 === 1 ? base : `${stem}_${n2}${ext}`;
     try {
-      await writeFile7(file, text2, { encoding: "utf8", flag: "wx" });
+      await writeFile8(file, text2, { encoding: "utf8", flag: "wx" });
       return file;
     } catch (e) {
       if (e.code !== "EEXIST") throw e;
@@ -42088,29 +42416,29 @@ var BOARD_TOOLS = [
       const wantFrames = a2.frames ?? true;
       if (wantFrames) requireFfmpeg(state);
       return runJob(state, "board_vs_cut", async (ctx) => {
-        const outDir = join7(state.api.project.projectPaths(p).out, v.id);
-        await mkdir8(outDir, { recursive: true });
+        const outDir = join8(state.api.project.projectPaths(p).out, v.id);
+        await mkdir9(outDir, { recursive: true });
         const notes = [];
         if (how["marker"] || how["source"]) notes.push(`slot \u0E02\u0E2D\u0E07 ${how["marker"] + how["source"]} \u0E04\u0E25\u0E34\u0E1B\u0E40\u0E14\u0E32\u0E08\u0E32\u0E01 marker/\u0E0A\u0E37\u0E48\u0E2D\u0E44\u0E1F\u0E25\u0E4C \u2014 \u0E22\u0E37\u0E19\u0E22\u0E31\u0E19\u0E14\u0E49\u0E27\u0E22 board_link / ${how["marker"] + how["source"]} slot(s) inferred`);
         if (how["timeline"]) notes.push(`slot \u0E02\u0E2D\u0E07 ${how["timeline"]} \u0E04\u0E25\u0E34\u0E1B\u0E21\u0E32\u0E08\u0E32\u0E01\u0E44\u0E17\u0E21\u0E4C\u0E44\u0E25\u0E19\u0E4C\u0E1B\u0E31\u0E08\u0E08\u0E38\u0E1A\u0E31\u0E19 (\u0E40\u0E27\u0E2D\u0E23\u0E4C\u0E0A\u0E31\u0E19\u0E19\u0E35\u0E49 build \u0E01\u0E48\u0E2D\u0E19\u0E1C\u0E39\u0E01 slot) / taken from the live timeline`);
         const images = /* @__PURE__ */ new Map();
         const master = v.master;
-        const masterOk = !!master && existsSync10(master);
+        const masterOk = !!master && existsSync11(master);
         let imgDir;
         if (wantFrames && !masterOk) notes.push(`\u0E44\u0E21\u0E48\u0E1E\u0E1A\u0E44\u0E1F\u0E25\u0E4C master ${master ?? ""} \u2014 \u0E44\u0E21\u0E48\u0E21\u0E35\u0E40\u0E1F\u0E23\u0E21\u0E08\u0E32\u0E01\u0E04\u0E31\u0E17 / master not found`);
         const cutAfter = new Map((plan.cuts ?? []).filter((c3) => c3.dissolve > 0).map((c3) => [c3.after, c3.dissolve]));
         const realised = cmp.slots.filter((s) => s.cutStart !== void 0);
-        if (wantFrames && masterOk && realised.length) imgDir = await uniqueDir(join7(outDir, "board_vs_cut_frames"));
+        if (wantFrames && masterOk && realised.length) imgDir = await uniqueDir(join8(outDir, "board_vs_cut_frames"));
         let done = 0;
         for (const s of cmp.slots) {
           const img = {};
-          if (s.thumb && existsSync10(s.thumb)) img.board = htmlHref(s.thumb, outDir);
+          if (s.thumb && existsSync11(s.thumb)) img.board = htmlHref(s.thumb, outDir);
           if (imgDir && s.cutStart !== void 0) {
             const idx = plan.shots.findIndex((x) => x.id === s.clips[0]);
             const prevId = idx > 0 ? plan.shots[idx - 1].id : void 0;
             const inB = prevId && cutAfter.has(prevId) ? splitDissolve(cutAfter.get(prevId)).b : 0;
             const frame2 = s.cutStart + Math.min(Math.max(0, (s.cutDur ?? 1) - 1), inB + 2);
-            const file = join7(imgDir, `${String(done + 1).padStart(3, "0")}_${s.slot.replace(/[^A-Za-z0-9_-]/g, "_")}.jpg`);
+            const file = join8(imgDir, `${String(done + 1).padStart(3, "0")}_${s.slot.replace(/[^A-Za-z0-9_-]/g, "_")}.jpg`);
             if (await grabFrame(state, master, frame2, fps, file, ctx.signal)) {
               img.cut = htmlHref(file, outDir);
               img.cutFrame = frame2;
@@ -42120,8 +42448,8 @@ var BOARD_TOOLS = [
           }
           images.set(s.slot, img);
         }
-        const html = renderBoardVsCutHtml(cmp, { title: `${p.meta.name} \xB7 ${basename5(board.source)}`, version: v.id, ...masterOk ? { master } : {}, images, notes });
-        const report2 = await writeUnique(join7(outDir, "board_vs_cut.html"), html);
+        const html = renderBoardVsCutHtml(cmp, { title: `${p.meta.name} \xB7 ${basename6(board.source)}`, version: v.id, ...masterOk ? { master } : {}, images, notes });
+        const report2 = await writeUnique(join8(outDir, "board_vs_cut.html"), html);
         return {
           ok: !cmp.issues.some((i2) => i2.severity === "error"),
           version: v.id,
@@ -42204,18 +42532,18 @@ var BOARD_TOOLS = [
 ];
 
 // src/mcp/tools-media.ts
-import { existsSync as existsSync13 } from "node:fs";
-import { mkdir as mkdir11, writeFile as writeFile10 } from "node:fs/promises";
-import { join as join10, resolve as resolve4 } from "node:path";
+import { existsSync as existsSync14 } from "node:fs";
+import { mkdir as mkdir12, writeFile as writeFile11 } from "node:fs/promises";
+import { join as join11, resolve as resolve5 } from "node:path";
 init_hash();
 init_project();
 init_timecode();
 
 // src/engine/scan.ts
 init_execa();
-import { constants as constants7, existsSync as existsSync11 } from "node:fs";
-import { copyFile as copyFile4, link as link3, mkdir as mkdir9, readdir as readdir5, rename as rename7, readFile as readFile9, stat as stat7, writeFile as writeFile8 } from "node:fs/promises";
-import { basename as basename6, dirname as dirname5, extname as extname6, join as join8, relative as relative2, sep as sep2 } from "node:path";
+import { constants as constants8, existsSync as existsSync12 } from "node:fs";
+import { copyFile as copyFile5, link as link3, mkdir as mkdir10, readdir as readdir5, rename as rename8, readFile as readFile10, stat as stat7, writeFile as writeFile9 } from "node:fs/promises";
+import { basename as basename7, dirname as dirname6, extname as extname7, join as join9, relative as relative2, sep as sep2 } from "node:path";
 var VIDEO_EXT = /* @__PURE__ */ new Set([".mov", ".mp4", ".m4v", ".mxf", ".avi", ".mkv", ".mts", ".m2ts", ".ts", ".webm", ".wmv", ".mpg", ".mpeg", ".3gp", ".dv", ".flv"]);
 var AUDIO_EXT2 = /* @__PURE__ */ new Set([".wav", ".mp3", ".aac", ".m4a", ".flac", ".ogg", ".opus", ".aif", ".aiff", ".wma", ".ac3"]);
 var STILL_EXT2 = /* @__PURE__ */ new Set([".png", ".jpg", ".jpeg", ".tif", ".tiff", ".bmp", ".gif", ".webp", ".psd", ".exr", ".dpx", ".tga", ".heic"]);
@@ -42388,7 +42716,7 @@ async function listFiles(dir, recursive) {
   const walk2 = async (d) => {
     const entries = await readdir5(d, { withFileTypes: true });
     for (const e of entries) {
-      const full = join8(d, e.name);
+      const full = join9(d, e.name);
       if (e.isDirectory()) {
         if (recursive && !e.name.startsWith(".")) await walk2(full);
         continue;
@@ -42400,7 +42728,7 @@ async function listFiles(dir, recursive) {
   return out2.sort();
 }
 function kindOf(path12) {
-  const ext = extname6(path12).toLowerCase();
+  const ext = extname7(path12).toLowerCase();
   if (VIDEO_EXT.has(ext)) return "video";
   if (AUDIO_EXT2.has(ext)) return "audio";
   if (STILL_EXT2.has(ext)) return "still";
@@ -42438,14 +42766,14 @@ async function scanFootage(tools, dir, opts = {}) {
   await pool(paths, Math.max(1, opts.concurrency ?? 4), async (path12, i2) => {
     const rel = relative2(dir, path12);
     const kind = kindOf(path12);
-    const f = { path: path12, rel, name: basename6(path12), kind, size: (await stat7(path12)).size, flags: [], notes: [] };
+    const f = { path: path12, rel, name: basename7(path12), kind, size: (await stat7(path12)).size, flags: [], notes: [] };
     const fixedRel = fixRel(rel);
     if (fixedRel) {
       f.fixedRel = fixedRel;
       f.flags.push("mojibake");
     }
-    const name = basename6(fixedRel ?? rel);
-    f.slot = slotOf(name) ?? slotOf(basename6(dirname5(fixedRel ?? rel)));
+    const name = basename7(fixedRel ?? rel);
+    f.slot = slotOf(name) ?? slotOf(basename7(dirname6(fixedRel ?? rel)));
     if (f.slot === void 0) delete f.slot;
     if (kind !== "audio") {
       const p = await probeFile(tools, path12, opts.signal);
@@ -42504,16 +42832,16 @@ function conforms(src, project2) {
   return Math.abs(ratio - Math.round(ratio)) < 2e-3 && Math.round(ratio) >= 1;
 }
 async function applyAliases(report2, aliasDir) {
-  await mkdir9(aliasDir, { recursive: true });
-  const res = { aliasDir, created: [], skipped: [], index: join8(aliasDir, "aliases.json") };
+  await mkdir10(aliasDir, { recursive: true });
+  const res = { aliasDir, created: [], skipped: [], index: join9(aliasDir, "aliases.json") };
   for (const f of report2.files) {
     if (!f.fixedRel) continue;
-    const alias = join8(aliasDir, f.fixedRel);
-    if (existsSync11(alias)) {
+    const alias = join9(aliasDir, f.fixedRel);
+    if (existsSync12(alias)) {
       res.skipped.push({ source: f.path, alias, reason: "exists" });
       continue;
     }
-    await mkdir9(dirname5(alias), { recursive: true });
+    await mkdir10(dirname6(alias), { recursive: true });
     try {
       await link3(f.path, alias);
       res.created.push({ source: f.path, alias, method: "hardlink" });
@@ -42524,7 +42852,7 @@ async function applyAliases(report2, aliasDir) {
         continue;
       }
       try {
-        await copyFile4(f.path, alias, constants7.COPYFILE_EXCL);
+        await copyFile5(f.path, alias, constants8.COPYFILE_EXCL);
         res.created.push({ source: f.path, alias, method: "copy" });
       } catch (e2) {
         res.skipped.push({ source: f.path, alias, reason: e2 instanceof Error ? e2.message : String(e2) });
@@ -42532,26 +42860,26 @@ async function applyAliases(report2, aliasDir) {
     }
   }
   let index = {};
-  if (existsSync11(res.index)) {
+  if (existsSync12(res.index)) {
     try {
-      index = JSON.parse(await readFile9(res.index, "utf8"));
+      index = JSON.parse(await readFile10(res.index, "utf8"));
     } catch {
     }
   }
   for (const c3 of res.created) index[c3.alias] = c3.source;
   const tmp = `${res.index}.${process.pid}.${Date.now()}.tmp`;
-  await writeFile8(tmp, `${JSON.stringify(index, null, 2)}
+  await writeFile9(tmp, `${JSON.stringify(index, null, 2)}
 `, { encoding: "utf8", flag: "wx" });
-  await rename7(tmp, res.index);
+  await rename8(tmp, res.index);
   return res;
 }
 
 // src/engine/shots.ts
 init_execa();
 init_hash();
-import { existsSync as existsSync12 } from "node:fs";
-import { mkdir as mkdir10, readFile as readFile10, rename as rename8, writeFile as writeFile9 } from "node:fs/promises";
-import { basename as basename7, join as join9 } from "node:path";
+import { existsSync as existsSync13 } from "node:fs";
+import { mkdir as mkdir11, readFile as readFile11, rename as rename9, writeFile as writeFile10 } from "node:fs/promises";
+import { basename as basename8, join as join10 } from "node:path";
 var DEFAULT_SCENE_THRESHOLD = 10;
 var CACHE_SCHEMA = 1;
 var SCALE_WIDTH = 320;
@@ -42566,7 +42894,7 @@ async function run5(file, args, timeoutMs, signal) {
     maxBuffer: 512 * 2 ** 20
   });
   if (r.isCanceled) throw new Error("shot detection cancelled");
-  if (r.timedOut) throw new Error(`${basename7(file)} timed out after ${timeoutMs} ms`);
+  if (r.timedOut) throw new Error(`${basename8(file)} timed out after ${timeoutMs} ms`);
   return { exitCode: r.exitCode ?? -1, stdout: String(r.stdout ?? ""), stderr: String(r.stderr ?? "") };
 }
 var versionMemo = /* @__PURE__ */ new Map();
@@ -42658,12 +42986,12 @@ function sameKey(e, threshold, ver, fps) {
   return e.threshold === threshold && e.ffmpegVersion === ver && Math.abs(e.fps - fps) < 1e-6;
 }
 function shotCachePath(cacheDir, fileHash) {
-  return join9(cacheDir, `${fileHash}.json`);
+  return join10(cacheDir, `${fileHash}.json`);
 }
 async function readCache(file) {
-  if (!existsSync12(file)) return void 0;
+  if (!existsSync13(file)) return void 0;
   try {
-    const j = JSON.parse(await readFile10(file, "utf8"));
+    const j = JSON.parse(await readFile11(file, "utf8"));
     return Array.isArray(j.entries) ? j : void 0;
   } catch {
     return void 0;
@@ -42678,7 +43006,7 @@ async function loadCachedShots(cacheDir, fileHash, opts) {
   return { ...rest, motion: decodeMotion(motionQ) };
 }
 async function writeCache(cacheDir, idx) {
-  await mkdir10(cacheDir, { recursive: true });
+  await mkdir11(cacheDir, { recursive: true });
   const file = shotCachePath(cacheDir, idx.fileHash);
   const prev = await readCache(file);
   const { motion, ...rest } = idx;
@@ -42686,9 +43014,9 @@ async function writeCache(cacheDir, idx) {
   const entries = (prev?.entries ?? []).filter((x) => !(x.schema === CACHE_SCHEMA && sameKey(x, idx.threshold, idx.ffmpegVersion, idx.fps)));
   entries.push(entry);
   const tmp = `${file}.${process.pid}.${Date.now()}.tmp`;
-  await writeFile9(tmp, `${JSON.stringify({ fileHash: idx.fileHash, entries })}
+  await writeFile10(tmp, `${JSON.stringify({ fileHash: idx.fileHash, entries })}
 `, { encoding: "utf8", flag: "wx" });
-  await rename8(tmp, file);
+  await rename9(tmp, file);
 }
 async function detectShots(tools, path12, opts) {
   const threshold = opts.threshold ?? DEFAULT_SCENE_THRESHOLD;
@@ -43024,12 +43352,12 @@ async function runJob2(state, name, wait, fn) {
   throw new ToolError(info.error ?? `${name} ${info.status}`, { jobId: job.id, status: info.status });
 }
 function mediaPath(a2) {
-  if (a2.kind === "aecomp") return a2.render?.path && existsSync13(a2.render.path) ? a2.render.path : void 0;
+  if (a2.kind === "aecomp") return a2.render?.path && existsSync14(a2.render.path) ? a2.render.path : void 0;
   if (a2.kind === "still" || a2.kind === "audio") return void 0;
   return a2.path;
 }
 function shotsDir(p) {
-  return join10(p.dir, "cache", "shots");
+  return join11(p.dir, "cache", "shots");
 }
 function defaultAssetIds(p) {
   const used = [...new Set(p.timeline.video.map((c3) => c3.src))].filter((id) => p.assets[id] && mediaPath(p.assets[id]));
@@ -43048,7 +43376,7 @@ async function cachedShots(state, p, ids, threshold) {
   for (const id of ids) {
     const a2 = p.assets[id];
     const path12 = a2 && mediaPath(a2);
-    if (!a2 || !path12 || !existsSync13(path12)) continue;
+    if (!a2 || !path12 || !existsSync14(path12)) continue;
     const idx = await loadCachedShots(shotsDir(p), await contentHash(a2, path12), { fps: p.meta.fps, threshold, ffmpegVersion: ver });
     if (idx) map.set(id, idx);
     else missing.push(id);
@@ -43064,16 +43392,16 @@ function countBy(issues) {
   return out2;
 }
 async function backupTimeline2(p, reason) {
-  const dir = join10(p.dir, "history");
-  await mkdir11(dir, { recursive: true });
+  const dir = join11(p.dir, "history");
+  await mkdir12(dir, { recursive: true });
   const now = (/* @__PURE__ */ new Date()).toISOString();
   const stamp = now.replace(/[:.]/g, "-");
   const body2 = `${JSON.stringify({ savedAt: now, reason, timeline: p.timeline }, null, 2)}
 `;
   for (let n2 = 1; ; n2++) {
-    const file = join10(dir, `timeline-${stamp}-${n2}.json`);
+    const file = join11(dir, `timeline-${stamp}-${n2}.json`);
     try {
-      await writeFile10(file, body2, { encoding: "utf8", flag: "wx" });
+      await writeFile11(file, body2, { encoding: "utf8", flag: "wx" });
       return file;
     } catch (e) {
       if (e.code !== "EEXIST") throw e;
@@ -43109,7 +43437,7 @@ var MEDIA_TOOLS = [
           ctx.progress({ stage: "shots", done, total: ids.length, message: id });
           const asset = p.assets[id];
           const path12 = mediaPath(asset);
-          if (!path12 || !existsSync13(path12)) {
+          if (!path12 || !existsSync14(path12)) {
             skipped.push({ assetId: id, reason: asset.kind === "aecomp" ? "\u0E22\u0E31\u0E07\u0E44\u0E21\u0E48\u0E21\u0E35 render / no render yet" : asset.kind === "still" || asset.kind === "audio" ? "\u0E44\u0E21\u0E48\u0E43\u0E0A\u0E48\u0E27\u0E34\u0E14\u0E35\u0E42\u0E2D / not video" : "\u0E44\u0E21\u0E48\u0E1E\u0E1A\u0E44\u0E1F\u0E25\u0E4C / file missing" });
             done++;
             continue;
@@ -43235,10 +43563,10 @@ var MEDIA_TOOLS = [
     writesProject: true,
     handler: async (a2, state) => {
       requireFfmpeg(state);
-      const dir = resolve4(a2.dir);
-      if (!existsSync13(dir)) throw new ToolError(`\u0E44\u0E21\u0E48\u0E1E\u0E1A\u0E42\u0E1F\u0E25\u0E40\u0E14\u0E2D\u0E23\u0E4C / folder not found: ${dir}`);
+      const dir = resolve5(a2.dir);
+      if (!existsSync14(dir)) throw new ToolError(`\u0E44\u0E21\u0E48\u0E1E\u0E1A\u0E42\u0E1F\u0E25\u0E40\u0E14\u0E2D\u0E23\u0E4C / folder not found: ${dir}`);
       const p = a2.apply ? requireProject(state) : state.project;
-      const aliasDir = p ? join10(p.dir, "media-aliases") : void 0;
+      const aliasDir = p ? join11(p.dir, "media-aliases") : void 0;
       if (a2.apply && aliasDir && isProtected(aliasDir)) throw new ToolError("\u0E2B\u0E49\u0E32\u0E21\u0E40\u0E02\u0E35\u0E22\u0E19\u0E43\u0E19\u0E42\u0E1F\u0E25\u0E40\u0E14\u0E2D\u0E23\u0E4C\u0E17\u0E35\u0E48\u0E1B\u0E49\u0E2D\u0E07\u0E01\u0E31\u0E19\u0E44\u0E27\u0E49 / protected path", { path: aliasDir });
       return runJob2(state, "scan_footage", a2.wait, async (ctx) => {
         const report2 = await scanFootage(state.env.tools, dir, {
@@ -43263,9 +43591,9 @@ var MEDIA_TOOLS = [
 ];
 
 // src/mcp/tools-ae.ts
-import { existsSync as existsSync14 } from "node:fs";
-import { mkdir as mkdir12 } from "node:fs/promises";
-import { basename as basename9, extname as extname8, join as join12, resolve as resolve6 } from "node:path";
+import { existsSync as existsSync15 } from "node:fs";
+import { mkdir as mkdir13 } from "node:fs/promises";
+import { basename as basename10, extname as extname9, join as join13, resolve as resolve7 } from "node:path";
 init_project();
 init_aerender();
 
@@ -43273,7 +43601,7 @@ init_aerender();
 init_execa();
 init_project();
 import { readdir as readdir6 } from "node:fs/promises";
-import { basename as basename8, extname as extname7, join as join11, resolve as resolve5 } from "node:path";
+import { basename as basename9, extname as extname8, join as join12, resolve as resolve6 } from "node:path";
 var QC_KIND = {
   "animation-ends-early": "comp",
   "layer-ends-early": "comp",
@@ -43284,7 +43612,7 @@ var QC_KIND = {
 };
 var ANIMATE_BY = { characters: "char", words: "word", lines: "line" };
 function samePath4(a2, b) {
-  const x = resolve5(a2), y = resolve5(b);
+  const x = resolve6(a2), y = resolve6(b);
   return process.platform === "win32" ? x.toLowerCase() === y.toLowerCase() : x === y;
 }
 function compTargets(p, assetIds) {
@@ -43410,18 +43738,18 @@ async function listInstalledFonts(src = {}) {
     if (rows.length) sources.push(`${key} (${rows.length})`);
     for (const r of rows) {
       names.push(r.name);
-      if (r.file) names.push(basename8(r.file, extname7(r.file)));
+      if (r.file) names.push(basename9(r.file, extname8(r.file)));
     }
   }
   const dirs = [
-    join11(env["WINDIR"] ?? env["SystemRoot"] ?? "C:\\Windows", "Fonts"),
-    ...env["LOCALAPPDATA"] ? [join11(env["LOCALAPPDATA"], "Microsoft", "Windows", "Fonts")] : [],
-    join11(env["CommonProgramFiles"] ?? "C:\\Program Files\\Common Files", "Adobe", "Fonts")
+    join12(env["WINDIR"] ?? env["SystemRoot"] ?? "C:\\Windows", "Fonts"),
+    ...env["LOCALAPPDATA"] ? [join12(env["LOCALAPPDATA"], "Microsoft", "Windows", "Fonts")] : [],
+    join12(env["CommonProgramFiles"] ?? "C:\\Program Files\\Common Files", "Adobe", "Fonts")
   ];
   for (const dir of dirs) {
-    const files = (await readDir(dir)).filter((f) => FONT_EXT.has(extname7(f).toLowerCase()));
+    const files = (await readDir(dir)).filter((f) => FONT_EXT.has(extname8(f).toLowerCase()));
     if (files.length) sources.push(`${dir} (${files.length})`);
-    for (const f of files) names.push(basename8(f, extname7(f)));
+    for (const f of files) names.push(basename9(f, extname8(f)));
   }
   return { names, sources };
 }
@@ -43504,8 +43832,8 @@ function stripFrames(duration3, n2) {
   return [...out2];
 }
 function requireAep(path12) {
-  const aep = resolve6(path12);
-  if (!existsSync14(aep)) throw new ToolError(`\u0E44\u0E21\u0E48\u0E1E\u0E1A\u0E44\u0E1F\u0E25\u0E4C .aep / project not found: ${aep}`);
+  const aep = resolve7(path12);
+  if (!existsSync15(aep)) throw new ToolError(`\u0E44\u0E21\u0E48\u0E1E\u0E1A\u0E44\u0E1F\u0E25\u0E4C .aep / project not found: ${aep}`);
   return aep;
 }
 var AE_TOOLS = [
@@ -43526,7 +43854,7 @@ var AE_TOOLS = [
       if (!ae.scanTemplate) throw new ToolError("backend \u0E19\u0E35\u0E49\u0E2A\u0E41\u0E01\u0E19 template \u0E44\u0E21\u0E48\u0E44\u0E14\u0E49 / this AE backend cannot scan templates");
       let outDir;
       if (a2.renderStrips) {
-        outDir = join12(requireProject(state).dir, "review", "templates", slug(basename9(aep, extname8(aep))));
+        outDir = join13(requireProject(state).dir, "review", "templates", slug(basename10(aep, extname9(aep))));
         if (isProtected(outDir)) throw new ToolError("\u0E2B\u0E49\u0E32\u0E21\u0E40\u0E02\u0E35\u0E22\u0E19\u0E43\u0E19\u0E42\u0E1F\u0E25\u0E40\u0E14\u0E2D\u0E23\u0E4C\u0E17\u0E35\u0E48\u0E1B\u0E49\u0E2D\u0E07\u0E01\u0E31\u0E19\u0E44\u0E27\u0E49 / refusing to write inside a protected path", { path: outDir });
       }
       return runAeJob(state, "template_scan", async (ctx) => {
@@ -43542,7 +43870,7 @@ var AE_TOOLS = [
         const max = a2.maxComps ?? 6;
         const skipped = chosen.slice(max).map((c3) => c3.name);
         const strips = [];
-        await mkdir12(outDir, { recursive: true });
+        await mkdir13(outDir, { recursive: true });
         const todo = chosen.slice(0, max);
         for (const [i2, c3] of todo.entries()) {
           ctx.signal.throwIfAborted();
@@ -43551,7 +43879,7 @@ var AE_TOOLS = [
           const paths = [];
           try {
             for (const f of frames3) {
-              const target = uniqueOutputPath(join12(outDir, `${slug(c3.name)}_f${String(f).padStart(5, "0")}.png`));
+              const target = uniqueOutputPath(join13(outDir, `${slug(c3.name)}_f${String(f).padStart(5, "0")}.png`));
               paths.push(await ae.previewFrame(aep, c3.name, f, target));
             }
             strips.push({ comp: c3.name, frames: frames3, paths });
@@ -43620,7 +43948,7 @@ var AE_TOOLS = [
     },
     handler: async (a2, state) => {
       if (!state.ae.purgeCaches) throw new ToolError("backend \u0E19\u0E35\u0E49\u0E25\u0E49\u0E32\u0E07 cache \u0E44\u0E21\u0E48\u0E44\u0E14\u0E49 / this AE backend cannot purge caches");
-      const cacheDir = a2.cacheDir ? resolve6(a2.cacheDir) : defaultAeCacheDir();
+      const cacheDir = a2.cacheDir ? resolve7(a2.cacheDir) : defaultAeCacheDir();
       return runAeJob(state, "ae_purge_cache", async () => {
         const outcome = await purgeIfLowCacheSpace(state.ae, { cacheDir, belowGb: a2.ifBelowGb ?? Infinity });
         let freeGb;
@@ -43637,8 +43965,8 @@ var AE_TOOLS = [
 // src/core/rules.ts
 init_execa();
 import { randomBytes as randomBytes7 } from "node:crypto";
-import { existsSync as existsSync15 } from "node:fs";
-import { mkdir as mkdir13 } from "node:fs/promises";
+import { existsSync as existsSync16 } from "node:fs";
+import { mkdir as mkdir14 } from "node:fs/promises";
 import path11 from "node:path";
 init_project();
 init_timecode();
@@ -44113,9 +44441,9 @@ var SHEET_THUMB_WIDTH2 = 480;
 var FRAME_TIMEOUT_MS = 12e4;
 async function extractEvidence(tools, p, plan, opts = {}) {
   if (!plan.instances.length) throw new Error("no instances to extract");
-  if (!existsSync15(plan.master)) throw new Error(`master not found: ${plan.master}`);
+  if (!existsSync16(plan.master)) throw new Error(`master not found: ${plan.master}`);
   const dir = path11.join(p.dir, "review", "evidence", safeName(plan.versionId));
-  await mkdir13(dir, { recursive: true });
+  await mkdir14(dir, { recursive: true });
   const stamp = `${(/* @__PURE__ */ new Date()).toISOString().replace(/[-:]/g, "").replace(/\..*$/, "")}_${randomBytes7(2).toString("hex")}`;
   const frames3 = [];
   const warnings = [...plan.warnings];
@@ -44123,7 +44451,7 @@ async function extractEvidence(tools, p, plan, opts = {}) {
     const out2 = freePath2(path11.join(dir, `${stamp}_${String(inst.instance).padStart(2, "0")}_${safeName(inst.clipId)}_f${inst.frame}.png`));
     const ss = (Math.max(0, inst.frame - 0.25) / plan.fps).toFixed(6);
     const r = await ff(tools.ffmpeg, ["-ss", ss, "-i", plan.master, "-map", "0:v:0", "-frames:v", "1", "-update", "1", out2], opts.signal);
-    if (r.exitCode !== 0 || !existsSync15(out2)) {
+    if (r.exitCode !== 0 || !existsSync16(out2)) {
       warnings.push(`\u0E14\u0E36\u0E07\u0E40\u0E1F\u0E23\u0E21 ${inst.frame} (${inst.clipId}) \u0E44\u0E21\u0E48\u0E2A\u0E33\u0E40\u0E23\u0E47\u0E08: ${r.tail}`);
       continue;
     }
@@ -44140,7 +44468,7 @@ async function extractEvidence(tools, p, plan, opts = {}) {
 async function tileFrames(ffmpeg, frames3, out2, signal) {
   const cols = Math.min(SHEET_COLUMNS2, frames3.length);
   const rows = Math.ceil(frames3.length / cols);
-  const fontOpts = existsSync15(WINDOWS_FONT3) ? [`fontfile='${WINDOWS_FONT3.replace(":", "\\:")}'`, void 0] : [void 0];
+  const fontOpts = existsSync16(WINDOWS_FONT3) ? [`fontfile='${WINDOWS_FONT3.replace(":", "\\:")}'`, void 0] : [void 0];
   for (const font of fontOpts) {
     const chains = frames3.map((f, i2) => {
       const label = `#${f.instance} ${safeName(f.clipId)} ${f.tc}`.replace(/:/g, "\\:");
@@ -44150,7 +44478,7 @@ async function tileFrames(ffmpeg, frames3, out2, signal) {
     const graph = `${chains.join(";")};${frames3.map((_, i2) => `[v${i2}]`).join("")}concat=n=${frames3.length}:v=1:a=0,tile=layout=${cols}x${rows}:padding=4:margin=4:color=0x202020`;
     const args = [...frames3.flatMap((f) => ["-i", f.path]), "-filter_complex", graph, "-frames:v", "1", "-update", "1", out2];
     const r = await ff(ffmpeg, args, signal);
-    if (r.exitCode === 0 && existsSync15(out2)) return out2;
+    if (r.exitCode === 0 && existsSync16(out2)) return out2;
   }
   return void 0;
 }
@@ -44171,12 +44499,12 @@ function safeName(s) {
   return s.replace(/[^A-Za-z0-9_-]+/g, "_").replace(/^_+|_+$/g, "") || "x";
 }
 function freePath2(p) {
-  if (!existsSync15(p)) return p;
+  if (!existsSync16(p)) return p;
   const ext = path11.extname(p);
   const base = p.slice(0, p.length - ext.length);
   for (let i2 = 2; ; i2++) {
     const c3 = `${base}_${i2}${ext}`;
-    if (!existsSync15(c3)) return c3;
+    if (!existsSync16(c3)) return c3;
   }
 }
 
@@ -44358,9 +44686,9 @@ var RULES_TOOLS = [
 ];
 
 // src/mcp/tools-edit.ts
-import { existsSync as existsSync16 } from "node:fs";
-import { mkdir as mkdir14, writeFile as writeFile11 } from "node:fs/promises";
-import { join as join13 } from "node:path";
+import { existsSync as existsSync17 } from "node:fs";
+import { mkdir as mkdir15, writeFile as writeFile12 } from "node:fs/promises";
+import { join as join14 } from "node:path";
 init_timecode();
 
 // src/engine/joins.ts
@@ -44543,16 +44871,16 @@ async function runJob3(state, name, wait, fn) {
   throw new ToolError(info.error ?? `${name} ${info.status}`, { jobId: job.id, status: info.status });
 }
 async function backupTimeline3(p, reason) {
-  const dir = join13(p.dir, "history");
-  await mkdir14(dir, { recursive: true });
+  const dir = join14(p.dir, "history");
+  await mkdir15(dir, { recursive: true });
   const now = (/* @__PURE__ */ new Date()).toISOString();
   const stamp = now.replace(/[:.]/g, "-");
   const body2 = `${JSON.stringify({ savedAt: now, reason, timeline: p.timeline }, null, 2)}
 `;
   for (let n2 = 1; ; n2++) {
-    const file = join13(dir, `timeline-${stamp}-${n2}.json`);
+    const file = join14(dir, `timeline-${stamp}-${n2}.json`);
     try {
-      await writeFile11(file, body2, { encoding: "utf8", flag: "wx" });
+      await writeFile12(file, body2, { encoding: "utf8", flag: "wx" });
       return file;
     } catch (e) {
       if (e.code !== "EEXIST") throw e;
@@ -44697,7 +45025,7 @@ var EDIT_TOOLS = [
         const old = snap?.render;
         if (!old) render2 = { action: "none", reason: "no render recorded for this shot" };
         else if (asset.render?.path === old.path && asset.render.renderedAt === old.renderedAt) render2 = { action: "unchanged", path: old.path };
-        else if (!existsSync16(old.path)) {
+        else if (!existsSync17(old.path)) {
           render2 = { action: "missing", path: old.path };
           warnings.push(`\u0E44\u0E1F\u0E25\u0E4C render \u0E02\u0E2D\u0E07 ${v.id} \u0E44\u0E21\u0E48\u0E2D\u0E22\u0E39\u0E48\u0E41\u0E25\u0E49\u0E27 (${old.path}) \u2014 build \u0E08\u0E30 render comp \u0E2A\u0E16\u0E32\u0E19\u0E30\u0E1B\u0E31\u0E08\u0E08\u0E38\u0E1A\u0E31\u0E19 / the old render is gone: the build renders the comp as it is now`);
         } else {
@@ -44769,7 +45097,7 @@ var EDIT_TOOLS = [
       if (!(a2.to > a2.from)) throw new ToolError(`\u0E0A\u0E48\u0E27\u0E07\u0E44\u0E21\u0E48\u0E16\u0E39\u0E01\u0E15\u0E49\u0E2D\u0E07 / bad range: to (${a2.to}) must be > from (${a2.from})`);
       if (a2.version) {
         const v = findVersion(p, a2.version);
-        if (!existsSync16(v.master)) throw new ToolError(`\u0E44\u0E21\u0E48\u0E1E\u0E1A master \u0E02\u0E2D\u0E07 ${v.id} / master missing: ${v.master}`);
+        if (!existsSync17(v.master)) throw new ToolError(`\u0E44\u0E21\u0E48\u0E1E\u0E1A master \u0E02\u0E2D\u0E07 ${v.id} / master missing: ${v.master}`);
       } else {
         const errors = state.api.project.validateTimeline(p);
         if (errors.length) throw new ToolError("timeline \u0E44\u0E21\u0E48\u0E1C\u0E48\u0E32\u0E19\u0E01\u0E32\u0E23\u0E15\u0E23\u0E27\u0E08\u0E2A\u0E2D\u0E1A / timeline invalid", { errors });
@@ -44798,7 +45126,7 @@ var EDIT_TOOLS = [
 ];
 
 // src/mcp/tools-review2.ts
-import { join as join14 } from "node:path";
+import { join as join15 } from "node:path";
 function version2(p, id) {
   const v = p.versions.find((x) => x.id === id);
   if (!v) throw new ToolError(`\u0E44\u0E21\u0E48\u0E1E\u0E1A\u0E40\u0E27\u0E2D\u0E23\u0E4C\u0E0A\u0E31\u0E19 / unknown version: ${id}`);
@@ -44829,7 +45157,7 @@ var REVIEW2_TOOLS = [
         const planA = versionPlan(p, va), planB = versionPlan(p, vb);
         if (planA.fps !== planB.fps) throw new ToolError(`fps \u0E15\u0E48\u0E32\u0E07\u0E01\u0E31\u0E19 / fps differ (${planA.fps} vs ${planB.fps})`);
         const { pairs, map } = comparePairs(planA, planB, { ...a2.clipIds ? { clipIds: a2.clipIds } : {}, ...a2.frames ? { frames: a2.frames } : {} });
-        const outPath = join14(state.api.project.projectPaths(p).review, "compare", `${va.id}_vs_${vb.id}.png`);
+        const outPath = join15(state.api.project.projectPaths(p).review, "compare", `${va.id}_vs_${vb.id}.png`);
         return await renderCompareSheet({
           tools: state.env.tools,
           map,
@@ -44972,17 +45300,17 @@ var EditOpSchema = external_exports.discriminatedUnion("op", [
 ]);
 var WIN = process.platform === "win32";
 function samePath5(a2, b) {
-  const x = resolve7(a2);
-  const y = resolve7(b);
+  const x = resolve8(a2);
+  const y = resolve8(b);
   return WIN ? x.toLowerCase() === y.toLowerCase() : x === y;
 }
 function uniquePath3(p) {
-  if (!existsSync17(p)) return p;
-  const ext = extname9(p);
+  if (!existsSync18(p)) return p;
+  const ext = extname10(p);
   const base = ext ? p.slice(0, -ext.length) : p;
   for (let i2 = 2; ; i2++) {
     const c3 = `${base}_${i2}${ext}`;
-    if (!existsSync17(c3)) return c3;
+    if (!existsSync18(c3)) return c3;
   }
 }
 function fileSafe(name) {
@@ -44996,14 +45324,14 @@ function asciiSlug(s) {
   return `${slug2 || "comp"}_${h2.toString(16)}`;
 }
 function isInside(child2, parent) {
-  const rel = relative3(resolve7(parent), resolve7(child2));
+  const rel = relative3(resolve8(parent), resolve8(child2));
   return rel === "" || !rel.startsWith("..") && !isAbsolute2(rel);
 }
 function assertWritable(target, what) {
   if (isProtected(target)) throw new ToolError(`\u0E2B\u0E49\u0E32\u0E21\u0E40\u0E02\u0E35\u0E22\u0E19\u0E43\u0E19\u0E42\u0E1F\u0E25\u0E40\u0E14\u0E2D\u0E23\u0E4C\u0E17\u0E35\u0E48\u0E1B\u0E49\u0E2D\u0E07\u0E01\u0E31\u0E19\u0E44\u0E27\u0E49 / refusing to write ${what} inside a protected path`, { path: target });
 }
 function assertConfined(state, target, aep, what) {
-  const roots = [dirname6(aep), ...state.project ? [state.project.dir] : []];
+  const roots = [dirname7(aep), ...state.project ? [state.project.dir] : []];
   if (!roots.some((r) => isInside(target, r))) {
     throw new ToolError(`${what} \u0E15\u0E49\u0E2D\u0E07\u0E2D\u0E22\u0E39\u0E48\u0E43\u0E19\u0E42\u0E1F\u0E25\u0E40\u0E14\u0E2D\u0E23\u0E4C\u0E42\u0E1B\u0E23\u0E40\u0E08\u0E01\u0E15\u0E4C\u0E2B\u0E23\u0E37\u0E2D\u0E42\u0E1F\u0E25\u0E40\u0E14\u0E2D\u0E23\u0E4C\u0E02\u0E2D\u0E07 .aep / ${what} must be inside the project folder or next to the .aep`, { path: target, allowed: roots });
   }
@@ -45054,10 +45382,10 @@ async function forgetRenders(state, p, ids, ctx) {
     const a2 = p.assets[id];
     if (!a2 || !isAeComp(a2)) continue;
     const old = a2.render?.path;
-    if (old && existsSync17(old)) {
-      const ext = extname9(old);
+    if (old && existsSync18(old)) {
+      const ext = extname10(old);
       const aside = uniquePath3(`${old.slice(0, old.length - ext.length)}_forced${ext}`);
-      await rename9(old, aside);
+      await rename10(old, aside);
       moved[id] = aside;
       ctx.log(`${id}: previous render kept as ${aside}`);
     }
@@ -45068,16 +45396,16 @@ async function forgetRenders(state, p, ids, ctx) {
 }
 var BACKUP_RE = /^timeline-(.+)-(\d+)\.json$/;
 async function backupTimeline4(p, reason) {
-  const dir = join15(p.dir, "history");
-  await mkdir15(dir, { recursive: true });
+  const dir = join16(p.dir, "history");
+  await mkdir16(dir, { recursive: true });
   const now = (/* @__PURE__ */ new Date()).toISOString();
   const stamp = now.replace(/[:.]/g, "-");
   const body2 = `${JSON.stringify({ savedAt: now, reason, timeline: p.timeline }, null, 2)}
 `;
   for (let n2 = 1; ; n2++) {
-    const file = join15(dir, `timeline-${stamp}-${n2}.json`);
+    const file = join16(dir, `timeline-${stamp}-${n2}.json`);
     try {
-      await writeFile12(file, body2, { encoding: "utf8", flag: "wx" });
+      await writeFile13(file, body2, { encoding: "utf8", flag: "wx" });
       return file;
     } catch (e) {
       if (e.code !== "EEXIST") throw e;
@@ -45085,8 +45413,8 @@ async function backupTimeline4(p, reason) {
   }
 }
 async function listBackups(p) {
-  const dir = join15(p.dir, "history");
-  const names = existsSync17(dir) ? (await readdir7(dir)).filter((n2) => BACKUP_RE.test(n2)) : [];
+  const dir = join16(p.dir, "history");
+  const names = existsSync18(dir) ? (await readdir7(dir)).filter((n2) => BACKUP_RE.test(n2)) : [];
   const key = (n2) => {
     const m = BACKUP_RE.exec(n2);
     return [m[1], Number(m[2])];
@@ -45098,7 +45426,7 @@ async function listBackups(p) {
   });
   return Promise.all(names.map(async (name) => {
     try {
-      const d = JSON.parse(await readFile11(join15(dir, name), "utf8"));
+      const d = JSON.parse(await readFile12(join16(dir, name), "utf8"));
       const video = d.timeline?.video ?? [];
       return { name, savedAt: d.savedAt, reason: d.reason, clips: video.length, frames: video.reduce((s, c3) => s + (c3.dur > 0 ? c3.dur : 0), 0) };
     } catch {
@@ -45164,10 +45492,10 @@ function startReviewJob(state, id, open3, wait = true) {
   const running = activeJob2(state, PROJECT_JOBS2);
   if (running) throw new ToolError(`wait for ${running.name} before creating a review`, { jobId: running.id });
   const snapshot2 = versionPlan(p, v);
-  if (!open3 || !v.reviewProxy || !existsSync17(v.reviewProxy)) requireFfmpeg(state);
+  if (!open3 || !v.reviewProxy || !existsSync18(v.reviewProxy)) requireFfmpeg(state);
   const job = state.jobs.start(open3 ? "review_open" : "preview", async (ctx) => {
     v.reviewPlan ??= structuredClone(snapshot2);
-    if (!open3 || !v.reviewProxy || !existsSync17(v.reviewProxy)) {
+    if (!open3 || !v.reviewProxy || !existsSync18(v.reviewProxy)) {
       ctx.log("creating review proxy");
       v.reviewProxy = await state.assembler.reviewProxy(p, v.id, { signal: ctx.signal });
     }
@@ -45391,11 +45719,11 @@ var CORE_TOOLS = [
       targets: external_exports.array(external_exports.string()).optional().describe("delivery target ids (see delivery_presets)")
     },
     handler: async (a2, state) => {
-      const dir = resolve7(a2.dir);
+      const dir = resolve8(a2.dir);
       assertWritable(dir, "project_new.dir");
       const unknown2 = (a2.targets ?? []).filter((t) => !PRESETS[t]);
       if (unknown2.length) throw new ToolError(`\u0E44\u0E21\u0E48\u0E23\u0E39\u0E49\u0E08\u0E31\u0E01 target / unknown delivery targets: ${unknown2.join(", ")}`, { known: Object.keys(PRESETS) });
-      if (existsSync17(join15(dir, "project.json"))) throw new ToolError("\u0E21\u0E35\u0E42\u0E1B\u0E23\u0E40\u0E08\u0E01\u0E15\u0E4C\u0E2D\u0E22\u0E39\u0E48\u0E41\u0E25\u0E49\u0E27 \u0E43\u0E0A\u0E49 project_open / project already exists, use project_open", { dir });
+      if (existsSync18(join16(dir, "project.json"))) throw new ToolError("\u0E21\u0E35\u0E42\u0E1B\u0E23\u0E40\u0E08\u0E01\u0E15\u0E4C\u0E2D\u0E22\u0E39\u0E48\u0E41\u0E25\u0E49\u0E27 \u0E43\u0E0A\u0E49 project_open / project already exists, use project_open", { dir });
       const p = await state.api.project.createProject(dir, { name: a2.name, fps: a2.fps, width: a2.width, height: a2.height });
       if (a2.targets?.length) {
         p.delivery.targets = [...new Set(a2.targets)];
@@ -45428,8 +45756,8 @@ var CORE_TOOLS = [
     description: "\u0E40\u0E1B\u0E34\u0E14\u0E42\u0E1B\u0E23\u0E40\u0E08\u0E01\u0E15\u0E4C\u0E17\u0E35\u0E48\u0E21\u0E35\u0E2D\u0E22\u0E39\u0E48 \xB7 Open an existing project folder",
     input: { dir: external_exports.string() },
     handler: async (a2, state) => {
-      assertWritable(resolve7(a2.dir), "project (opened for editing)");
-      const p = await state.api.project.loadProject(resolve7(a2.dir));
+      assertWritable(resolve8(a2.dir), "project (opened for editing)");
+      const p = await state.api.project.loadProject(resolve8(a2.dir));
       state.project = p;
       return { ok: true, ...projectStatus(state, p) };
     }
@@ -45442,10 +45770,10 @@ var CORE_TOOLS = [
   }),
   tool({
     name: "asset_add",
-    description: "\u0E40\u0E1E\u0E34\u0E48\u0E21\u0E44\u0E1F\u0E25\u0E4C\u0E2A\u0E37\u0E48\u0E2D (path) \u0E2B\u0E23\u0E37\u0E2D AE comp (aep + comp) \xB7 Add a media file or an After Effects comp",
+    description: "\u0E40\u0E1E\u0E34\u0E48\u0E21\u0E44\u0E1F\u0E25\u0E4C\u0E2A\u0E37\u0E48\u0E2D (path) \u0E2B\u0E23\u0E37\u0E2D comp (aep + comp) \u0E08\u0E32\u0E01 After Effects (.aep) \u0E2B\u0E23\u0E37\u0E2D EffectCraft (.ecproj) \xB7 Add a media file or a motion comp (.aep or .ecproj)",
     input: {
       path: external_exports.string().optional().describe("video / still / audio file"),
-      aep: external_exports.string().optional().describe(".aep path (with comp)"),
+      aep: external_exports.string().optional().describe(".aep (After Effects) or .ecproj (EffectCraft) path, with comp"),
       comp: external_exports.string().optional().describe("comp name inside the .aep"),
       id: external_exports.string().optional().describe("asset id (default: auto)"),
       kind: external_exports.enum(["camera", "graphic", "still", "audio"]).optional().describe("for files; default from probe")
@@ -45455,13 +45783,13 @@ var CORE_TOOLS = [
       let asset;
       if (a2.aep) {
         if (!a2.comp) throw new ToolError("\u0E15\u0E49\u0E2D\u0E07\u0E23\u0E30\u0E1A\u0E38 comp \u0E04\u0E39\u0E48\u0E01\u0E31\u0E1A aep / comp is required with aep");
-        const aep = resolve7(a2.aep);
-        if (!existsSync17(aep)) throw new ToolError(`\u0E44\u0E21\u0E48\u0E1E\u0E1A\u0E44\u0E1F\u0E25\u0E4C / file not found: ${aep}`);
+        const aep = resolve8(a2.aep);
+        if (!existsSync18(aep)) throw new ToolError(`\u0E44\u0E21\u0E48\u0E1E\u0E1A\u0E44\u0E1F\u0E25\u0E4C / file not found: ${aep}`);
         asset = state.api.project.addAeComp(p, aep, a2.comp, a2.id);
       } else if (a2.path) {
         requireFfmpeg(state);
-        const path12 = resolve7(a2.path);
-        if (!existsSync17(path12)) throw new ToolError(`\u0E44\u0E21\u0E48\u0E1E\u0E1A\u0E44\u0E1F\u0E25\u0E4C / file not found: ${path12}`);
+        const path12 = resolve8(a2.path);
+        if (!existsSync18(path12)) throw new ToolError(`\u0E44\u0E21\u0E48\u0E1E\u0E1A\u0E44\u0E1F\u0E25\u0E4C / file not found: ${path12}`);
         asset = await state.api.project.addFileAsset(p, path12, { id: a2.id, kind: a2.kind, probe: state.api.probe });
       } else {
         throw new ToolError("\u0E15\u0E49\u0E2D\u0E07\u0E23\u0E30\u0E1A\u0E38 path \u0E2B\u0E23\u0E37\u0E2D aep+comp / give path, or aep + comp");
@@ -45538,10 +45866,10 @@ var CORE_TOOLS = [
   }),
   tool({
     name: "ae_list_comps",
-    description: "\u0E23\u0E32\u0E22\u0E0A\u0E37\u0E48\u0E2D comp \u0E43\u0E19 .aep (\u0E40\u0E1B\u0E34\u0E14 AE \u0E41\u0E1A\u0E1A headless; job \u2014 \u0E16\u0E49\u0E32\u0E04\u0E34\u0E27\u0E27\u0E48\u0E32\u0E07\u0E23\u0E2D\u0E1C\u0E25\u0E44\u0E21\u0E48\u0E40\u0E01\u0E34\u0E19 ~20 \u0E27\u0E34) \xB7 List comps in an .aep (job; waits up to ~20 s when idle)",
+    description: "\u0E23\u0E32\u0E22\u0E0A\u0E37\u0E48\u0E2D comp \u0E43\u0E19 .aep \u0E2B\u0E23\u0E37\u0E2D .ecproj (job \u2014 \u0E16\u0E49\u0E32\u0E04\u0E34\u0E27\u0E27\u0E48\u0E32\u0E07\u0E23\u0E2D\u0E1C\u0E25\u0E44\u0E21\u0E48\u0E40\u0E01\u0E34\u0E19 ~20 \u0E27\u0E34) \xB7 List comps in an .aep / .ecproj (job; waits up to ~20 s when idle)",
     input: { aep: external_exports.string(), wait: external_exports.boolean().optional().describe("wait up to ~20 s for the result (default: only when no other job is queued)") },
     handler: async (a2, state) => {
-      const aep = resolve7(a2.aep);
+      const aep = resolve8(a2.aep);
       return runAeJob2(state, "ae_list_comps", a2.wait, async () => ({ comps: await state.ae.listComps(aep) }));
     }
   }),
@@ -45550,7 +45878,7 @@ var CORE_TOOLS = [
     description: "\u0E14\u0E39 layer \u0E02\u0E2D\u0E07 comp (\u0E0A\u0E19\u0E34\u0E14, in/out, \u0E02\u0E49\u0E2D\u0E04\u0E27\u0E32\u0E21, effects, \u0E02\u0E2D\u0E1A\u0E40\u0E02\u0E15; job) \xB7 Inspect a comp's layers (job)",
     input: { aep: external_exports.string(), comp: external_exports.string(), atFrame: frames2.min(0).optional(), wait: external_exports.boolean().optional() },
     handler: async (a2, state) => {
-      const aep = resolve7(a2.aep);
+      const aep = resolve8(a2.aep);
       return runAeJob2(state, "ae_inspect_comp", a2.wait, async () => {
         const detail = await state.ae.inspectComp(aep, a2.comp, a2.atFrame);
         return { ...detail, ...isOpaque(detail, a2.comp) ? opaqueHint(state, aep, a2.comp) : {} };
@@ -45564,12 +45892,13 @@ var CORE_TOOLS = [
       aep: external_exports.string(),
       comp: external_exports.string(),
       ops: external_exports.array(AeOpSchema).min(1),
-      saveAs: external_exports.string().optional().describe("new .aep inside the project folder or next to the source .aep"),
+      saveAs: external_exports.string().optional().describe("new project file (same type as the source: .aep or .ecproj) inside the project folder or next to the source"),
       wait: external_exports.boolean().optional()
     },
     handler: async (a2, state) => {
-      const aep = resolve7(a2.aep);
-      const saveAs = a2.saveAs ? resolve7(a2.saveAs) : void 0;
+      const aep = resolve8(a2.aep);
+      const saveAs = a2.saveAs ? resolve8(a2.saveAs) : void 0;
+      if (saveAs && extname10(saveAs).toLowerCase() !== extname10(aep).toLowerCase()) throw new ToolError(`saveAs \u0E15\u0E49\u0E2D\u0E07\u0E40\u0E1B\u0E47\u0E19\u0E44\u0E1F\u0E25\u0E4C\u0E0A\u0E19\u0E34\u0E14\u0E40\u0E14\u0E35\u0E22\u0E27\u0E01\u0E31\u0E1A\u0E15\u0E49\u0E19\u0E09\u0E1A\u0E31\u0E1A (${extname10(aep)}) / saveAs must have the source's extension`);
       if (saveAs) assertConfined(state, saveAs, aep, "saveAs");
       else assertWritable(aep, "the .aep (in-place edit)");
       return runAeJob2(state, "ae_edit", a2.wait, async () => {
@@ -45596,29 +45925,31 @@ var CORE_TOOLS = [
   }),
   tool({
     name: "ae_create",
-    description: "\u0E2A\u0E23\u0E49\u0E32\u0E07 .aep \u0E43\u0E2B\u0E21\u0E48\u0E08\u0E32\u0E01\u0E2A\u0E04\u0E23\u0E34\u0E1B\u0E15\u0E4C JSX \u0E41\u0E1A\u0E1A headless (job) \u0E43\u0E0A\u0E49\u0E41\u0E17\u0E19\u0E01\u0E32\u0E23\u0E40\u0E23\u0E35\u0E22\u0E01 AfterFX \u0E40\u0E2D\u0E07 \xB7 Create a new .aep by running a JSX build script headlessly (job). The script runs in an empty project: build comps/layers only \u2014 no app.newProject() (kills headless AE), no save, no quit. L(msg) appends to the returned log; SCRIPT_DIR is the folder of jsxPath. Errors come back with the script line. asset: registers the comp for build; an existing aecomp id is repointed to the new .aep so the next build re-renders it.",
+    description: '\u0E2A\u0E23\u0E49\u0E32\u0E07\u0E42\u0E1B\u0E23\u0E40\u0E08\u0E01\u0E15\u0E4C\u0E43\u0E2B\u0E21\u0E48\u0E08\u0E32\u0E01\u0E2A\u0E04\u0E23\u0E34\u0E1B\u0E15\u0E4C JSX \u0E41\u0E1A\u0E1A headless (job): saveAs .aep = After Effects, .ecproj = EffectCraft (ArtCraft) \xB7 Create a new .aep or .ecproj by running a JSX build script headlessly (job). The script runs in an empty project: build comps/layers only \u2014 no app.newProject() (kills headless AE), no save, no quit. Use match-name property paths (layer.property("ADBE Transform Group").property("ADBE Position")) and new TextDocument(...) so one script works in both hosts: EffectCraft does not resolve display names like property("Position"). L(msg) appends to the returned log; SCRIPT_DIR is the folder of jsxPath. Errors come back with the script line. asset: registers the comp for build; an existing aecomp id is repointed to the new .aep so the next build re-renders it.',
     input: {
       jsx: external_exports.string().optional().describe("script text"),
       jsxPath: external_exports.string().optional().describe("UTF-8 .jsx file (instead of jsx)"),
-      saveAs: external_exports.string().describe("new .aep inside the project folder (never overwritten; use a new name per revision)"),
+      saveAs: external_exports.string().describe("new .aep (After Effects) or .ecproj (EffectCraft) inside the project folder (never overwritten; use a new name per revision)"),
       asset: external_exports.object({ comp: external_exports.string(), id: external_exports.string().optional() }).optional(),
       wait: external_exports.boolean().optional()
     },
     handler: async (a2, state) => {
       if (!state.ae.create) throw new ToolError("AE backend cannot create projects");
       if (!a2.jsx === !a2.jsxPath) throw new ToolError("\u0E23\u0E30\u0E1A\u0E38 jsx \u0E2B\u0E23\u0E37\u0E2D jsxPath \u0E2D\u0E22\u0E48\u0E32\u0E07\u0E43\u0E14\u0E2D\u0E22\u0E48\u0E32\u0E07\u0E2B\u0E19\u0E36\u0E48\u0E07 / give exactly one of jsx or jsxPath");
-      const jsxPath = a2.jsxPath ? resolve7(a2.jsxPath) : void 0;
-      if (jsxPath && !existsSync17(jsxPath)) throw new ToolError(`\u0E44\u0E21\u0E48\u0E1E\u0E1A\u0E44\u0E1F\u0E25\u0E4C / file not found: ${jsxPath}`);
+      const jsxPath = a2.jsxPath ? resolve8(a2.jsxPath) : void 0;
+      if (jsxPath && !existsSync18(jsxPath)) throw new ToolError(`\u0E44\u0E21\u0E48\u0E1E\u0E1A\u0E44\u0E1F\u0E25\u0E4C / file not found: ${jsxPath}`);
       if (!jsxPath || a2.asset) requireProject(state);
-      const saveAs = resolve7(a2.saveAs);
-      if (extname9(saveAs).toLowerCase() !== ".aep") throw new ToolError("saveAs \u0E15\u0E49\u0E2D\u0E07\u0E40\u0E1B\u0E47\u0E19 .aep / saveAs must end in .aep");
-      if (existsSync17(saveAs)) throw new ToolError(`\u0E21\u0E35\u0E44\u0E1F\u0E25\u0E4C\u0E19\u0E35\u0E49\u0E41\u0E25\u0E49\u0E27 \u0E43\u0E0A\u0E49\u0E0A\u0E37\u0E48\u0E2D\u0E43\u0E2B\u0E21\u0E48 / refusing to overwrite: ${saveAs}`);
-      assertConfined(state, saveAs, jsxPath ?? join15(state.project.dir, "x"), "saveAs");
+      const saveAs = resolve8(a2.saveAs);
+      const ext = extname10(saveAs).toLowerCase();
+      if (ext !== ".aep" && ext !== ".ecproj") throw new ToolError("saveAs \u0E15\u0E49\u0E2D\u0E07\u0E40\u0E1B\u0E47\u0E19 .aep \u0E2B\u0E23\u0E37\u0E2D .ecproj / saveAs must end in .aep or .ecproj");
+      if (ext === ".ecproj" && !state.env.tools.effectcraftCli) throw new ToolError("\u0E44\u0E21\u0E48\u0E1E\u0E1A EffectCraft / effectcraft-cli not found (install EffectCraft or set EDITMCP_EFFECTCRAFT_DIR)");
+      if (existsSync18(saveAs)) throw new ToolError(`\u0E21\u0E35\u0E44\u0E1F\u0E25\u0E4C\u0E19\u0E35\u0E49\u0E41\u0E25\u0E49\u0E27 \u0E43\u0E0A\u0E49\u0E0A\u0E37\u0E48\u0E2D\u0E43\u0E2B\u0E21\u0E48 / refusing to overwrite: ${saveAs}`);
+      assertConfined(state, saveAs, jsxPath ?? join16(state.project.dir, "x"), "saveAs");
       const existing = a2.asset?.id ? state.project.assets[a2.asset.id] : void 0;
       if (existing && existing.kind !== "aecomp") throw new ToolError(`asset id already in use by a ${existing.kind} file: ${a2.asset.id}`);
-      const jsx = a2.jsx ?? await readFile11(jsxPath, "utf8");
+      const jsx = a2.jsx ?? await readFile12(jsxPath, "utf8");
       return runAeJob2(state, "ae_create", a2.wait, async () => {
-        const res = await state.ae.create({ jsx, saveAs, ...jsxPath ? { scriptDir: dirname6(jsxPath) } : {} });
+        const res = await state.ae.create({ jsx, saveAs, ...jsxPath ? { scriptDir: dirname7(jsxPath) } : {} });
         let asset;
         const p = state.project;
         if (p && a2.asset) {
@@ -45650,15 +45981,15 @@ var CORE_TOOLS = [
       wait: external_exports.boolean().optional()
     },
     handler: async (a2, state) => {
-      const aep = resolve7(a2.aep);
-      let out2 = a2.out ? resolve7(a2.out) : "";
+      const aep = resolve8(a2.aep);
+      let out2 = a2.out ? resolve8(a2.out) : "";
       if (out2) {
         assertConfined(state, out2, aep, "out");
-        await mkdir15(dirname6(out2), { recursive: true });
+        await mkdir16(dirname7(out2), { recursive: true });
       } else {
-        const dir = state.project ? state.api.project.projectPaths(state.project).review : join15(os7.tmpdir(), "editmcp");
-        await mkdir15(dir, { recursive: true });
-        out2 = join15(dir, `preview_${asciiSlug(a2.comp)}_${a2.frame}.png`);
+        const dir = state.project ? state.api.project.projectPaths(state.project).review : join16(os8.tmpdir(), "editmcp");
+        await mkdir16(dir, { recursive: true });
+        out2 = join16(dir, `preview_${asciiSlug(a2.comp)}_${a2.frame}.png`);
       }
       return runAeJob2(state, "ae_preview_frame", a2.wait, async () => {
         const png = await state.ae.previewFrame(aep, a2.comp, a2.frame, uniquePath3(out2));
@@ -45859,10 +46190,10 @@ var CORE_TOOLS = [
       const sequenceName = a2.sequenceName ?? `${p.meta.name}_${version3}`;
       const target = a2.target ?? "premiere";
       const xml = state.api.xmeml.writeXmeml(p, { sequenceName, flavor: target });
-      const dir = join15(state.api.project.projectPaths(p).out, version3);
-      await mkdir15(dir, { recursive: true });
-      const path12 = uniquePath3(join15(dir, `${fileSafe(p.meta.name)}${target === "premiere" ? "" : `_${target}`}.xml`));
-      await writeFile12(path12, xml, { encoding: "utf8", flag: "wx" });
+      const dir = join16(state.api.project.projectPaths(p).out, version3);
+      await mkdir16(dir, { recursive: true });
+      const path12 = uniquePath3(join16(dir, `${fileSafe(p.meta.name)}${target === "premiere" ? "" : `_${target}`}.xml`));
+      await writeFile13(path12, xml, { encoding: "utf8", flag: "wx" });
       const warnings = xmemlExportWarnings(p);
       return {
         ok: true,
@@ -45886,16 +46217,16 @@ var CORE_TOOLS = [
     },
     handler: async (a2, state) => {
       const p = requireProject(state);
-      const path12 = resolve7(a2.path);
-      if (!existsSync17(path12)) throw new ToolError(`\u0E44\u0E21\u0E48\u0E1E\u0E1A\u0E44\u0E1F\u0E25\u0E4C / file not found: ${path12}`);
-      const r = state.api.xmeml.readXmeml(await readFile11(path12, "utf8"), p);
+      const path12 = resolve8(a2.path);
+      if (!existsSync18(path12)) throw new ToolError(`\u0E44\u0E21\u0E48\u0E1E\u0E1A\u0E44\u0E1F\u0E25\u0E4C / file not found: ${path12}`);
+      const r = state.api.xmeml.readXmeml(await readFile12(path12, "utf8"), p);
       const warnings = [...r.warnings ?? []];
       if (r.fps !== p.meta.fps) warnings.push(`fps \u0E43\u0E19 XML = ${r.fps} \u0E41\u0E15\u0E48\u0E42\u0E1B\u0E23\u0E40\u0E08\u0E01\u0E15\u0E4C = ${p.meta.fps}`);
       if (r.width !== p.meta.width || r.height !== p.meta.height) warnings.push(`\u0E02\u0E19\u0E32\u0E14\u0E43\u0E19 XML = ${r.width}x${r.height} \u0E41\u0E15\u0E48\u0E42\u0E1B\u0E23\u0E40\u0E08\u0E01\u0E15\u0E4C = ${p.meta.width}x${p.meta.height}`);
       const diff = diffTimelines(p.timeline, r.timeline);
       const summary = summarizeDiff(diff, p.meta.fps);
       const { errors } = validateCandidate(state, p, r.timeline);
-      const report2 = { file: basename10(path12), summary, diff, warnings, unresolvedPaths: r.unresolvedPaths };
+      const report2 = { file: basename11(path12), summary, diff, warnings, unresolvedPaths: r.unresolvedPaths };
       if (!a2.apply) {
         return {
           ok: true,
@@ -45908,7 +46239,7 @@ var CORE_TOOLS = [
         };
       }
       if (errors.length) throw new ToolError("\u0E44\u0E17\u0E21\u0E4C\u0E44\u0E25\u0E19\u0E4C\u0E08\u0E32\u0E01 XML \u0E44\u0E21\u0E48\u0E1C\u0E48\u0E32\u0E19\u0E01\u0E32\u0E23\u0E15\u0E23\u0E27\u0E08\u0E2A\u0E2D\u0E1A \u0E44\u0E21\u0E48\u0E44\u0E14\u0E49\u0E1A\u0E31\u0E19\u0E17\u0E36\u0E01 / imported timeline invalid, not applied", { errors, ...report2 });
-      const backup = await backupTimeline4(p, `before import_premiere_xml ${basename10(path12)}`);
+      const backup = await backupTimeline4(p, `before import_premiere_xml ${basename11(path12)}`);
       await commitOrThrow(state, p, r.timeline, "timeline");
       return { ok: true, applied: true, backup, ...report2, timeline: timelineSummary(state, p), hint: "\u0E22\u0E49\u0E2D\u0E19\u0E01\u0E25\u0E31\u0E1A\u0E44\u0E14\u0E49\u0E14\u0E49\u0E27\u0E22 timeline_restore / undo with timeline_restore" };
     }
@@ -45920,12 +46251,12 @@ var CORE_TOOLS = [
     handler: async (a2, state) => {
       const p = requireProject(state);
       if (!a2.backup) return { backups: await listBackups(p), hint: 'timeline_restore {backup: "<name>"} \u0E40\u0E1E\u0E37\u0E48\u0E2D\u0E22\u0E49\u0E2D\u0E19\u0E01\u0E25\u0E31\u0E1A / pass a name to restore' };
-      if (basename10(a2.backup) !== a2.backup || !BACKUP_RE.test(a2.backup)) throw new ToolError(`\u0E0A\u0E37\u0E48\u0E2D\u0E44\u0E1F\u0E25\u0E4C\u0E2A\u0E33\u0E23\u0E2D\u0E07\u0E44\u0E21\u0E48\u0E16\u0E39\u0E01\u0E15\u0E49\u0E2D\u0E07 / not a timeline backup name: ${a2.backup}`);
-      const file = join15(p.dir, "history", a2.backup);
-      if (!existsSync17(file)) throw new ToolError(`\u0E44\u0E21\u0E48\u0E1E\u0E1A\u0E44\u0E1F\u0E25\u0E4C\u0E2A\u0E33\u0E23\u0E2D\u0E07 / backup not found: ${a2.backup}`, { backups: (await listBackups(p)).map((b) => b.name) });
+      if (basename11(a2.backup) !== a2.backup || !BACKUP_RE.test(a2.backup)) throw new ToolError(`\u0E0A\u0E37\u0E48\u0E2D\u0E44\u0E1F\u0E25\u0E4C\u0E2A\u0E33\u0E23\u0E2D\u0E07\u0E44\u0E21\u0E48\u0E16\u0E39\u0E01\u0E15\u0E49\u0E2D\u0E07 / not a timeline backup name: ${a2.backup}`);
+      const file = join16(p.dir, "history", a2.backup);
+      if (!existsSync18(file)) throw new ToolError(`\u0E44\u0E21\u0E48\u0E1E\u0E1A\u0E44\u0E1F\u0E25\u0E4C\u0E2A\u0E33\u0E23\u0E2D\u0E07 / backup not found: ${a2.backup}`, { backups: (await listBackups(p)).map((b) => b.name) });
       let next;
       try {
-        next = JSON.parse(await readFile11(file, "utf8")).timeline;
+        next = JSON.parse(await readFile12(file, "utf8")).timeline;
       } catch (e) {
         throw new ToolError(`\u0E2D\u0E48\u0E32\u0E19\u0E44\u0E1F\u0E25\u0E4C\u0E2A\u0E33\u0E23\u0E2D\u0E07\u0E44\u0E21\u0E48\u0E44\u0E14\u0E49 / unreadable backup: ${e instanceof Error ? e.message : String(e)}`);
       }
@@ -45944,7 +46275,7 @@ var CORE_TOOLS = [
     input: {},
     handler: async (_a, state) => {
       const env = state.env;
-      const freeRamGb = os7.freemem() / 2 ** 30;
+      const freeRamGb = os8.freemem() / 2 ** 30;
       let aeVersion = "unknown (not launched)";
       if (process.env["EDITMCP_ALLOW_AE"] === "1" && env.tools.afterfx) {
         try {
@@ -45969,7 +46300,7 @@ var CORE_TOOLS = [
         afterEffects: env.tools.afterfx ? "found" : "not found (ae_* tools unavailable)",
         premiere: env.tools.premiereExe ? "found (optional; exchange via FCP7 XML)" : "not found (optional)",
         filmcraft: env.tools.filmcraftCli ? 'found (optional; export_premiere_xml {target: "filmcraft"})' : "not found (optional)",
-        effectcraft: env.tools.effectcraftCli ? "found (optional; not used by CatCut yet)" : "not found (optional)",
+        effectcraft: env.tools.effectcraftCli ? "found (optional; .ecproj comps: ae_create / build render them headless)" : "not found (optional)",
         problems: state.problems,
         compat: COMPAT_NOTES,
         project: state.project ? { name: state.project.meta.name, dir: state.project.dir } : null
@@ -45988,6 +46319,7 @@ var INSTRUCTIONS = [
   'FilmCraft (ArtCraft) loop: same, with export_premiere_xml {target: "filmcraft"} (FilmCraft misreads the Premiere form around dissolves); its Final Cut Pro XML export comes back through import_premiere_xml.',
   "ae_* tools run as jobs: if the result has pending:true, call job_wait {id}. If a tool says the project was changed elsewhere, it has been reloaded: re-issue the edit.",
   "New AE comps: write a JSX build script and run ae_create (never launch AfterFX/aerender/ffmpeg yourself, never write into out/). Long jobs: job_wait {id}, never sleep-poll.",
+  "EffectCraft (ArtCraft): ae_create with saveAs *.ecproj builds the comp in EffectCraft instead of After Effects; every ae_* tool and build accept .ecproj. Use match-name property paths and new TextDocument(...) so a script runs in both hosts.",
   "Review: review_open (returns the URL) \u2192 user selects shots/ranges and annotates \u2192 review_notes. Propose edits from submitted notes before applying them. Evidence for notes: rules_evidence {clipIds, offsets}.",
   "Builds are incremental: unchanged segments are never re-encoded; outputs are never overwritten (new version each build)."
 ].join("\n");
@@ -46024,8 +46356,8 @@ function isMain(metaUrl) {
   const entry = process.argv[1];
   if (!entry) return false;
   try {
-    const a2 = resolve8(fileURLToPath4(metaUrl));
-    const b = resolve8(entry);
+    const a2 = resolve9(fileURLToPath5(metaUrl));
+    const b = resolve9(entry);
     return process.platform === "win32" ? a2.toLowerCase() === b.toLowerCase() : a2 === b;
   } catch {
     return false;

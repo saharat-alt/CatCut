@@ -424,7 +424,7 @@ export interface RenderResult {
     log: string;
 }
 export interface AeBackend {
-    readonly kind: 'extendscript-headless' | 'mock';
+    readonly kind: 'extendscript-headless' | 'effectcraft' | 'mock';
     listComps(aep: string): Promise<CompInfo[]>;
     inspectComp(aep: string, comp: string, atFrame?: Frames): Promise<CompDetail>;
     fingerprint(aep: string, comps?: string[]): Promise<Record<string, string>>;

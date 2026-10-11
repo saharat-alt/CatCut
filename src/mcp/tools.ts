@@ -652,10 +652,10 @@ const CORE_TOOLS: readonly ToolDef[] = [
 
   tool({
     name: 'asset_add',
-    description: 'เพิ่มไฟล์สื่อ (path) หรือ AE comp (aep + comp) · Add a media file or an After Effects comp',
+    description: 'เพิ่มไฟล์สื่อ (path) หรือ comp (aep + comp) จาก After Effects (.aep) หรือ EffectCraft (.ecproj) · Add a media file or a motion comp (.aep or .ecproj)',
     input: {
       path: z.string().optional().describe('video / still / audio file'),
-      aep: z.string().optional().describe('.aep path (with comp)'),
+      aep: z.string().optional().describe('.aep (After Effects) or .ecproj (EffectCraft) path, with comp'),
       comp: z.string().optional().describe('comp name inside the .aep'),
       id: z.string().optional().describe('asset id (default: auto)'),
       kind: z.enum(['camera', 'graphic', 'still', 'audio']).optional().describe('for files; default from probe'),
@@ -753,7 +753,7 @@ const CORE_TOOLS: readonly ToolDef[] = [
 
   tool({
     name: 'ae_list_comps',
-    description: 'รายชื่อ comp ใน .aep (เปิด AE แบบ headless; job — ถ้าคิวว่างรอผลไม่เกิน ~20 วิ) · List comps in an .aep (job; waits up to ~20 s when idle)',
+    description: 'รายชื่อ comp ใน .aep หรือ .ecproj (job — ถ้าคิวว่างรอผลไม่เกิน ~20 วิ) · List comps in an .aep / .ecproj (job; waits up to ~20 s when idle)',
     input: { aep: z.string(), wait: z.boolean().optional().describe('wait up to ~20 s for the result (default: only when no other job is queued)') },
     handler: async (a, state) => {
       const aep = resolve(a.aep);
@@ -779,12 +779,13 @@ const CORE_TOOLS: readonly ToolDef[] = [
     description: 'แก้ comp (setText, replaceFootage, shiftLayer, setProperty, addEffect, applyPreset, setLayerEnabled, duplicateComp, script) แล้วบันทึก (job); render เดิมจะถูกนับว่าเก่า · Edit a comp (job)',
     input: {
       aep: z.string(), comp: z.string(), ops: z.array(AeOpSchema).min(1),
-      saveAs: z.string().optional().describe('new .aep inside the project folder or next to the source .aep'),
+      saveAs: z.string().optional().describe('new project file (same type as the source: .aep or .ecproj) inside the project folder or next to the source'),
       wait: z.boolean().optional(),
     },
     handler: async (a, state) => {
       const aep = resolve(a.aep);
       const saveAs = a.saveAs ? resolve(a.saveAs) : undefined;
+      if (saveAs && extname(saveAs).toLowerCase() !== extname(aep).toLowerCase()) throw new ToolError(`saveAs ต้องเป็นไฟล์ชนิดเดียวกับต้นฉบับ (${extname(aep)}) / saveAs must have the source's extension`);
       if (saveAs) assertConfined(state, saveAs, aep, 'saveAs');
       else assertWritable(aep, 'the .aep (in-place edit)');
       return runAeJob(state, 'ae_edit', a.wait, async () => {
@@ -810,14 +811,15 @@ const CORE_TOOLS: readonly ToolDef[] = [
 
   tool({
     name: 'ae_create',
-    description: 'สร้าง .aep ใหม่จากสคริปต์ JSX แบบ headless (job) ใช้แทนการเรียก AfterFX เอง · Create a new .aep by running a JSX build script headlessly (job). '
+    description: 'สร้างโปรเจกต์ใหม่จากสคริปต์ JSX แบบ headless (job): saveAs .aep = After Effects, .ecproj = EffectCraft (ArtCraft) · Create a new .aep or .ecproj by running a JSX build script headlessly (job). '
       + 'The script runs in an empty project: build comps/layers only — no app.newProject() (kills headless AE), no save, no quit. '
+      + 'Use match-name property paths (layer.property("ADBE Transform Group").property("ADBE Position")) and new TextDocument(...) so one script works in both hosts: EffectCraft does not resolve display names like property("Position"). '
       + 'L(msg) appends to the returned log; SCRIPT_DIR is the folder of jsxPath. Errors come back with the script line. '
       + 'asset: registers the comp for build; an existing aecomp id is repointed to the new .aep so the next build re-renders it.',
     input: {
       jsx: z.string().optional().describe('script text'),
       jsxPath: z.string().optional().describe('UTF-8 .jsx file (instead of jsx)'),
-      saveAs: z.string().describe('new .aep inside the project folder (never overwritten; use a new name per revision)'),
+      saveAs: z.string().describe('new .aep (After Effects) or .ecproj (EffectCraft) inside the project folder (never overwritten; use a new name per revision)'),
       asset: z.object({ comp: z.string(), id: z.string().optional() }).optional(),
       wait: z.boolean().optional(),
     },
@@ -828,7 +830,9 @@ const CORE_TOOLS: readonly ToolDef[] = [
       if (jsxPath && !existsSync(jsxPath)) throw new ToolError(`ไม่พบไฟล์ / file not found: ${jsxPath}`);
       if (!jsxPath || a.asset) requireProject(state);
       const saveAs = resolve(a.saveAs);
-      if (extname(saveAs).toLowerCase() !== '.aep') throw new ToolError('saveAs ต้องเป็น .aep / saveAs must end in .aep');
+      const ext = extname(saveAs).toLowerCase();
+      if (ext !== '.aep' && ext !== '.ecproj') throw new ToolError('saveAs ต้องเป็น .aep หรือ .ecproj / saveAs must end in .aep or .ecproj');
+      if (ext === '.ecproj' && !state.env.tools.effectcraftCli) throw new ToolError('ไม่พบ EffectCraft / effectcraft-cli not found (install EffectCraft or set EDITMCP_EFFECTCRAFT_DIR)');
       if (existsSync(saveAs)) throw new ToolError(`มีไฟล์นี้แล้ว ใช้ชื่อใหม่ / refusing to overwrite: ${saveAs}`);
       assertConfined(state, saveAs, jsxPath ?? join(state.project!.dir, 'x'), 'saveAs');
       const existing = a.asset?.id ? state.project!.assets[a.asset.id] : undefined;
@@ -1171,7 +1175,7 @@ const CORE_TOOLS: readonly ToolDef[] = [
         afterEffects: env.tools.afterfx ? 'found' : 'not found (ae_* tools unavailable)',
         premiere: env.tools.premiereExe ? 'found (optional; exchange via FCP7 XML)' : 'not found (optional)',
         filmcraft: env.tools.filmcraftCli ? 'found (optional; export_premiere_xml {target: "filmcraft"})' : 'not found (optional)',
-        effectcraft: env.tools.effectcraftCli ? 'found (optional; not used by CatCut yet)' : 'not found (optional)',
+        effectcraft: env.tools.effectcraftCli ? 'found (optional; .ecproj comps: ae_create / build render them headless)' : 'not found (optional)',
         problems: state.problems,
         compat: COMPAT_NOTES,
         project: state.project ? { name: state.project.meta.name, dir: state.project.dir } : null,

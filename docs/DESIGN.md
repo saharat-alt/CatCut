@@ -169,7 +169,16 @@ project.json ──export_premiere_xml──▶ seq.xml ──เปิดใน
 - Reader รับได้ทั้งสองแบบ: ขอบคลิปที่ระบุเลขและพบกันในช่วง dissolve = จุดตัดจริง (FilmCraft สร้าง dissolve เลขคี่แบบ 7/6 → คงจุดตัดไว้ เตือน แล้วจัดกึ่งกลางตามกฎเราตอน export ครั้งถัดไป)
 - FilmCraft ไม่เก็บชื่อแทร็ก (`MZ.TrackName`) → ถ้าแทร็กไม่มีชื่อ เลน vo/music/sfx ใช้ id คลิปที่โปรเจกต์มีอยู่ (ต้อง src ตรงกันด้วย) ก่อนเดาจากตำแหน่ง
 - `doctor` หา `filmcraft-cli.exe` / `effectcraft-cli.exe` (Program Files หรือ `EDITMCP_FILMCRAFT_DIR` / `EDITMCP_EFFECTCRAFT_DIR`)
-- ถัดไป (ยังไม่ทำ): สั่ง FilmCraft ผ่าน MCP/CLI ตรง ๆ แทนไฟล์ XML, และ EffectCraft เป็น motion backend คู่กับ AE
+- ถัดไป (ยังไม่ทำ): สั่ง FilmCraft ผ่าน MCP/CLI ตรง ๆ แทนไฟล์ XML
+
+### 5.3.2 EffectCraft (ArtCraft) — motion backend คู่กับ AE
+- `createMotionBackend` (src/engine/effectcraft.ts) ส่งงานตามนามสกุล: `.ecproj` → EffectCraft, อื่น ๆ → After Effects → build / fingerprint / render / `ae_*` ไม่ต้องรู้ว่าเป็นโปรแกรมไหน; asset ยังเป็น `aecomp` (field `aep` เก็บ path `.ecproj` ได้)
+- รายชื่อ comp, ความยาว, fingerprint: อ่าน JSON ของ `.ecproj` ตรง ๆ ไม่เปิดโปรแกรม; fingerprint = comp + item ที่ layer อ้างถึง (precomp/solid/footage) + comp ที่ expression `comp("…")` อ้างถึง + project settings + hash เนื้อไฟล์ footage
+- inspect / edit / create: `effectcraft-cli script` + `jsx/ec-runner.jsx` (object model แบบ AE แต่ **ต้องใช้ match name** — `property("Position")` ได้ null; text ใหม่ใช้ `new TextDocument`)
+- render: `effectcraft-cli render --comp <name> --format prores --prores hq` ลง temp ASCII แล้วย้าย (CLI เขียนทับเงียบ ๆ); ช่วงเฟรมส่งเป็นวินาทีกว้างครึ่งเฟรม (`[start, end)` และ snap ที่เวลาเฟรม); preview: `render-frame --comp <id>`
+- ProRes ของ EffectCraft (apch, timebase 1/25, vendor 0000, แท็ก bt709) ต่อ `concat -c copy` ได้ bit-exact เพราะ segment ทุกตัวผ่าน `-video_track_timescale` อยู่แล้ว — ทดสอบจริงทั้ง loop: ae_create → build → แก้ข้อความ → build ใหม่ render แค่ comp + segment/dissolve ที่โดน
+- AE-only (ยังไม่มีใน EffectCraft): `template_scan`, `comp_lint`, `font_audit`, `applyPreset` (.ffx), เตือน GUI เปิดค้าง
+- เทสต์จริง (opt-in): `CATCUT_EFFECTCRAFT_IT=1 npm test -- effectcraft`
 
 ### 5.4 QC อัตโนมัติ (ทุก build)
 - ภาพ: จำนวนเฟรม = แผน, `blackdetect`, `freezedetect` (จับอาการ "ค้าง" แบบที่ 00:00:34:23) → รายงานว่าช็อตไหน/comp ไหน

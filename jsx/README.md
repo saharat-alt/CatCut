@@ -162,3 +162,12 @@ merely opening and saving the project does not re-render anything.
 
 The alternative, re-rendering any comp like that whenever the .aep changes, made almost every real comp
 re-render on every save. That is why these signals are scoped as described above.
+
+## ec-runner.jsx (EffectCraft)
+
+Same job idea for EffectCraft (`src/engine/effectcraft.ts`): `launch.jsx` is `var CATCUT_JOB = {...};`
+followed by the runner text (EffectCraft has no `#include` / `$.evalFile`), run with
+`effectcraft-cli script launch.jsx [project.ecproj] [--save | --empty --save-as tmp.ecproj]`. The runner
+prints one `@@CATCUT@@{json}` line. Actions: `inspect`, `edit` (AeOp list, minus `applyPreset`),
+`create`. EffectCraft resolves match names only, so every property path is a match-name path. List,
+timing and fingerprints never run the runner: they read the `.ecproj` JSON.

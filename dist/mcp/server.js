@@ -16,6 +16,7 @@ const INSTRUCTIONS = [
     'FilmCraft (ArtCraft) loop: same, with export_premiere_xml {target: "filmcraft"} (FilmCraft misreads the Premiere form around dissolves); its Final Cut Pro XML export comes back through import_premiere_xml.',
     'ae_* tools run as jobs: if the result has pending:true, call job_wait {id}. If a tool says the project was changed elsewhere, it has been reloaded: re-issue the edit.',
     'New AE comps: write a JSX build script and run ae_create (never launch AfterFX/aerender/ffmpeg yourself, never write into out/). Long jobs: job_wait {id}, never sleep-poll.',
+    'EffectCraft (ArtCraft): ae_create with saveAs *.ecproj builds the comp in EffectCraft instead of After Effects; every ae_* tool and build accept .ecproj. Use match-name property paths and new TextDocument(...) so a script runs in both hosts.',
     'Review: review_open (returns the URL) → user selects shots/ranges and annotates → review_notes. Propose edits from submitted notes before applying them. Evidence for notes: rules_evidence {clipIds, offsets}.',
     'Builds are incremental: unchanged segments are never re-encoded; outputs are never overwritten (new version each build).',
 ].join('\n');

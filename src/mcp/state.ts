@@ -97,7 +97,9 @@ export async function createAppState(opts: { projectDir?: string } = {}): Promis
     import('../engine/ae.js'),
     import('../core/jobs.js'),
   ]);
-  const ae = aeMod.createAeBackend(env.tools);
+  const { createEffectCraftBackend, createMotionBackend } = await import('../engine/effectcraft.js');
+  // .ecproj comps go to EffectCraft, everything else to After Effects
+  const ae = createMotionBackend(aeMod.createAeBackend(env.tools), createEffectCraftBackend(env.tools));
   const assembler = new ffmpegMod.Assembler({ tools: env.tools, env, ae, qc: qcMod.runQc });
   const state: AppState = {
     env,

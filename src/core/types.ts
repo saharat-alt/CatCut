@@ -51,7 +51,7 @@ export interface AeRenderRecord {
 export interface AeCompAsset {
   id: string;
   kind: 'aecomp';
-  aep: string; // absolute path to the .aep the comp lives in
+  aep: string; // absolute path to the project the comp lives in: .aep (After Effects) or .ecproj (EffectCraft)
   comp: string; // comp name
   fingerprint?: string; // last known comp fingerprint
   render?: AeRenderRecord; // last good render (undefined = needs render)
@@ -442,7 +442,7 @@ export interface RenderResult {
 }
 
 export interface AeBackend {
-  readonly kind: 'extendscript-headless' | 'mock';
+  readonly kind: 'extendscript-headless' | 'effectcraft' | 'mock';
   listComps(aep: string): Promise<CompInfo[]>;
   inspectComp(aep: string, comp: string, atFrame?: Frames): Promise<CompDetail>;
   fingerprint(aep: string, comps?: string[]): Promise<Record<string, string>>;
