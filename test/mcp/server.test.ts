@@ -303,6 +303,18 @@ describe('mcp server (real core, fake engines)', () => {
     expect(xbad.isError).toBe(true);
   });
 
+  it('export_premiere_xml {target: "filmcraft"} writes its own file with explicit clip edges', async () => {
+    const x = await call(client, 'export_premiere_xml', { target: 'filmcraft' });
+    expect(x.isError).toBe(false);
+    expect(x.data['target']).toBe('filmcraft');
+    const path = String(x.data['path']);
+    expect(path).toMatch(/_filmcraft(_\d+)?\.xml$/);
+    const xml = await readFile(path, 'utf8');
+    expect(xml).toContain('<xmeml');
+    expect(xml).not.toMatch(/<(start|end)>-1</);
+    expect((await call(client, 'export_premiere_xml', { target: 'avid' })).isError).toBe(true);
+  });
+
   it('import_premiere_xml is a dry run by default; apply backs up the timeline first; timeline_restore undoes it', async () => {
     const p = state.project!;
     const original: Timeline = structuredClone(p.timeline);

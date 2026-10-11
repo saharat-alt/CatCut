@@ -1059,26 +1059,34 @@ const CORE_TOOLS: readonly ToolDef[] = [
 
   tool({
     name: 'export_premiere_xml',
-    description: 'ส่งออก FCP7 XML (xmeml) ไปเปิดใน Premiere → out/<version>/<name>.xml · Export the timeline as FCP7 XML for Premiere',
-    input: { version: z.string().optional().describe('default: latest, or "draft" before any build'), sequenceName: z.string().optional() },
+    description: 'ส่งออก FCP7 XML (xmeml) ไปเปิดใน Premiere หรือ FilmCraft (ArtCraft) → out/<version>/<name>.xml · Export the timeline as FCP7 XML for Premiere or FilmCraft',
+    input: {
+      version: z.string().optional().describe('default: latest, or "draft" before any build'),
+      sequenceName: z.string().optional(),
+      target: z.enum(['premiere', 'filmcraft']).optional().describe('editor that opens the file (default premiere); filmcraft writes explicit clip edges FilmCraft reads correctly around dissolves'),
+    },
     handler: async (a, state) => {
       const p = requireProject(state);
       if (a.version && !p.versions.some((v) => v.id === a.version)) throw new ToolError(`ไม่พบเวอร์ชัน / unknown version: ${a.version}`);
       const version = a.version ?? p.versions[p.versions.length - 1]?.id ?? 'draft';
       const sequenceName = a.sequenceName ?? `${p.meta.name}_${version}`;
-      const xml = state.api.xmeml.writeXmeml(p, { sequenceName });
+      const target = a.target ?? 'premiere';
+      const xml = state.api.xmeml.writeXmeml(p, { sequenceName, flavor: target });
       const dir = join(state.api.project.projectPaths(p).out, version);
       await mkdir(dir, { recursive: true });
-      const path = uniquePath(join(dir, `${fileSafe(p.meta.name)}.xml`));
+      const path = uniquePath(join(dir, `${fileSafe(p.meta.name)}${target === 'premiere' ? '' : `_${target}`}.xml`));
       await writeFile(path, xml, { encoding: 'utf8', flag: 'wx' });
       const warnings = xmemlExportWarnings(p); // things FCP7 XML cannot carry (ramps, optical-flow, ...)
-      return { ok: true, path, version, sequenceName, clips: p.timeline.video.length, unrendered: compsNeedingRender(p), ...(warnings.length ? { warnings } : {}) };
+      return {
+        ok: true, path, version, sequenceName, target, clips: p.timeline.video.length, unrendered: compsNeedingRender(p), ...(warnings.length ? { warnings } : {}),
+        ...(target === 'filmcraft' ? { hint: 'FilmCraft: File > Import เลือกไฟล์นี้ · กลับมาด้วย File > Export > Final Cut Pro XML แล้ว import_premiere_xml' } : {}),
+      };
     },
   }),
 
   tool({
     name: 'import_premiere_xml',
-    description: 'นำ FCP7 XML ที่ export จาก Premiere กลับมา: ค่าเริ่มต้นแค่สรุปความต่าง + คำเตือน (dry run); apply: true เพื่อใช้ (สำรองไทม์ไลน์เดิมไว้ใน history/ ก่อน) · Import Premiere XML: dry-run diff by default, apply: true to commit',
+    description: 'นำ FCP7 XML ที่ export จาก Premiere หรือ FilmCraft กลับมา: ค่าเริ่มต้นแค่สรุปความต่าง + คำเตือน (dry run); apply: true เพื่อใช้ (สำรองไทม์ไลน์เดิมไว้ใน history/ ก่อน) · Import Premiere/FilmCraft XML: dry-run diff by default, apply: true to commit',
     input: {
       path: z.string(),
       apply: z.boolean().optional().describe('commit the imported timeline (default false = dry run: summary, diff, warnings only)'),
@@ -1162,6 +1170,8 @@ const CORE_TOOLS: readonly ToolDef[] = [
         aeBackend: state.ae.kind,
         afterEffects: env.tools.afterfx ? 'found' : 'not found (ae_* tools unavailable)',
         premiere: env.tools.premiereExe ? 'found (optional; exchange via FCP7 XML)' : 'not found (optional)',
+        filmcraft: env.tools.filmcraftCli ? 'found (optional; export_premiere_xml {target: "filmcraft"})' : 'not found (optional)',
+        effectcraft: env.tools.effectcraftCli ? 'found (optional; not used by CatCut yet)' : 'not found (optional)',
         problems: state.problems,
         compat: COMPAT_NOTES,
         project: state.project ? { name: state.project.meta.name, dir: state.project.dir } : null,

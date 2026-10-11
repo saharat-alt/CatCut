@@ -706,6 +706,18 @@ describe('speed and push-in', () => {
     expect(r.warnings).toEqual([expect.stringContaining("'ramp' speed ramp kept from the project")]);
   });
 
+  it('filmcraft flavor: explicit edges in retimed frames, push-in over the body, exact round trip', () => {
+    const p = makeProject(speedTimeline());
+    const xml = writeXmeml(p, { sequenceName: 'fc', flavor: 'filmcraft' });
+    const [slow, fast] = videoItems(xml);
+    expect(slow).toMatchObject({ in: '20', out: '120', start: '0', end: '100' });
+    expect(fast).toMatchObject({ in: '151', out: '191', start: '100', end: '140' });
+    expect(param(effects(fast!).find((e) => e['effectid'] === 'basic')!, 'scale')!['keyframe']).toEqual([{ when: '151', value: '110' }, { when: '190', value: '118.8' }]);
+    const r = readXmeml(xml, p);
+    expect(r.timeline).toEqual(speedTimeline());
+    expect(r.warnings).toEqual([expect.stringContaining("'ramp' speed ramp kept from the project")]);
+  });
+
   it('reads speed and push-in from a foreign file (no project): constant rate, interpolation from frame blending, ramp as average', () => {
     const p = makeProject(speedTimeline());
     const r = readXmeml(writeXmeml(p, { sequenceName: 'rt' }), undefined, { resolveAsset: (abs) => (abs.endsWith('.mp4') ? 'cam' : 'title') });
@@ -733,5 +745,72 @@ describe('speed and push-in', () => {
       expect.stringContaining('reverse ignored'),
       expect.stringContaining('read as push-in'),
     ]));
+  });
+});
+
+describe('FilmCraft (ArtCraft) interchange', () => {
+  const vItems = (xml: string): Array<Record<string, unknown>> => get(parse(xml), 'xmeml', 'sequence', 'media', 'video', 'track', 0, 'clipitem');
+  const vTrans = (xml: string): Array<Record<string, unknown>> => get(parse(xml), 'xmeml', 'sequence', 'media', 'video', 'track', 0, 'transitionitem');
+
+  it('flavor filmcraft: every clip edge explicit at its cut, in/out over the body, same transitions', () => {
+    const p = makeProject(richTimeline());
+    const fc = writeXmeml(p, { sequenceName: 'fc', flavor: 'filmcraft' });
+    expect(fc).not.toMatch(/<(start|end)>-1</);
+    expect(vItems(fc).map((c) => [c['start'], c['end'], c['in'], c['out']])).toEqual([
+      [0, 100, 10, 110],
+      [100, 220, 0, 120],
+      [220, 300, 300, 380],
+      [300, 350, 10, 60],
+    ]);
+    const tr = (xml: string) => vTrans(xml).map((t) => [t['start'], t['end'], t['alignment']]);
+    expect(tr(fc)).toEqual(tr(writeXmeml(p, { sequenceName: 'fc' })));
+    expect(tr(fc)).toEqual([[215, 225, 'center'], [294, 307, 'center']]);
+  });
+
+  it('flavor filmcraft round-trips exactly, with no warnings', () => {
+    const p = makeProject(richTimeline());
+    const r = readXmeml(writeXmeml(p, { sequenceName: 'fc', flavor: 'filmcraft' }), p);
+    expect(r.timeline).toEqual(richTimeline());
+    expect(r.warnings).toEqual([]);
+  });
+
+  it('a still keeps its own in-point with explicit edges (no clamp to 0)', () => {
+    const t: Timeline = { video: [{ id: 'a', src: 'cam', in: 10, dur: 50 }, { id: 'b', src: 'still', in: 0, dur: 40 }], cuts: [{ after: 'a', dissolve: 8 }], audio: { vo: [], music: [], sfx: [] } };
+    const p = makeProject(t);
+    const xml = writeXmeml(p, { sequenceName: 'still', flavor: 'filmcraft' });
+    expect(vItems(xml)[1]).toMatchObject({ start: 50, end: 90, in: 0, out: 40 });
+    expect(readXmeml(xml, p).timeline).toEqual(t);
+  });
+
+  it('explicit edges pin the cut when an editor splits an odd dissolve the other way (FilmCraft: 7/6)', () => {
+    const t: Timeline = { video: [{ id: 'a', src: 'cam', in: 10, dur: 100 }, { id: 'b', src: 'title', in: 20, dur: 120 }], cuts: [{ after: 'a', dissolve: 13 }], audio: { vo: [], music: [], sfx: [] } };
+    const p = makeProject(t);
+    const ours = writeXmeml(p, { sequenceName: 'odd', flavor: 'filmcraft' });
+    expect(vTrans(ours).map((x) => [x['start'], x['end']])).toEqual([[94, 107]]); // a = floor(13/2) = 6 before the cut
+    const theirs = ours.replace('<start>94</start>', '<start>93</start>').replace('<end>107</end>', '<end>106</end>');
+    const r = readXmeml(theirs, p);
+    expect(r.timeline.video).toEqual(t.video);
+    expect(r.timeline.cuts).toEqual(t.cuts);
+    expect(r.warnings).toEqual([expect.stringMatching(/dissolve 13f at 100 is split 7\/6 \(CatCut centres 6\/7\)/)]);
+  });
+
+  it('tracks without names (FilmCraft export): lanes follow the project clip ids instead of positions', () => {
+    const p = makeProject(richTimeline());
+    const bare = writeXmeml(p, { sequenceName: 'fc', flavor: 'filmcraft' }).replace(/<track [^>]*>/g, '<track>');
+    expect(bare).not.toContain('MZ.TrackName');
+    const r = readXmeml(bare, p);
+    expect(r.timeline.audio).toEqual(richTimeline().audio);
+    expect(r.warnings).toEqual([]);
+    // a foreign file (no project) still falls back to positions, and says so
+    expect(readXmeml(bare).warnings.some((w) => w.includes('ambiguous') || w.includes('not on a vo/music/sfx track'))).toBe(true);
+  });
+
+  it('a clip id that now points at another source is not trusted for its lane', () => {
+    const p = makeProject(richTimeline());
+    const bare = writeXmeml(p, { sequenceName: 'fc' }).replace(/<track [^>]*>/g, '<track>');
+    const other = makeProject(richTimeline());
+    other.timeline.audio.music = [{ id: 'm1', src: 'vo', at: 0, dur: 10 }]; // same id, different source
+    const r = readXmeml(bare, other);
+    expect(r.timeline.audio.music.map((c) => c.id)).not.toContain('m1');
   });
 });

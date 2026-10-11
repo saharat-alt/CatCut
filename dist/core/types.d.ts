@@ -290,6 +290,8 @@ export interface ToolPaths {
     aeVersionDir?: string;
     premiereExe?: string;
     mediaEncoderExe?: string;
+    filmcraftCli?: string;
+    effectcraftCli?: string;
 }
 export interface Encoders {
     h264_nvenc: boolean;
@@ -472,6 +474,12 @@ export interface XmemlWriteOptions {
     sequenceName: string;
     /** asset id -> file path to reference (full comp render or original camera file) */
     resolvePath?: (asset: Asset) => string | undefined;
+    /**
+     * 'premiere' (default): edges touching a transition are -1 and in/out include the dissolve halves.
+     * 'filmcraft': every clip edge is explicit at its cut and in/out cover the body only (FilmCraft
+     * misreads the -1 form: it drops or re-tracks clips next to dissolves).
+     */
+    flavor?: 'premiere' | 'filmcraft';
 }
 export interface XmemlReadResult {
     fps: number;

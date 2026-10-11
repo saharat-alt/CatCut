@@ -20876,6 +20876,7 @@ function writeXmeml(p, opts) {
   const n2 = clips.length;
   const resolvePath = opts.resolvePath ?? defaultResolvePath;
   const useClipAudio = tl.audio.useClipAudio !== false;
+  const explicitEdges = opts.flavor === "filmcraft";
   const assetOf = (id, who) => {
     const a2 = p.assets[id];
     if (!a2) throw new Error(`xmeml: ${who} refers to unknown asset '${id}'`);
@@ -21040,6 +21041,7 @@ function writeXmeml(p, opts) {
   clips.forEach((c3, i2) => {
     const a2 = assetOf(c3.src, `clip '${c3.id}'`);
     const start = startOf(i2);
+    const bodyIn = explicitEdges && a2.kind === "still" ? c3.in : (vIn[i2] ?? 0) + ap(i2);
     vItems.push(
       ela(
         "clipitem",
@@ -21048,16 +21050,16 @@ function writeXmeml(p, opts) {
         el("enabled", "TRUE"),
         el("duration", itemDuration(i2, a2, c3.src)),
         rate2(),
-        el("start", ap(i2) > 0 ? -1 : start),
-        el("end", bn(i2) > 0 ? -1 : start + c3.dur),
-        el("in", vIn[i2] ?? 0),
-        el("out", vOut[i2] ?? 0),
+        el("start", ap(i2) > 0 && !explicitEdges ? -1 : start),
+        el("end", bn(i2) > 0 && !explicitEdges ? -1 : start + c3.dur),
+        el("in", explicitEdges ? bodyIn : vIn[i2] ?? 0),
+        el("out", explicitEdges ? bodyIn + c3.dur : vOut[i2] ?? 0),
         el("pixelaspectratio", "square"),
         el("anamorphic", "FALSE"),
         el("alphatype", "none"),
         fileRef(c3.src),
         remapFor(i2, c3, "video"),
-        motionFilter(c3.scale, c3.pushIn ? { pct: c3.pushIn, from: (vIn[i2] ?? 0) + ap(i2), to: (vIn[i2] ?? 0) + ap(i2) + Math.max(1, c3.dur - 1) } : void 0),
+        motionFilter(c3.scale, c3.pushIn ? { pct: c3.pushIn, from: bodyIn, to: bodyIn + Math.max(1, c3.dur - 1) } : void 0),
         ...linksFor(i2)
       )
     );
@@ -21069,9 +21071,9 @@ function writeXmeml(p, opts) {
     for (const L of lanesOf(i2)) {
       const xfPrev = i2 > 0 && onLane(i2 - 1, L) && dAfter(i2 - 1) > 0;
       const xfNext = i2 < n2 - 1 && onLane(i2 + 1, L) && dAfter(i2) > 0;
-      const hp = xfPrev ? ap(i2) : 0;
-      const hn = xfNext ? bn(i2) : 0;
-      const xIn = (vIn[i2] ?? 0) + ap(i2) - hp;
+      const hp = xfPrev && !explicitEdges ? ap(i2) : 0;
+      const hn = xfNext && !explicitEdges ? bn(i2) : 0;
+      const xIn = bodyIn - hp;
       const lane = clipAudioItems[L];
       if (!lane) continue;
       lane.push(
@@ -21240,17 +21242,21 @@ function readItems(track, label, fps, fileOf, warn) {
       if ((childText(k, "enabled") ?? "TRUE").toUpperCase() === "FALSE") warn(`${label}: '${name}' is disabled in the XML but kept`);
       const fileNode = child(k, "file");
       const nested = child(k, "sequence");
+      const start = childNum(k, "start") ?? 0;
+      const end = childNum(k, "end") ?? -1;
       items.push({
         kind: "clip",
         node: k,
         name,
-        start: childNum(k, "start") ?? 0,
-        end: childNum(k, "end") ?? -1,
+        start,
+        end,
         in: inF,
         out: outF,
         file: fileNode ? fileOf(fileNode) : void 0,
         nestedSequence: nested ? childText(nested, "name") ?? "nested sequence" : void 0,
-        alignment: ""
+        alignment: "",
+        fixedStart: start >= 0,
+        fixedEnd: end >= 0
       });
     } else if (t === "transitionitem") {
       const eff = child(k, "effect");
@@ -21261,7 +21267,7 @@ function readItems(track, label, fps, fileOf, warn) {
         warn(`${label}: transition '${name}' has no usable start/end; ignored`);
         continue;
       }
-      items.push({ kind: "trans", node: k, name, start, end, in: 0, out: 0, alignment: (childText(k, "alignment") ?? "center").toLowerCase() });
+      items.push({ kind: "trans", node: k, name, start, end, in: 0, out: 0, alignment: (childText(k, "alignment") ?? "center").toLowerCase(), fixedStart: true, fixedEnd: true });
     }
   }
   items.forEach((it, i2) => {
@@ -21298,6 +21304,16 @@ function cutOf(t, label, warn) {
     return t.end;
   }
   return t.start + splitDissolve(n2).a;
+}
+function cutBetween(left, t, right, label, warn) {
+  if (left?.fixedEnd && right?.fixedStart && left.end === right.start && left.end >= t.start && left.end <= t.end) {
+    const c3 = left.end;
+    const n2 = t.end - t.start;
+    const { a: a2, b } = splitDissolve(n2);
+    if (c3 - t.start !== a2) warn(`${label}: dissolve ${n2}f at ${c3} is split ${c3 - t.start}/${t.end - c3} (CatCut centres ${a2}/${b}); cut kept at ${c3}, re-centred on the next export`);
+    return c3;
+  }
+  return cutOf(t, label, warn);
 }
 function readTimeRemap(clipNode) {
   for (const f of children(clipNode, "filter")) {
@@ -21401,13 +21417,13 @@ function audioTrackRoles(tracks) {
       const t = tracks[i2 + k];
       const nm = attrOf(t, "MZ.TrackName") ?? childText(t, "name");
       const fromName = roleFromName(nm);
-      out2.push({ role: fromName ?? byPos[logical], why: fromName ? `name '${nm}'` : nm ? `unrecognised name '${nm}'` : "no track name" });
+      out2.push({ role: fromName ?? byPos[logical], why: fromName ? `name '${nm}'` : nm ? `unrecognised name '${nm}'` : "no track name", named: fromName !== void 0 });
     }
     i2 += size;
   }
   return out2;
 }
-function mergeStereoPairs(trackItems, layout, warn) {
+function mergeStereoPairs(trackItems, layout, warn, knownClip) {
   const all = [];
   const byId = /* @__PURE__ */ new Map();
   trackItems.forEach((items, ti) => {
@@ -21444,7 +21460,8 @@ function mergeStereoPairs(trackItems, layout, warn) {
     for (const g of group) {
       dropped.add(g.it);
       const other = layout[g.ti]?.role;
-      if (other !== role) warn(`A${a2.ti + 1}/A${g.ti + 1}: stereo pair '${a2.it.name}' spans tracks read as ${role ?? "extra"} and ${other ?? "extra"}; treated as ${role === "vo" || role === "music" ? role : "sfx"} (ambiguous)`);
+      const byId2 = !layout[a2.ti]?.named && knownClip(a2.it.name);
+      if (other !== role && !byId2) warn(`A${a2.ti + 1}/A${g.ti + 1}: stereo pair '${a2.it.name}' spans tracks read as ${role ?? "extra"} and ${other ?? "extra"}; treated as ${role === "vo" || role === "music" ? role : "sfx"} (ambiguous)`);
     }
   }
   return dropped;
@@ -21554,6 +21571,15 @@ function readXmeml(xml, p, opts = {}) {
   const videoIds = /* @__PURE__ */ new Set();
   let lastIdx = -1;
   let lastEnd;
+  const cuts1 = /* @__PURE__ */ new Map();
+  const cutAt = (left, t, right) => {
+    let c3 = cuts1.get(t);
+    if (c3 === void 0) {
+      c3 = cutBetween(left, t, right, "V1", warn);
+      cuts1.set(t, c3);
+    }
+    return c3;
+  };
   items.forEach((it, i2) => {
     if (it.kind !== "clip") return;
     const prev = items[i2 - 1];
@@ -21565,8 +21591,8 @@ function readXmeml(xml, p, opts = {}) {
     if (prev?.kind === "trans" && !prevT) warn(`V1: transition '${prev.name}' before '${it.name}' has no clip on its other side; folded into the clip`);
     if (next?.kind === "trans" && !nextT) warn(`V1: transition '${next.name}' after '${it.name}' has no clip on its other side; folded into the clip`);
     if (prevT && !/dissolve/i.test(prevT.name)) warn(`V1: transition '${prevT.name}' treated as a cross dissolve`);
-    const cPrev = prevT ? cutOf(prevT, "V1", warn) : it.start;
-    const cNext = nextT ? cutOf(nextT, "V1", warn) : it.end;
+    const cPrev = prevT ? cutAt(before, prevT, it) : it.start;
+    const cNext = nextT ? cutAt(it, nextT, after) : it.end;
     const dur = cNext - cPrev;
     if (dur <= 0) {
       warn(`V1: '${it.name}' has no frames left outside its transitions; skipped`);
@@ -21644,14 +21670,15 @@ function readXmeml(xml, p, opts = {}) {
   const audioIds = /* @__PURE__ */ new Set();
   let linkedClipAudio = 0;
   const layout = audioTrackRoles(aTracks);
+  const knownLane = /* @__PURE__ */ new Map();
+  for (const role of ["vo", "music", "sfx"]) for (const c3 of p?.timeline.audio[role] ?? []) knownLane.set(c3.id, { role, src: c3.src });
   const trackItems = aTracks.map((trk, ti) => readItems(trk, `A${ti + 1}`, fps, fileOf, warn));
-  const dropped = mergeStereoPairs(trackItems, layout, warn);
+  const dropped = mergeStereoPairs(trackItems, layout, warn, (name) => knownLane.has(name));
   aTracks.forEach((_trk, ti) => {
     const idx = ti + 1;
     const label = `A${idx}`;
-    const { role: placed, why } = layout[ti] ?? { role: void 0, why: "position" };
-    const role = placed === "vo" || placed === "music" ? placed : "sfx";
-    const list = role === "vo" ? vo : role === "music" ? music : sfx;
+    const { role: placed, why, named } = layout[ti] ?? { role: void 0, why: "position", named: false };
+    const trackRole = placed === "vo" || placed === "music" ? placed : "sfx";
     const tItems = trackItems[ti] ?? [];
     tItems.forEach((it, k) => {
       if (it.kind !== "clip") return;
@@ -21660,13 +21687,18 @@ function readXmeml(xml, p, opts = {}) {
         return;
       }
       if (dropped.has(it)) return;
-      if (placed === "clip") warn(`${label}: '${it.name}' is not on a vo/music/sfx track; treated as sfx`);
-      else if (placed === void 0) warn(`${label}: '${it.name}' is on an extra track without a recognisable name (${why}); treated as sfx (ambiguous)`);
+      const src = srcFor(it, label);
+      const known = named ? void 0 : knownLane.get(it.name);
+      const byId = known !== void 0 && known.src === src;
+      const role = byId ? known.role : trackRole;
+      const list = role === "vo" ? vo : role === "music" ? music : sfx;
+      if (!byId && placed === "clip") warn(`${label}: '${it.name}' is not on a vo/music/sfx track; treated as sfx`);
+      else if (!byId && placed === void 0) warn(`${label}: '${it.name}' is on an extra track without a recognisable name (${why}); treated as sfx (ambiguous)`);
       const prev = tItems[k - 1];
       const next = tItems[k + 1];
       const prevT = prev?.kind === "trans" && tItems[k - 2]?.kind === "clip" ? prev : void 0;
       const nextT = next?.kind === "trans" && tItems[k + 2]?.kind === "clip" ? next : void 0;
-      const ac = { id: uniqueId2(audioIds, it.name, `${role}${list.length + 1}`), src: srcFor(it, label), at: it.start, dur: it.end - it.start };
+      const ac = { id: uniqueId2(audioIds, it.name, `${role}${list.length + 1}`), src, at: it.start, dur: it.end - it.start };
       if (it.in > 0) ac.in = it.in;
       const lv = readLevels(it.node, it.in, it.out);
       if (lv.gainDb !== void 0) ac.gainDb = lv.gainDb;
@@ -39370,10 +39402,23 @@ function findPremiere() {
   }
   return out2;
 }
+function findArtCraft() {
+  const pf = process.env["ProgramFiles"] ?? "C:\\Program Files";
+  const find = (envKey, app, exe) => {
+    const envDir = process.env[envKey];
+    return firstExisting([envDir ? join(envDir, exe) : "", join(pf, app, exe)]);
+  };
+  const out2 = {};
+  const fc = find("EDITMCP_FILMCRAFT_DIR", "FilmCraft", "filmcraft-cli.exe");
+  const ec = find("EDITMCP_EFFECTCRAFT_DIR", "EffectCraft", "effectcraft-cli.exe");
+  if (fc) out2.filmcraftCli = fc;
+  if (ec) out2.effectcraftCli = ec;
+  return out2;
+}
 function discoverTools() {
   const ff2 = findFfmpeg();
   if (!ff2) throw new Error("ffmpeg/ffprobe not found. Install via winget (Gyan.FFmpeg) or set EDITMCP_FFMPEG to its bin folder.");
-  return { ...ff2, ...findAfterEffects(), ...findPremiere() };
+  return { ...ff2, ...findAfterEffects(), ...findPremiere(), ...findArtCraft() };
 }
 async function probeEncoders(ffmpeg) {
   const { stdout } = await execa(ffmpeg, ["-hide_banner", "-encoders"], { reject: false, windowsHide: true, timeout: 3e4 });
@@ -45801,25 +45846,40 @@ var CORE_TOOLS = [
   }),
   tool({
     name: "export_premiere_xml",
-    description: "\u0E2A\u0E48\u0E07\u0E2D\u0E2D\u0E01 FCP7 XML (xmeml) \u0E44\u0E1B\u0E40\u0E1B\u0E34\u0E14\u0E43\u0E19 Premiere \u2192 out/<version>/<name>.xml \xB7 Export the timeline as FCP7 XML for Premiere",
-    input: { version: external_exports.string().optional().describe('default: latest, or "draft" before any build'), sequenceName: external_exports.string().optional() },
+    description: "\u0E2A\u0E48\u0E07\u0E2D\u0E2D\u0E01 FCP7 XML (xmeml) \u0E44\u0E1B\u0E40\u0E1B\u0E34\u0E14\u0E43\u0E19 Premiere \u0E2B\u0E23\u0E37\u0E2D FilmCraft (ArtCraft) \u2192 out/<version>/<name>.xml \xB7 Export the timeline as FCP7 XML for Premiere or FilmCraft",
+    input: {
+      version: external_exports.string().optional().describe('default: latest, or "draft" before any build'),
+      sequenceName: external_exports.string().optional(),
+      target: external_exports.enum(["premiere", "filmcraft"]).optional().describe("editor that opens the file (default premiere); filmcraft writes explicit clip edges FilmCraft reads correctly around dissolves")
+    },
     handler: async (a2, state) => {
       const p = requireProject(state);
       if (a2.version && !p.versions.some((v) => v.id === a2.version)) throw new ToolError(`\u0E44\u0E21\u0E48\u0E1E\u0E1A\u0E40\u0E27\u0E2D\u0E23\u0E4C\u0E0A\u0E31\u0E19 / unknown version: ${a2.version}`);
       const version3 = a2.version ?? p.versions[p.versions.length - 1]?.id ?? "draft";
       const sequenceName = a2.sequenceName ?? `${p.meta.name}_${version3}`;
-      const xml = state.api.xmeml.writeXmeml(p, { sequenceName });
+      const target = a2.target ?? "premiere";
+      const xml = state.api.xmeml.writeXmeml(p, { sequenceName, flavor: target });
       const dir = join15(state.api.project.projectPaths(p).out, version3);
       await mkdir15(dir, { recursive: true });
-      const path12 = uniquePath3(join15(dir, `${fileSafe(p.meta.name)}.xml`));
+      const path12 = uniquePath3(join15(dir, `${fileSafe(p.meta.name)}${target === "premiere" ? "" : `_${target}`}.xml`));
       await writeFile12(path12, xml, { encoding: "utf8", flag: "wx" });
       const warnings = xmemlExportWarnings(p);
-      return { ok: true, path: path12, version: version3, sequenceName, clips: p.timeline.video.length, unrendered: compsNeedingRender(p), ...warnings.length ? { warnings } : {} };
+      return {
+        ok: true,
+        path: path12,
+        version: version3,
+        sequenceName,
+        target,
+        clips: p.timeline.video.length,
+        unrendered: compsNeedingRender(p),
+        ...warnings.length ? { warnings } : {},
+        ...target === "filmcraft" ? { hint: "FilmCraft: File > Import \u0E40\u0E25\u0E37\u0E2D\u0E01\u0E44\u0E1F\u0E25\u0E4C\u0E19\u0E35\u0E49 \xB7 \u0E01\u0E25\u0E31\u0E1A\u0E21\u0E32\u0E14\u0E49\u0E27\u0E22 File > Export > Final Cut Pro XML \u0E41\u0E25\u0E49\u0E27 import_premiere_xml" } : {}
+      };
     }
   }),
   tool({
     name: "import_premiere_xml",
-    description: "\u0E19\u0E33 FCP7 XML \u0E17\u0E35\u0E48 export \u0E08\u0E32\u0E01 Premiere \u0E01\u0E25\u0E31\u0E1A\u0E21\u0E32: \u0E04\u0E48\u0E32\u0E40\u0E23\u0E34\u0E48\u0E21\u0E15\u0E49\u0E19\u0E41\u0E04\u0E48\u0E2A\u0E23\u0E38\u0E1B\u0E04\u0E27\u0E32\u0E21\u0E15\u0E48\u0E32\u0E07 + \u0E04\u0E33\u0E40\u0E15\u0E37\u0E2D\u0E19 (dry run); apply: true \u0E40\u0E1E\u0E37\u0E48\u0E2D\u0E43\u0E0A\u0E49 (\u0E2A\u0E33\u0E23\u0E2D\u0E07\u0E44\u0E17\u0E21\u0E4C\u0E44\u0E25\u0E19\u0E4C\u0E40\u0E14\u0E34\u0E21\u0E44\u0E27\u0E49\u0E43\u0E19 history/ \u0E01\u0E48\u0E2D\u0E19) \xB7 Import Premiere XML: dry-run diff by default, apply: true to commit",
+    description: "\u0E19\u0E33 FCP7 XML \u0E17\u0E35\u0E48 export \u0E08\u0E32\u0E01 Premiere \u0E2B\u0E23\u0E37\u0E2D FilmCraft \u0E01\u0E25\u0E31\u0E1A\u0E21\u0E32: \u0E04\u0E48\u0E32\u0E40\u0E23\u0E34\u0E48\u0E21\u0E15\u0E49\u0E19\u0E41\u0E04\u0E48\u0E2A\u0E23\u0E38\u0E1B\u0E04\u0E27\u0E32\u0E21\u0E15\u0E48\u0E32\u0E07 + \u0E04\u0E33\u0E40\u0E15\u0E37\u0E2D\u0E19 (dry run); apply: true \u0E40\u0E1E\u0E37\u0E48\u0E2D\u0E43\u0E0A\u0E49 (\u0E2A\u0E33\u0E23\u0E2D\u0E07\u0E44\u0E17\u0E21\u0E4C\u0E44\u0E25\u0E19\u0E4C\u0E40\u0E14\u0E34\u0E21\u0E44\u0E27\u0E49\u0E43\u0E19 history/ \u0E01\u0E48\u0E2D\u0E19) \xB7 Import Premiere/FilmCraft XML: dry-run diff by default, apply: true to commit",
     input: {
       path: external_exports.string(),
       apply: external_exports.boolean().optional().describe("commit the imported timeline (default false = dry run: summary, diff, warnings only)")
@@ -45908,6 +45968,8 @@ var CORE_TOOLS = [
         aeBackend: state.ae.kind,
         afterEffects: env.tools.afterfx ? "found" : "not found (ae_* tools unavailable)",
         premiere: env.tools.premiereExe ? "found (optional; exchange via FCP7 XML)" : "not found (optional)",
+        filmcraft: env.tools.filmcraftCli ? 'found (optional; export_premiere_xml {target: "filmcraft"})' : "not found (optional)",
+        effectcraft: env.tools.effectcraftCli ? "found (optional; not used by CatCut yet)" : "not found (optional)",
         problems: state.problems,
         compat: COMPAT_NOTES,
         project: state.project ? { name: state.project.meta.name, dir: state.project.dir } : null
@@ -45923,6 +45985,7 @@ var INSTRUCTIONS = [
   "CatCut \u{1F43E}: headless video editing (After Effects headless + aerender + ffmpeg). \u0E17\u0E38\u0E01\u0E40\u0E27\u0E25\u0E32\u0E40\u0E1B\u0E47\u0E19\u0E40\u0E1F\u0E23\u0E21\u0E17\u0E35\u0E48 fps \u0E02\u0E2D\u0E07\u0E42\u0E1B\u0E23\u0E40\u0E08\u0E01\u0E15\u0E4C (\u0E44\u0E21\u0E48\u0E43\u0E0A\u0E48\u0E27\u0E34\u0E19\u0E32\u0E17\u0E35).",
   "Flow: doctor \u2192 project_new/project_open \u2192 asset_add \u2192 timeline_set (or timeline_edit / audio_add) \u2192 build (returns job id; call job_wait {id}) \u2192 deliver \u2192 export_premiere_xml.",
   "Premiere loop: export_premiere_xml \u2192 edit in Premiere \u2192 File > Export > Final Cut Pro XML \u2192 import_premiere_xml (dry run: show the summary to the user) \u2192 import_premiere_xml {apply: true} (backs up the timeline; undo with timeline_restore) \u2192 build.",
+  'FilmCraft (ArtCraft) loop: same, with export_premiere_xml {target: "filmcraft"} (FilmCraft misreads the Premiere form around dissolves); its Final Cut Pro XML export comes back through import_premiere_xml.',
   "ae_* tools run as jobs: if the result has pending:true, call job_wait {id}. If a tool says the project was changed elsewhere, it has been reloaded: re-issue the edit.",
   "New AE comps: write a JSX build script and run ae_create (never launch AfterFX/aerender/ffmpeg yourself, never write into out/). Long jobs: job_wait {id}, never sleep-poll.",
   "Review: review_open (returns the URL) \u2192 user selects shots/ranges and annotates \u2192 review_notes. Propose edits from submitted notes before applying them. Evidence for notes: rules_evidence {clipIds, offsets}.",
@@ -46028,7 +46091,7 @@ function printDoctor(d) {
   out(`CatCut doctor ${d["ok"] ? "OK" : "PROBLEMS"}`);
   out("");
   out("tools");
-  for (const k of ["ffmpeg", "ffprobe", "afterfx", "aerender", "aeVersionDir", "premiereExe", "mediaEncoderExe"]) out(`  ${k.padEnd(16)} ${tools[k] ?? "-"}`);
+  for (const k of ["ffmpeg", "ffprobe", "afterfx", "aerender", "aeVersionDir", "premiereExe", "mediaEncoderExe", "filmcraftCli", "effectcraftCli"]) out(`  ${k.padEnd(16)} ${tools[k] ?? "-"}`);
   out(`  ffmpeg version   ${d["ffmpegVersion"] ?? "-"}`);
   out(`  AE version       ${d["aeVersion"]}`);
   out("");

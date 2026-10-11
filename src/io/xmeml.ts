@@ -8,6 +8,10 @@
  * Dissolve N at cut C covers [C-a, C+b), a = floor(N/2): the transitionitem has exactly that
  * start/end, touching clip edges are written as -1 (FCP7 convention) and in/out are extended by
  * the halves. Clip ids travel in <name> (Premiere preserves it), file ids derive from asset ids.
+ * flavor 'filmcraft' (ArtCraft FilmCraft): same transitionitems, but every clip edge is explicit at
+ * its cut and in/out cover the body only — FilmCraft's own form, which it reads back exactly.
+ * The reader accepts both; explicit edges inside a transition pin the cut (an off-centre split from
+ * an editor is kept at its cut and re-centred on the next export).
  */
 import path from 'node:path';
 import { XMLParser } from 'fast-xml-parser';
@@ -350,6 +354,7 @@ export function writeXmeml(p: Project, opts: XmemlWriteOptions): string {
   const n = clips.length;
   const resolvePath = opts.resolvePath ?? defaultResolvePath;
   const useClipAudio = tl.audio.useClipAudio !== false;
+  const explicitEdges = opts.flavor === 'filmcraft';
 
   const assetOf = (id: string, who: string): Asset => {
     const a = p.assets[id];
@@ -535,6 +540,8 @@ export function writeXmeml(p: Project, opts: XmemlWriteOptions): string {
   clips.forEach((c, i) => {
     const a = assetOf(c.src, `clip '${c.id}'`);
     const start = startOf(i);
+    // explicit edges need no head handle, so a still keeps its own in (the -1 form may clamp it to 0)
+    const bodyIn = explicitEdges && a.kind === 'still' ? c.in : (vIn[i] ?? 0) + ap(i);
     vItems.push(
       ela(
         'clipitem',
@@ -543,16 +550,16 @@ export function writeXmeml(p: Project, opts: XmemlWriteOptions): string {
         el('enabled', 'TRUE'),
         el('duration', itemDuration(i, a, c.src)),
         rate(),
-        el('start', ap(i) > 0 ? -1 : start),
-        el('end', bn(i) > 0 ? -1 : start + c.dur),
-        el('in', vIn[i] ?? 0),
-        el('out', vOut[i] ?? 0),
+        el('start', ap(i) > 0 && !explicitEdges ? -1 : start),
+        el('end', bn(i) > 0 && !explicitEdges ? -1 : start + c.dur),
+        el('in', explicitEdges ? bodyIn : vIn[i] ?? 0),
+        el('out', explicitEdges ? bodyIn + c.dur : vOut[i] ?? 0),
         el('pixelaspectratio', 'square'),
         el('anamorphic', 'FALSE'),
         el('alphatype', 'none'),
         fileRef(c.src),
         remapFor(i, c, 'video'),
-        motionFilter(c.scale, c.pushIn ? { pct: c.pushIn, from: (vIn[i] ?? 0) + ap(i), to: (vIn[i] ?? 0) + ap(i) + Math.max(1, c.dur - 1) } : undefined),
+        motionFilter(c.scale, c.pushIn ? { pct: c.pushIn, from: bodyIn, to: bodyIn + Math.max(1, c.dur - 1) } : undefined),
         ...linksFor(i),
       ),
     );
@@ -565,9 +572,9 @@ export function writeXmeml(p: Project, opts: XmemlWriteOptions): string {
       // audio cross fade only where both neighbours have audio on this lane; otherwise a hard cut at C
       const xfPrev = i > 0 && onLane(i - 1, L) && dAfter(i - 1) > 0;
       const xfNext = i < n - 1 && onLane(i + 1, L) && dAfter(i) > 0;
-      const hp = xfPrev ? ap(i) : 0;
-      const hn = xfNext ? bn(i) : 0;
-      const xIn = (vIn[i] ?? 0) + ap(i) - hp;
+      const hp = xfPrev && !explicitEdges ? ap(i) : 0;
+      const hn = xfNext && !explicitEdges ? bn(i) : 0;
+      const xIn = bodyIn - hp;
       const lane = clipAudioItems[L];
       if (!lane) continue;
       lane.push(
@@ -754,6 +761,9 @@ interface RItem {
   file?: FileRec;
   nestedSequence?: string;
   alignment: string;
+  /** start/end given in the XML (not -1 resolved from a neighbouring transition) */
+  fixedStart: boolean;
+  fixedEnd: boolean;
 }
 
 type Warn = (s: string) => void;
@@ -780,17 +790,21 @@ function readItems(track: PNode, label: string, fps: number, fileOf: (node: PNod
       if ((childText(k, 'enabled') ?? 'TRUE').toUpperCase() === 'FALSE') warn(`${label}: '${name}' is disabled in the XML but kept`);
       const fileNode = child(k, 'file');
       const nested = child(k, 'sequence');
+      const start = childNum(k, 'start') ?? 0;
+      const end = childNum(k, 'end') ?? -1;
       items.push({
         kind: 'clip',
         node: k,
         name,
-        start: childNum(k, 'start') ?? 0,
-        end: childNum(k, 'end') ?? -1,
+        start,
+        end,
         in: inF,
         out: outF,
         file: fileNode ? fileOf(fileNode) : undefined,
         nestedSequence: nested ? childText(nested, 'name') ?? 'nested sequence' : undefined,
         alignment: '',
+        fixedStart: start >= 0,
+        fixedEnd: end >= 0,
       });
     } else if (t === 'transitionitem') {
       const eff = child(k, 'effect');
@@ -801,7 +815,7 @@ function readItems(track: PNode, label: string, fps: number, fileOf: (node: PNod
         warn(`${label}: transition '${name}' has no usable start/end; ignored`);
         continue;
       }
-      items.push({ kind: 'trans', node: k, name, start, end, in: 0, out: 0, alignment: (childText(k, 'alignment') ?? 'center').toLowerCase() });
+      items.push({ kind: 'trans', node: k, name, start, end, in: 0, out: 0, alignment: (childText(k, 'alignment') ?? 'center').toLowerCase(), fixedStart: true, fixedEnd: true });
     }
   }
   items.forEach((it, i) => {
@@ -840,6 +854,21 @@ function cutOf(t: RItem, label: string, warn: Warn): Frames {
     return t.end;
   }
   return t.start + splitDissolve(n).a;
+}
+
+/**
+ * Cut of transition `t` between clips `left` and `right`: explicit clip edges meeting inside the
+ * transition pin it (FilmCraft, and Premiere-family editors writing explicit edges); otherwise cutOf.
+ */
+function cutBetween(left: RItem | undefined, t: RItem, right: RItem | undefined, label: string, warn: Warn): Frames {
+  if (left?.fixedEnd && right?.fixedStart && left.end === right.start && left.end >= t.start && left.end <= t.end) {
+    const c = left.end;
+    const n = t.end - t.start;
+    const { a, b } = splitDissolve(n);
+    if (c - t.start !== a) warn(`${label}: dissolve ${n}f at ${c} is split ${c - t.start}/${t.end - c} (CatCut centres ${a}/${b}); cut kept at ${c}, re-centred on the next export`);
+    return c;
+  }
+  return cutOf(t, label, warn);
 }
 
 interface TimeRemap {
@@ -943,6 +972,7 @@ type AudioRole = 'clip' | 'vo' | 'music' | 'sfx';
 interface TrackRole {
   role: AudioRole | undefined; // undefined = extra track the layout cannot place
   why: string;
+  named: boolean; // role came from a recognisable track name (else from the position)
 }
 
 function roleFromName(name: string | undefined): AudioRole | undefined {
@@ -983,7 +1013,7 @@ function audioTrackRoles(tracks: PNode[]): TrackRole[] {
       const t = tracks[i + k] as PNode;
       const nm = attrOf(t, 'MZ.TrackName') ?? childText(t, 'name');
       const fromName = roleFromName(nm);
-      out.push({ role: fromName ?? byPos[logical], why: fromName ? `name '${nm}'` : nm ? `unrecognised name '${nm}'` : 'no track name' });
+      out.push({ role: fromName ?? byPos[logical], why: fromName ? `name '${nm}'` : nm ? `unrecognised name '${nm}'` : 'no track name', named: fromName !== undefined });
     }
     i += size;
   }
@@ -994,7 +1024,7 @@ function audioTrackRoles(tracks: PNode[]): TrackRole[] {
  * Stereo (or wider) audio arrives as one clipitem per channel, linked only to each other, with the
  * same file and the same start/end/in/out. Keep the one on the lowest track; return the others.
  */
-function mergeStereoPairs(trackItems: RItem[][], layout: TrackRole[], warn: Warn): Set<RItem> {
+function mergeStereoPairs(trackItems: RItem[][], layout: TrackRole[], warn: Warn, knownClip: (name: string) => boolean): Set<RItem> {
   interface AItem { it: RItem; ti: number; id: string; refs: string[] }
   const all: AItem[] = [];
   const byId = new Map<string, AItem>();
@@ -1032,7 +1062,8 @@ function mergeStereoPairs(trackItems: RItem[][], layout: TrackRole[], warn: Warn
     for (const g of group) {
       dropped.add(g.it);
       const other = layout[g.ti]?.role;
-      if (other !== role) warn(`A${a.ti + 1}/A${g.ti + 1}: stereo pair '${a.it.name}' spans tracks read as ${role ?? 'extra'} and ${other ?? 'extra'}; treated as ${role === 'vo' || role === 'music' ? role : 'sfx'} (ambiguous)`);
+      const byId = !layout[a.ti]?.named && knownClip(a.it.name); // the importer places it by its clip id instead
+      if (other !== role && !byId) warn(`A${a.ti + 1}/A${g.ti + 1}: stereo pair '${a.it.name}' spans tracks read as ${role ?? 'extra'} and ${other ?? 'extra'}; treated as ${role === 'vo' || role === 'music' ? role : 'sfx'} (ambiguous)`);
     }
   }
   return dropped;
@@ -1151,6 +1182,15 @@ export function readXmeml(xml: string, p?: Project, opts: XmemlReadOptions = {})
   const videoIds = new Set<string>();
   let lastIdx = -1;
   let lastEnd: Frames | undefined;
+  const cuts1 = new Map<RItem, Frames>(); // each transition is reached from both sides; resolve (and warn) once
+  const cutAt = (left: RItem | undefined, t: RItem, right: RItem | undefined): Frames => {
+    let c = cuts1.get(t);
+    if (c === undefined) {
+      c = cutBetween(left, t, right, 'V1', warn);
+      cuts1.set(t, c);
+    }
+    return c;
+  };
   items.forEach((it, i) => {
     if (it.kind !== 'clip') return;
     const prev = items[i - 1];
@@ -1162,8 +1202,8 @@ export function readXmeml(xml: string, p?: Project, opts: XmemlReadOptions = {})
     if (prev?.kind === 'trans' && !prevT) warn(`V1: transition '${prev.name}' before '${it.name}' has no clip on its other side; folded into the clip`);
     if (next?.kind === 'trans' && !nextT) warn(`V1: transition '${next.name}' after '${it.name}' has no clip on its other side; folded into the clip`);
     if (prevT && !/dissolve/i.test(prevT.name)) warn(`V1: transition '${prevT.name}' treated as a cross dissolve`);
-    const cPrev = prevT ? cutOf(prevT, 'V1', warn) : it.start;
-    const cNext = nextT ? cutOf(nextT, 'V1', warn) : it.end;
+    const cPrev = prevT ? cutAt(before, prevT, it) : it.start;
+    const cNext = nextT ? cutAt(it, nextT, after) : it.end;
     const dur = cNext - cPrev;
     if (dur <= 0) {
       warn(`V1: '${it.name}' has no frames left outside its transitions; skipped`);
@@ -1248,14 +1288,17 @@ export function readXmeml(xml: string, p?: Project, opts: XmemlReadOptions = {})
   const audioIds = new Set<string>();
   let linkedClipAudio = 0;
   const layout = audioTrackRoles(aTracks);
+  // Editors that drop track names (FilmCraft) still keep clip names: a clip this project already has
+  // (same id, same source) keeps its lane when its track's role is only a positional guess.
+  const knownLane = new Map<string, { role: 'vo' | 'music' | 'sfx'; src: string }>();
+  for (const role of ['vo', 'music', 'sfx'] as const) for (const c of p?.timeline.audio[role] ?? []) knownLane.set(c.id, { role, src: c.src });
   const trackItems = aTracks.map((trk, ti) => readItems(trk, `A${ti + 1}`, fps, fileOf, warn));
-  const dropped = mergeStereoPairs(trackItems, layout, warn);
+  const dropped = mergeStereoPairs(trackItems, layout, warn, (name) => knownLane.has(name));
   aTracks.forEach((_trk, ti) => {
     const idx = ti + 1;
     const label = `A${idx}`;
-    const { role: placed, why } = layout[ti] ?? { role: undefined, why: 'position' };
-    const role: 'vo' | 'music' | 'sfx' = placed === 'vo' || placed === 'music' ? placed : 'sfx';
-    const list = role === 'vo' ? vo : role === 'music' ? music : sfx;
+    const { role: placed, why, named } = layout[ti] ?? { role: undefined, why: 'position', named: false };
+    const trackRole: 'vo' | 'music' | 'sfx' = placed === 'vo' || placed === 'music' ? placed : 'sfx';
     const tItems = trackItems[ti] ?? [];
     tItems.forEach((it, k) => {
       if (it.kind !== 'clip') return;
@@ -1264,13 +1307,18 @@ export function readXmeml(xml: string, p?: Project, opts: XmemlReadOptions = {})
         return;
       }
       if (dropped.has(it)) return;
-      if (placed === 'clip') warn(`${label}: '${it.name}' is not on a vo/music/sfx track; treated as sfx`);
-      else if (placed === undefined) warn(`${label}: '${it.name}' is on an extra track without a recognisable name (${why}); treated as sfx (ambiguous)`);
+      const src = srcFor(it, label);
+      const known = named ? undefined : knownLane.get(it.name);
+      const byId = known !== undefined && known.src === src;
+      const role = byId ? known.role : trackRole;
+      const list = role === 'vo' ? vo : role === 'music' ? music : sfx;
+      if (!byId && placed === 'clip') warn(`${label}: '${it.name}' is not on a vo/music/sfx track; treated as sfx`);
+      else if (!byId && placed === undefined) warn(`${label}: '${it.name}' is on an extra track without a recognisable name (${why}); treated as sfx (ambiguous)`);
       const prev = tItems[k - 1];
       const next = tItems[k + 1];
       const prevT = prev?.kind === 'trans' && tItems[k - 2]?.kind === 'clip' ? prev : undefined;
       const nextT = next?.kind === 'trans' && tItems[k + 2]?.kind === 'clip' ? next : undefined;
-      const ac: AudioClip = { id: uniqueId(audioIds, it.name, `${role}${list.length + 1}`), src: srcFor(it, label), at: it.start, dur: it.end - it.start };
+      const ac: AudioClip = { id: uniqueId(audioIds, it.name, `${role}${list.length + 1}`), src, at: it.start, dur: it.end - it.start };
       if (it.in > 0) ac.in = it.in;
       const lv = readLevels(it.node, it.in, it.out);
       if (lv.gainDb !== undefined) ac.gainDb = lv.gainDb;

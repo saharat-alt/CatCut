@@ -162,6 +162,15 @@ project.json ──export_premiere_xml──▶ seq.xml ──เปิดใน
 - Reader: map `pathurl` → asset id → timeline ใหม่ → diff กับของเดิม
 - **ต้องทดสอบจริง:** Premiere 2026 กับ dissolve เลขคี่, ค่า Motion ตอน import (เคยมีบั๊ก), ไฟล์ path ไทยใน `pathurl`
 
+### 5.3.1 FilmCraft (ArtCraft) — รอบเดียวกัน คนละสำนวน XML
+- `export_premiere_xml {target: "filmcraft"}`: ทุกขอบคลิปเป็นตัวเลขที่จุดตัด, in/out เฉพาะตัวคลิป (ไม่รวมครึ่ง dissolve), transitionitem เหมือนเดิม ([C−a, C+b))
+  - เหตุผล: FilmCraft 0.6.0 อ่าน `-1` แบบ Premiere ผิด — คลิปถัดจาก dissolve ถูกย้ายไป V2 / คลิประหว่าง dissolve สองอันหายไป
+  - ทดสอบจริงกับ `filmcraft-cli` แล้ว: คลิป/dissolve 10 และ 13 เฟรม/marker/scale/เสียงกลับมาครบทุกเฟรม ไม่มีคำเตือน
+- Reader รับได้ทั้งสองแบบ: ขอบคลิปที่ระบุเลขและพบกันในช่วง dissolve = จุดตัดจริง (FilmCraft สร้าง dissolve เลขคี่แบบ 7/6 → คงจุดตัดไว้ เตือน แล้วจัดกึ่งกลางตามกฎเราตอน export ครั้งถัดไป)
+- FilmCraft ไม่เก็บชื่อแทร็ก (`MZ.TrackName`) → ถ้าแทร็กไม่มีชื่อ เลน vo/music/sfx ใช้ id คลิปที่โปรเจกต์มีอยู่ (ต้อง src ตรงกันด้วย) ก่อนเดาจากตำแหน่ง
+- `doctor` หา `filmcraft-cli.exe` / `effectcraft-cli.exe` (Program Files หรือ `EDITMCP_FILMCRAFT_DIR` / `EDITMCP_EFFECTCRAFT_DIR`)
+- ถัดไป (ยังไม่ทำ): สั่ง FilmCraft ผ่าน MCP/CLI ตรง ๆ แทนไฟล์ XML, และ EffectCraft เป็น motion backend คู่กับ AE
+
 ### 5.4 QC อัตโนมัติ (ทุก build)
 - ภาพ: จำนวนเฟรม = แผน, `blackdetect`, `freezedetect` (จับอาการ "ค้าง" แบบที่ 00:00:34:23) → รายงานว่าช็อตไหน/comp ไหน
 - เสียง: `silencedetect`, integrated loudness + true peak ตาม preset, เช็ก phase/clipping
@@ -185,7 +194,7 @@ project.json ──export_premiere_xml──▶ seq.xml ──เปิดใน
 | build | `build` | render ส่วนที่เปลี่ยน → assemble → QC → master (incremental เสมอ) |
 | build | `preview` | พรีวิวไฟล์เล็กเร็ว ๆ |
 | build | `deliver` | สร้าง deliverable ตาม preset |
-| premiere | `export_premiere_xml` / `import_premiere_xml` | รอบแก้มือใน Premiere |
+| premiere | `export_premiere_xml` / `import_premiere_xml` | รอบแก้มือใน Premiere หรือ FilmCraft (`target: "filmcraft"`) |
 | review | `review_cut` | สรุปสถิติ pacing/loudness/contact sheet ให้ agent วิจารณ์และแนะนำ |
 | library | `technique_search` / `technique_apply` / `technique_save` | ใช้/บันทึกเทคนิค (ดูข้อ 7) |
 

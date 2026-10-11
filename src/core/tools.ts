@@ -69,10 +69,28 @@ export function findPremiere(): Pick<ToolPaths, 'premiereExe' | 'mediaEncoderExe
   return out;
 }
 
+/**
+ * ArtCraft headless CLIs (optional): EDITMCP_FILMCRAFT_DIR / EDITMCP_EFFECTCRAFT_DIR (e.g. a portable
+ * zip), else the MSI install folders under Program Files.
+ */
+export function findArtCraft(): Pick<ToolPaths, 'filmcraftCli' | 'effectcraftCli'> {
+  const pf = process.env['ProgramFiles'] ?? 'C:\\Program Files';
+  const find = (envKey: string, app: string, exe: string): string | undefined => {
+    const envDir = process.env[envKey];
+    return firstExisting([envDir ? join(envDir, exe) : '', join(pf, app, exe)]);
+  };
+  const out: Pick<ToolPaths, 'filmcraftCli' | 'effectcraftCli'> = {};
+  const fc = find('EDITMCP_FILMCRAFT_DIR', 'FilmCraft', 'filmcraft-cli.exe');
+  const ec = find('EDITMCP_EFFECTCRAFT_DIR', 'EffectCraft', 'effectcraft-cli.exe');
+  if (fc) out.filmcraftCli = fc;
+  if (ec) out.effectcraftCli = ec;
+  return out;
+}
+
 export function discoverTools(): ToolPaths {
   const ff = findFfmpeg();
   if (!ff) throw new Error('ffmpeg/ffprobe not found. Install via winget (Gyan.FFmpeg) or set EDITMCP_FFMPEG to its bin folder.');
-  return { ...ff, ...findAfterEffects(), ...findPremiere() };
+  return { ...ff, ...findAfterEffects(), ...findPremiere(), ...findArtCraft() };
 }
 
 export async function probeEncoders(ffmpeg: string): Promise<Encoders & { version?: string }> {

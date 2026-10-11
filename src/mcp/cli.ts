@@ -58,7 +58,7 @@ function printDoctor(d: Record<string, unknown>): void {
   out(`CatCut doctor ${d['ok'] ? 'OK' : 'PROBLEMS'}`);
   out('');
   out('tools');
-  for (const k of ['ffmpeg', 'ffprobe', 'afterfx', 'aerender', 'aeVersionDir', 'premiereExe', 'mediaEncoderExe']) out(`  ${k.padEnd(16)} ${tools[k] ?? '-'}`);
+  for (const k of ['ffmpeg', 'ffprobe', 'afterfx', 'aerender', 'aeVersionDir', 'premiereExe', 'mediaEncoderExe', 'filmcraftCli', 'effectcraftCli']) out(`  ${k.padEnd(16)} ${tools[k] ?? '-'}`);
   out(`  ffmpeg version   ${d['ffmpegVersion'] ?? '-'}`);
   out(`  AE version       ${d['aeVersion']}`);
   out('');
