@@ -18,6 +18,7 @@ const USAGE = `CatCut 🐾 — headless video editing MCP (After Effects headles
   editmcp xml-export <projectDir> [--version v001] [--name SeqName]
   editmcp xml-import <projectDir> <file.xml> [--apply]   ค่าเริ่มต้นแค่สรุปความต่าง; --apply เพื่อใช้ (สำรองไทม์ไลน์ใน history/)
   editmcp review <projectDir> [--version v001]        เปิดหน้ารีวิวในเครื่อง (Ctrl+C เพื่อปิด server)
+  editmcp premiere-bridge install|status|uninstall  bridge ใน Premiere สำหรับ premiere_push / premiere_pull (ติดตั้งครั้งเดียว แล้วรีสตาร์ต Premiere)
 
   EDITMCP_ALLOW_AE=1   doctor may launch After Effects to read its version (off by default)
   EDITMCP_PROTECTED_PATHS=D:/job1;E:/job2   folders EDITMCP must never write into
@@ -61,6 +62,7 @@ function printDoctor(d: Record<string, unknown>): void {
   for (const k of ['ffmpeg', 'ffprobe', 'afterfx', 'aerender', 'aeVersionDir', 'premiereExe', 'mediaEncoderExe', 'filmcraftCli', 'effectcraftCli']) out(`  ${k.padEnd(16)} ${tools[k] ?? '-'}`);
   out(`  ffmpeg version   ${d['ffmpegVersion'] ?? '-'}`);
   out(`  AE version       ${d['aeVersion']}`);
+  out(`  Premiere bridge  ${d['premiereBridge'] ?? '-'}`);
   out('');
   out(`encoders  ${Object.entries(enc).map(([k, v]) => `${v ? '+' : '-'}${k}`).join('  ')}`);
   out(`gpu       ${d['gpu']}`);
@@ -162,6 +164,26 @@ async function main(argv: string[] = process.argv.slice(2)): Promise<number | nu
       out(pretty({ applied: d['applied'], valid: d['valid'], errors: d['errors'], backup: d['backup'], unresolvedPaths: d['unresolvedPaths'] }));
       if (!values.apply) err('dry run: ไม่ได้แก้ไทม์ไลน์ — ใส่ --apply เพื่อใช้ / nothing applied, re-run with --apply');
       return d['valid'] === false ? 2 : 0;
+    }
+    case 'premiere-bridge': {
+      const { createPremiereClient, installBridge, uninstallBridge } = await import('../engine/premiere.js');
+      const sub = rest[0] ?? 'status';
+      if (sub === 'install') {
+        const r = await installBridge();
+        out(`installed: ${r.installedTo}`);
+        out(`PlayerDebugMode=1 (unsigned extensions allowed): ${r.debugModeKeys.join(', ')}`);
+        out('Restart Premiere Pro (save your work first). The bridge starts by itself; check with: catcut premiere-bridge status');
+        out('ติดตั้งแล้ว — save งานแล้วปิดเปิด Premiere ใหม่ bridge จะเริ่มเอง');
+        return 0;
+      }
+      if (sub === 'uninstall') { out(`removed: ${await uninstallBridge()}`); return 0; }
+      if (sub === 'status') {
+        const st = await createPremiereClient().status();
+        out(pretty(st));
+        return st.connected ? 0 : 2;
+      }
+      err(`premiere-bridge: unknown subcommand ${sub} (install | status | uninstall)`);
+      return 1;
     }
     default:
       err(`unknown command: ${cmd}\n`);

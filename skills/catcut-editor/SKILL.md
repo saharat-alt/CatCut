@@ -33,7 +33,7 @@ Cards only collect choices; the actual work still goes through CatCut tools.
 1. **Brief/board first.** No brief (a one-off effect or test)? Skip the board; say so in one line. `board_import` the storyboard/brief, then `board_check`. Tie every clip to a board `slot`. If the board contradicts itself, ask before cutting.
 2. **Capture rules** the brief or user states: `rules_add_constraint` (checks: `board-only`, `logo-static`, `no-repeat-gimmick` are automatic; `no-cover-photo`, `manual` are checked by eye) and `rules_set_style` (radius, safe margin, palette, joins, thai, maxStaticSec).
 3. **Before every edit and every build, call `rules_get`** and re-read the checklist.
-4. **Edit**: use `timeline_edit` for small changes, `ae_edit` for existing comps and `ae_create` for new ones.
+4. **Edit**: use `timeline_edit` for small changes, `ae_edit` for existing comps and `ae_create` for new ones. To hand the cut to a human editor in Premiere, use `premiere_push` / `premiere_pull` (CatCut bridge), never screenshots or clicks.
 5. **Build** incrementally (`build`). Only changed segments re-render. Never export full deliverables when an incremental build answers the question. Check `disk_report` if space is tight. Build refuses below 5 GB free and warns below 20 GB.
 6. **Review**: run `qc_report`, then `rules_check` (machine checks → `style` issues plus a visual checklist). `review_open` returns the URL directly; give it to the user. QC on a clip without audio always reports silence/loudness: say so once, do not repeat it every round.
 7. **Fix loop**: address each note, rebuild, and review again until clean.

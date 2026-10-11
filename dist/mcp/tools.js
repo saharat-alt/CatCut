@@ -19,6 +19,7 @@ import { compsNeedingRender, isAeComp, requireFfmpeg, requireProject } from './s
 // ---------- result plumbing (shared: tooldef.ts) ----------
 import { fail, ok, tool, ToolError } from './tooldef.js';
 import { EXTRA_TOOLS } from './tools-extra.js';
+import { createPremiereClient } from '../engine/premiere.js';
 /** Tools that change the project while a build/deliver/review job may be using it. */
 const MUTATING = new Set(['project_new', 'project_open', 'asset_add', 'timeline_set', 'timeline_edit', 'audio_add', 'ae_edit', 'import_premiere_xml', 'timeline_restore']);
 /** Tools that write into the open project's folder. */
@@ -1216,6 +1217,12 @@ const CORE_TOOLS = [
                 afterEffects: env.tools.afterfx ? 'found' : 'not found (ae_* tools unavailable)',
                 premiere: env.tools.premiereExe ? 'found (optional; exchange via FCP7 XML)' : 'not found (optional)',
                 filmcraft: env.tools.filmcraftCli ? 'found (optional; export_premiere_xml {target: "filmcraft"})' : 'not found (optional)',
+                premiereBridge: await (async () => {
+                    const st = await (state.premiere ?? createPremiereClient()).status();
+                    if (st.connected)
+                        return `connected (Premiere ${st.premiere ?? '?'}, project ${st.project?.name ?? 'none'}): premiere_push / premiere_pull`;
+                    return st.installed ? 'installed, not running (start Premiere Pro)' : 'not installed (optional; `catcut premiere-bridge install` for push/pull without computer use)';
+                })(),
                 effectcraft: env.tools.effectcraftCli ? 'found (optional; .ecproj comps: ae_create / build render them headless)' : 'not found (optional)',
                 problems: state.problems,
                 compat: COMPAT_NOTES,

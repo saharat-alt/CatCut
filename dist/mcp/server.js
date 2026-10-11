@@ -13,6 +13,7 @@ const INSTRUCTIONS = [
     'CatCut 🐾: headless video editing (After Effects headless + aerender + ffmpeg). ทุกเวลาเป็นเฟรมที่ fps ของโปรเจกต์ (ไม่ใช่วินาที).',
     'Flow: doctor → project_new/project_open → asset_add → timeline_set (or timeline_edit / audio_add) → build (returns job id; call job_wait {id}) → deliver → export_premiere_xml.',
     'Premiere loop: export_premiere_xml → edit in Premiere → File > Export > Final Cut Pro XML → import_premiere_xml (dry run: show the summary to the user) → import_premiere_xml {apply: true} (backs up the timeline; undo with timeline_restore) → build.',
+    'Premiere handoff without computer use (CatCut bridge installed once with `catcut premiere-bridge install`): premiere_status → premiere_push {project: <open .prproj>} → the editor works in Premiere → premiere_pull (dry run, show the summary) → premiere_pull {apply: true} → build. Never drive Premiere through screenshots or clicks.',
     'FilmCraft (ArtCraft) loop: same, with export_premiere_xml {target: "filmcraft"} (FilmCraft misreads the Premiere form around dissolves); its Final Cut Pro XML export comes back through import_premiere_xml.',
     'ae_* tools run as jobs: if the result has pending:true, call job_wait {id}. If a tool says the project was changed elsewhere, it has been reloaded: re-issue the edit.',
     'New AE comps: write a JSX build script and run ae_create (never launch AfterFX/aerender/ffmpeg yourself, never write into out/). Long jobs: job_wait {id}, never sleep-poll.',

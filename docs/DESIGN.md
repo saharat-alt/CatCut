@@ -162,6 +162,17 @@ project.json ──export_premiere_xml──▶ seq.xml ──เปิดใน
 - Reader: map `pathurl` → asset id → timeline ใหม่ → diff กับของเดิม
 - **ต้องทดสอบจริง:** Premiere 2026 กับ dissolve เลขคี่, ค่า Motion ตอน import (เคยมีบั๊ก), ไฟล์ path ไทยใน `pathurl`
 
+### 5.3.0 Premiere handoff ไม่ใช้ computer use (CatCut bridge)
+- Premiere ไม่มีโหมด headless/command-line → ต้องมีตัวรับคำสั่งอยู่ใน Premiere: `premiere/catcut-bridge` (CEP) มี 2 ตัวในชุดเดียว
+  - `com.catcut.bridge.auto` ไม่มีหน้าต่าง เริ่มเองเมื่อ Premiere เปิด (`StartOn ApplicationActivate`) → ไม่ต้องเปิด panel / กด connect
+  - `com.catcut.bridge.panel` (Window > Extensions > CatCut Bridge) ดูสถานะ + สำรองถ้า auto-start ไม่ทำงานในบางเวอร์ชัน; มีตัวเดียวที่รับงาน (lock ด้วย heartbeat)
+- คิวเป็นไฟล์ใน `%TEMP%\catcut-premiere-bridge` (ASCII): `<id>.req.json` → `<id>.res.json`, `bridge.json` = heartbeat ทุก 2 วิ; ไฟล์ที่ Premiere อ่าน/เขียนผ่านโฟลเดอร์นี้เสมอ (path ไทยไม่ถึง Premiere)
+- host.jsx ทำได้แค่ ping/status/importXml/exportXml — ไม่มี save/close/open โปรเจกต์ Premiere
+- `premiere_push {project}`: export_premiere_xml → import เข้า bin "CatCut" ของโปรเจกต์ที่เปิด (ต้องระบุชื่อโปรเจกต์ให้ตรง ป้องกันใส่ผิดงาน; host เช็คซ้ำอีกชั้น) แล้วเปิด sequence
+- `premiere_pull {sequence?, apply?}`: Premiere `exportAsFinalCutProXML` → `out/premiere/<seq>.xml` (ไม่เขียนทับ) → import_premiere_xml (dry run เว้นแต่ apply)
+- ติดตั้งครั้งเดียว: `catcut premiere-bridge install` (ก๊อปไป `%APPDATA%\Adobe\CEP\extensions\com.catcut.bridge` + `PlayerDebugMode=1` ใน HKCU CSXS.9–12) แล้วรีสตาร์ต Premiere; จอดับ/ล็อกจอได้ แต่ห้าม sleep/log off
+- ยังต้องลองกับ Premiere จริง: auto-start event ใน Premiere 2026, import XML ที่มีสื่อหาย (dialog อาจค้าง → request timeout แล้วถอนคิว)
+
 ### 5.3.1 FilmCraft (ArtCraft) — รอบเดียวกัน คนละสำนวน XML
 - `export_premiere_xml {target: "filmcraft"}`: ทุกขอบคลิปเป็นตัวเลขที่จุดตัด, in/out เฉพาะตัวคลิป (ไม่รวมครึ่ง dissolve), transitionitem เหมือนเดิม ([C−a, C+b))
   - เหตุผล: FilmCraft 0.6.0 อ่าน `-1` แบบ Premiere ผิด — คลิปถัดจาก dissolve ถูกย้ายไป V2 / คลิประหว่าง dissolve สองอันหายไป

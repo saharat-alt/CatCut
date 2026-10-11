@@ -1,4 +1,5 @@
 import type { ReviewServer } from '../review/server.js';
+import type { PremiereClient } from '../engine/premiere.js';
 import type { AeBackend, AeCompAsset, Asset, BuildOptions, BuildResult, DeliveryTargetId, Environment, FileAsset, Frames, JobInfo, ProbeInfo, Progress, Project, Timeline, XmemlReadResult, XmemlWriteOptions } from '../core/types.js';
 export interface ProjectApi {
     createProject(dir: string, meta: {
@@ -61,6 +62,8 @@ export interface JobManagerLike {
 }
 export interface AppState {
     reviews?: Map<string, ReviewServer>;
+    /** Premiere handoff bridge client (created on first use; tests inject a fake) */
+    premiere?: PremiereClient;
     project?: Project;
     env: Environment;
     ae: AeBackend;

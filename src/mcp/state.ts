@@ -7,6 +7,7 @@
  */
 import os from 'node:os';
 import type { ReviewServer } from '../review/server.js';
+import type { PremiereClient } from '../engine/premiere.js';
 import { getEnvironment } from '../core/tools.js';
 import type {
   AeBackend, AeCompAsset, Asset, BuildOptions, BuildResult, DeliveryTargetId, Environment, FileAsset, Frames,
@@ -56,6 +57,8 @@ export interface JobManagerLike {
 
 export interface AppState {
   reviews?: Map<string, ReviewServer>;
+  /** Premiere handoff bridge client (created on first use; tests inject a fake) */
+  premiere?: PremiereClient;
   project?: Project;
   env: Environment;
   ae: AeBackend;

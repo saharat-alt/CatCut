@@ -1,0 +1,44 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>CatCut Bridge</title>
+<style>
+  body { margin: 10px; font: 12px/1.5 system-ui, sans-serif; background: #232323; color: #c8c8c8; }
+  b { color: #fff; }
+  .err { color: #ff8a80; }
+</style>
+</head>
+<body>
+<div><b>CatCut Bridge</b> <span id="v"></span></div>
+<div id="s">starting…</div>
+<div id="e" class="err"></div>
+<script>
+(function () {
+  var VERSION = '0.1.0';
+  var cep = window.__adobe_cep__;
+  var show = function (id, text) { var el = document.getElementById(id); if (el) el.textContent = text; };
+  show('v', VERSION);
+  try {
+    // getSystemPath(1) = extension folder, as a file URL (same decoding as Adobe's CSInterface)
+    var ext = decodeURI(cep.getSystemPath('extension')).replace(/^file:\/{2,3}/, '');
+    var path = require('path'), fs = require('fs'), os = require('os');
+    var core = require(path.join(ext, 'bridge-core.js'));
+    var bridge = core.createBridge({
+      fs: fs, path: path, dir: path.join(os.tmpdir(), 'catcut-premiere-bridge'), pid: process.pid, version: VERSION,
+      evalScript: function (script) { return new Promise(function (resolve) { cep.evalScript(script, resolve); }); },
+      onStatus: function (st) {
+        show('s', st.serving ? 'connected · ' + (st.project ? st.project.name : 'no project') + ' · ' + st.handled + ' job(s)' : 'standing by (another CatCut bridge is serving)');
+        show('e', st.lastError ? 'last error: ' + st.lastError : '');
+      },
+    });
+    bridge.start();
+    window.addEventListener('unload', function () { bridge.stop(); });
+  } catch (e) {
+    show('s', 'not running');
+    show('e', String(e && e.message || e));
+  }
+})();
+</script>
+</body>
+</html>
