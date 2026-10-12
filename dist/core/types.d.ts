@@ -156,7 +156,7 @@ export interface DeliverySettings {
     note?: string;
 }
 export interface QcIssue {
-    kind: 'black' | 'freeze' | 'silence' | 'loudness' | 'truepeak' | 'frames' | 'spec' | 'gap' | 'flash' | 'cutcross' | 'repeat' | 'duplicate' | 'lowmotion' | 'board' | 'style' | 'thai' | 'comp' | 'disk';
+    kind: 'black' | 'freeze' | 'silence' | 'loudness' | 'truepeak' | 'frames' | 'spec' | 'gap' | 'flash' | 'cutcross' | 'repeat' | 'duplicate' | 'lowmotion' | 'slowmo' | 'board' | 'style' | 'thai' | 'comp' | 'disk';
     severity: 'error' | 'warn';
     startFrame?: Frames;
     endFrame?: Frames;
@@ -488,4 +488,25 @@ export interface XmemlReadResult {
     timeline: Timeline;
     /** pathurl (decoded, absolute) -> asset id guess, resolved by caller */
     unresolvedPaths: string[];
+}
+/**
+ * Something only the person at the computer can do (sign in, tick a preference, close a dialog).
+ * Every tool that needs one returns this card so the agent relays the same steps every time
+ * instead of improvising (DESIGN.md §14).
+ */
+export interface UserAction {
+    /** stable id, e.g. 'ae-allow-scripts' */
+    code: string;
+    app: 'after-effects' | 'premiere' | 'ffmpeg' | 'disk' | 'catcut';
+    title: string;
+    steps: string[];
+    why: string;
+    /** once = never again on this computer; after-update = once per app/CatCut update; each-time = whenever it happens */
+    frequency: 'once' | 'after-update' | 'each-time';
+    /** must the app stay open after the steps */
+    keepOpen: boolean;
+    /** when the app may be closed */
+    closeAfter: string;
+    /** must the person open or create a project in that app (almost always false) */
+    needsProject: boolean;
 }

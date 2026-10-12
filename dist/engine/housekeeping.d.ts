@@ -11,6 +11,8 @@ export interface StatFsLike {
 }
 export type StatFsFn = (p: string) => Promise<StatFsLike>;
 export interface HousekeepingOptions {
+    /** warn when the project folder grows past this (default 50 GB) */
+    budgetGb?: number;
     statfs?: StatFsFn;
     env?: Record<string, string | undefined>;
     now?: () => Date;
@@ -34,6 +36,14 @@ export interface AeCacheInfo {
 }
 /** Parse an AE "Prefs*.txt": sections `["Name"]`, entries `"Key" = "value"`, long strings continued with `"\`. */
 export declare function parseAePrefs(text: string): Map<string, Map<string, string>>;
+export interface AeScriptingPref {
+    /** undefined: no prefs file yet (AE never started on this account) or the key is missing */
+    allowed?: boolean;
+    prefsFile?: string;
+    aeVersion?: string;
+}
+/** "Allow Scripts to Write Files and Access Network" from the newest AE main prefs, read without starting AE. */
+export declare function aeScriptingPref(env?: Record<string, string | undefined>): Promise<AeScriptingPref>;
 /** AE disk cache folder from the newest AE prefs under %APPDATA%; default %LOCALAPPDATA%\Temp; else unknown. */
 export declare function findAeDiskCache(env?: Record<string, string | undefined>): Promise<Omit<AeCacheInfo, 'bytes' | 'partial' | 'dirs'>>;
 export interface DiskReport {
@@ -55,6 +65,9 @@ export interface DiskReport {
             total: number;
         };
         review: number;
+        /** everything else in the project folder by top-level name (agent scripts, evidence frames, AE files ...) */
+        other: Record<string, number>;
+        total: number;
     };
     keptVersions: string[];
     warnings: string[];

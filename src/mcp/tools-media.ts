@@ -159,13 +159,13 @@ export const MEDIA_TOOLS: ToolDef[] = [
 
   tool({
     name: 'timeline_lint',
-    description: 'ตรวจไทม์ไลน์กับ shot index: ข้ามรอยตัดต้นทาง (cutcross), เฟรมแวบ (flash), ใช้ต้นทางซ้ำ (repeat), ภาพนิ่งนาน (lowmotion, คำแนะนำ) · Lint the timeline against cached source shot indexes',
+    description: 'ตรวจไทม์ไลน์กับ shot index: ข้ามรอยตัดต้นทาง (cutcross), เฟรมแวบ (flash), ใช้ต้นทางซ้ำ (repeat), ภาพนิ่งนาน (lowmotion, คำแนะนำ), สโลว์ฟุต fps ต่ำโดยไม่มี Optical Flow (slowmo) · Lint the timeline against cached source shot indexes',
     input: {
       flashFrames: z.number().int().min(1).optional().describe('visible shot piece shorter than this = flash (default 6)'),
       nearClips: z.number().int().min(1).optional().describe('repeat check window in clips (default 3)'),
       maxStaticSec: z.number().positive().optional().describe('default styleRules.maxStaticSec or 4'),
       staticMotion: z.number().min(0).optional().describe('motion (mafd) below this counts as static (default 0.5)'),
-      checks: z.array(z.enum(['cutcross', 'flash', 'repeat', 'lowmotion'])).optional(),
+      checks: z.array(z.enum(['cutcross', 'flash', 'repeat', 'lowmotion', 'slowmo'])).optional(),
       threshold: thresholdArg,
     },
     handler: async (a, state) => {
@@ -240,6 +240,36 @@ export const MEDIA_TOOLS: ToolDef[] = [
       }
       await state.api.project.saveProject(p);
       return { ok: true, applied: true, backup, ...base, hint: 'ย้อนกลับได้ด้วย timeline_restore / undo with timeline_restore' };
+    },
+  }),
+
+  tool({
+    name: 'proxy_make',
+    description: 'ทำ proxy MP4 H.264 เล็ก ๆ ให้ Premiere แนบกับไฟล์ต้นฉบับ: ชื่อ `<ชื่อเดิม>_Proxy.mp4` เรียงโฟลเดอร์เหมือนต้นฉบับ, เฟรม/fps/timecode/ช่องเสียงเท่าต้นฉบับ, เช็กพื้นที่ก่อน, ไม่เขียนทับ (ทำต่อจากเดิมได้) · Edit proxies for Premiere; then premiere_import_media attaches them',
+    input: {
+      sources: z.array(z.string()).min(1).describe('original files or folders (e.g. the CARD folders)'),
+      proxyDir: z.string().describe('where the proxies go (a fast drive with space; not inside a card folder)'),
+      height: z.union([z.literal(540), z.literal(720), z.literal(1080)]).optional().describe('proxy height (default 540)'),
+      wait: z.boolean().optional().describe('wait up to ~20 s for the result (default true; long runs return a job id: job_wait)'),
+    },
+    handler: async (a, state) => {
+      requireFfmpeg(state);
+      const { makeProxies, planProxies } = await import('../engine/proxy.js');
+      const plan = await planProxies(a.sources, a.proxyDir);
+      if (!plan.length) throw new ToolError('ไม่พบไฟล์วิดีโอในที่ระบุ / no video files found');
+      return runJob(state, 'proxy_make', a.wait, async (ctx) => {
+        const r = await makeProxies(state.env.tools, state.env.encoders, plan, {
+          ...(a.height ? { height: a.height } : {}), signal: ctx.signal,
+          onProgress: (done, total, file) => { ctx.progress({ stage: 'proxy', done, total, ...(file ? { message: file } : {}) }); },
+        });
+        const failed = r.rows.filter((x) => x.status === 'failed');
+        return {
+          ok: failed.length === 0, proxyDir: resolve(a.proxyDir), files: r.rows.length,
+          made: r.rows.filter((x) => x.status === 'made').length, existed: r.rows.filter((x) => x.status === 'exists').length,
+          failed, addedGb: Math.round((r.bytes / 2 ** 30) * 100) / 100,
+          next: 'premiere_import_media {project, sources (the same originals), proxyDir} imports the originals and attaches these proxies',
+        };
+      });
     },
   }),
 

@@ -110,6 +110,9 @@ function resolveShots(p, board, shots) {
     const live = new Map(p.timeline.video.map((c) => [c.id, c]));
     const out = shots.map((s) => {
         const sh = { id: s.id, src: s.src, start: s.start, dur: s.dur };
+        const asset = p.assets[s.src];
+        if (asset && asset.kind !== 'aecomp')
+            sh.file = basename(asset.path);
         if (s.marker)
             sh.marker = s.marker;
         if (s.slot) {

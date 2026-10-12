@@ -7,7 +7,7 @@
  */
 import os from 'node:os';
 import type { ReviewServer } from '../review/server.js';
-import type { PremiereClient } from '../engine/premiere.js';
+import type { PremiereClient, PremiereHost } from '../engine/premiere.js';
 import { getEnvironment } from '../core/tools.js';
 import type {
   AeBackend, AeCompAsset, Asset, BuildOptions, BuildResult, DeliveryTargetId, Environment, FileAsset, Frames,
@@ -59,6 +59,10 @@ export interface AppState {
   reviews?: Map<string, ReviewServer>;
   /** Premiere handoff bridge client (created on first use; tests inject a fake) */
   premiere?: PremiereClient;
+  /** process checks + launcher for Premiere (tests inject a fake) */
+  premiereHost?: PremiereHost;
+  /** set when CatCut started Premiere itself: only then premiere_close may quit it without force */
+  premiereLaunched?: { project: string; pid?: number };
   project?: Project;
   env: Environment;
   ae: AeBackend;

@@ -147,9 +147,9 @@ export const RULES_TOOLS = [
     }),
     tool({
         name: 'disk_report',
-        description: 'พื้นที่ว่างต่อไดรฟ์, ขนาด AE disk cache, ขนาด cache/ และ out/ ของโปรเจกต์ต่อเวอร์ชัน · Free space, AE disk cache size, project cache/out by version',
-        input: {},
-        handler: async (_a, state) => diskReport(requireProject(state)),
+        description: 'พื้นที่ว่างต่อไดรฟ์, ขนาด AE disk cache, ขนาด cache/ และ out/ ต่อเวอร์ชัน, และโฟลเดอร์อื่นในโปรเจกต์ (ไฟล์ที่ไม่ใช่ของ CatCut) พร้อมเตือนเมื่อเกินงบ · Free space, AE cache, project cache/out by version, other project folders, budget warning',
+        input: { budgetGb: z.number().positive().optional().describe('warn when the project folder is larger (default 50)') },
+        handler: async (a, state) => diskReport(requireProject(state), a.budgetGb ? { budgetGb: a.budgetGb } : {}),
     }),
     tool({
         name: 'cache_gc_plan',

@@ -178,6 +178,7 @@ export interface QcIssue {
     | 'repeat' // adjacent clips reuse overlapping source ranges
     | 'duplicate' // duplicated-frame cadence (stutter) inside a clip
     | 'lowmotion' // nearly static for long (advisory)
+    | 'slowmo' // slow motion that repeats source frames without optical flow
     | 'board' // deviates from the board (missing slot, order, timing drift, extra element)
     | 'style' // violates StyleRules / Constraint
     | 'thai' // Thai typography lint
@@ -501,4 +502,28 @@ export interface XmemlReadResult {
   timeline: Timeline;
   /** pathurl (decoded, absolute) -> asset id guess, resolved by caller */
   unresolvedPaths: string[];
+}
+
+// ---------- user action cards ----------
+
+/**
+ * Something only the person at the computer can do (sign in, tick a preference, close a dialog).
+ * Every tool that needs one returns this card so the agent relays the same steps every time
+ * instead of improvising (DESIGN.md §14).
+ */
+export interface UserAction {
+  /** stable id, e.g. 'ae-allow-scripts' */
+  code: string;
+  app: 'after-effects' | 'premiere' | 'ffmpeg' | 'disk' | 'catcut';
+  title: string;
+  steps: string[];
+  why: string;
+  /** once = never again on this computer; after-update = once per app/CatCut update; each-time = whenever it happens */
+  frequency: 'once' | 'after-update' | 'each-time';
+  /** must the app stay open after the steps */
+  keepOpen: boolean;
+  /** when the app may be closed */
+  closeAfter: string;
+  /** must the person open or create a project in that app (almost always false) */
+  needsProject: boolean;
 }

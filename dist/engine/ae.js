@@ -6,6 +6,8 @@ import { basename, dirname, extname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { randomUUID } from 'node:crypto';
 import { hashFile, hashJson } from '../core/hash.js';
+import { ACTIONS, UserActionError } from '../core/user-action.js';
+import { aeScriptingPref } from './housekeeping.js';
 import { aerender, defaultMfrPercent, isAscii, isMissingOmTemplate, killTree, moveFile, purgeIfLowCacheSpace, uniqueOutputPath, } from './aerender.js';
 /** Only the threshold fields the runner understands travel into the job. */
 function runnerRules(rules) {
@@ -59,9 +61,17 @@ export function createAeBackend(tools, opts = {}) {
         ...(opts.minFreeDiskGb !== undefined ? { minFreeGb: opts.minFreeDiskGb } : {}),
         ...(opts.retryDelayMs !== undefined ? { retryDelayMs: opts.retryDelayMs } : {}),
     };
+    const scriptingPref = opts.scriptingPref ?? (() => aeScriptingPref());
+    async function noResult(action, exitCode, stderr) {
+        const detail = `AfterFX ${action}: exit ${exitCode ?? '?'}, no result${stderr.trim() ? `: ${stderr.trim()}` : ''}`;
+        const pref = await scriptingPref();
+        if (pref.allowed === false)
+            return new UserActionError(detail, ACTIONS.aeAllowScripts());
+        return new UserActionError(detail, ACTIONS.aeFirstRun({ detail: `exit ${exitCode ?? '?'}` }));
+    }
     async function run(action, payload = {}) {
         if (!tools.afterfx)
-            throw new Error('AfterFX not found; install After Effects or set EDITMCP_AE_DIR');
+            throw new UserActionError('AfterFX not found; install After Effects or set EDITMCP_AE_DIR', ACTIONS.aeNotFound());
         const minRam = opts.minFreeRamGb ?? 0.75;
         if (os.freemem() / 2 ** 30 < minRam)
             throw new Error(`not enough free RAM for After Effects (need ${minRam} GB)`);
@@ -90,13 +100,20 @@ export function createAeBackend(tools, opts = {}) {
             }
             if (timedOut)
                 throw new Error(`AfterFX ${action} timed out after ${timeoutMs} ms (process tree killed)`);
-            if (output.exitCode !== 0) {
-                const report = await readFile(resultPath, 'utf8').catch(() => '');
-                throw new Error(`AfterFX failed (${output.exitCode}): ${report || String(output.stderr).slice(-2000)}`);
-            }
-            const result = JSON.parse((await readFile(resultPath, 'utf8')).replace(/^\uFEFF/, ''));
-            if (result.ok !== true)
+            const report = await readFile(resultPath, 'utf8').catch(() => undefined);
+            // No result at all: the runner never got to write one (scripts may not write files, or AE quit
+            // at a first-run screen). Both need the person, so say which one instead of a raw error.
+            if (report === undefined)
+                throw await noResult(action, output.exitCode, String(output.stderr ?? '').slice(-500));
+            if (output.exitCode !== 0)
+                throw new Error(`AfterFX failed (${output.exitCode}): ${report}`);
+            const result = JSON.parse(report.replace(/^\uFEFF/, ''));
+            if (result.ok !== true) {
+                if (/cannot write /.test(result.error ?? '') && (await scriptingPref()).allowed === false) {
+                    throw new UserActionError(`AfterFX: ${result.error}`, ACTIONS.aeAllowScripts());
+                }
                 throw new Error(`AfterFX: ${result.error ?? 'job failed'}`);
+            }
             return result;
         }
         finally {

@@ -10,6 +10,7 @@ import { createAppState } from './state.js';
 import { callTool, toolResultData } from './tools.js';
 const USAGE = `CatCut 🐾 — headless video editing MCP (After Effects headless + aerender + ffmpeg)
 
+  editmcp ready                                    เครื่องพร้อมไหม ต้องเปิดอะไรค้างไหม ต้องทำอะไร / what is ready, what you must do
   editmcp doctor                                   ตรวจเครื่องมือ / check tools, encoders, RAM, compat notes
   editmcp serve [projectDir]                       MCP stdio server (ใช้กับ Claude Code / Codex)
   editmcp build <projectDir> [--force] [--force-assets C_a,C_b] [--skip-qc] [--skip-deliver]
@@ -31,6 +32,10 @@ function pretty(v) {
 function report(r) {
     const data = toolResultData(r);
     if (r.isError) {
+        const ua = data['userAction'];
+        if (ua?.say)
+            err(`${ua.say}
+`);
         err(pretty(data));
         return null;
     }
@@ -119,6 +124,14 @@ async function main(argv = process.argv.slice(2)) {
         return d;
     };
     switch (cmd) {
+        case 'ready': {
+            const state = await createAppState();
+            const d = report(await callTool(state, 'ready_check'));
+            if (!d)
+                return 1;
+            out(String(d['say']));
+            return d['ready'] ? 0 : 2;
+        }
         case 'doctor': {
             const state = await createAppState();
             const d = report(await callTool(state, 'doctor'));
@@ -206,8 +219,8 @@ async function main(argv = process.argv.slice(2)) {
                 const r = await installBridge();
                 out(`installed: ${r.installedTo}`);
                 out(`PlayerDebugMode=1 (unsigned extensions allowed): ${r.debugModeKeys.join(', ')}`);
-                out('Restart Premiere Pro (save your work first). The bridge starts by itself; check with: catcut premiere-bridge status');
-                out('ติดตั้งแล้ว — save งานแล้วปิดเปิด Premiere ใหม่ bridge จะเริ่มเอง');
+                out('Premiere does not need to be open: CatCut starts it with the project when needed (premiere_open). If Premiere is open now, `catcut ready` says whether it needs one restart.');
+                out('ติดตั้งแล้ว — ไม่ต้องเปิด Premiere เอง CatCut เปิดให้พร้อมโปรเจกต์เมื่อต้องใช้; ถ้าเปิดอยู่ตอนนี้ `catcut ready` จะบอกว่าต้องปิด–เปิดหนึ่งครั้งไหม');
                 return 0;
             }
             if (sub === 'uninstall') {

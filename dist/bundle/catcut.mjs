@@ -48,10 +48,10 @@ var __toESM = (mod, isNodeMode, target) => (target = mod != null ? __create(__ge
   mod
 ));
 
-// ../../../node_modules/zod/v3/helpers/util.js
+// node_modules/zod/v3/helpers/util.js
 var util, objectUtil, ZodParsedType, getParsedType;
 var init_util = __esm({
-  "../../../node_modules/zod/v3/helpers/util.js"() {
+  "node_modules/zod/v3/helpers/util.js"() {
     (function(util2) {
       util2.assertEqual = (_) => {
       };
@@ -185,10 +185,10 @@ var init_util = __esm({
   }
 });
 
-// ../../../node_modules/zod/v3/ZodError.js
+// node_modules/zod/v3/ZodError.js
 var ZodIssueCode, quotelessJson, ZodError;
 var init_ZodError = __esm({
-  "../../../node_modules/zod/v3/ZodError.js"() {
+  "node_modules/zod/v3/ZodError.js"() {
     init_util();
     ZodIssueCode = util.arrayToEnum([
       "invalid_type",
@@ -309,10 +309,10 @@ var init_ZodError = __esm({
   }
 });
 
-// ../../../node_modules/zod/v3/locales/en.js
+// node_modules/zod/v3/locales/en.js
 var errorMap, en_default;
 var init_en = __esm({
-  "../../../node_modules/zod/v3/locales/en.js"() {
+  "node_modules/zod/v3/locales/en.js"() {
     init_ZodError();
     init_util();
     errorMap = (issue2, _ctx) => {
@@ -419,7 +419,7 @@ var init_en = __esm({
   }
 });
 
-// ../../../node_modules/zod/v3/errors.js
+// node_modules/zod/v3/errors.js
 function setErrorMap(map) {
   overrideErrorMap = map;
 }
@@ -428,13 +428,13 @@ function getErrorMap() {
 }
 var overrideErrorMap;
 var init_errors = __esm({
-  "../../../node_modules/zod/v3/errors.js"() {
+  "node_modules/zod/v3/errors.js"() {
     init_en();
     overrideErrorMap = en_default;
   }
 });
 
-// ../../../node_modules/zod/v3/helpers/parseUtil.js
+// node_modules/zod/v3/helpers/parseUtil.js
 function addIssueToContext(ctx, issueData) {
   const overrideMap = getErrorMap();
   const issue2 = makeIssue({
@@ -456,7 +456,7 @@ function addIssueToContext(ctx, issueData) {
 }
 var makeIssue, EMPTY_PATH, ParseStatus, INVALID, DIRTY, OK, isAborted, isDirty, isValid, isAsync;
 var init_parseUtil = __esm({
-  "../../../node_modules/zod/v3/helpers/parseUtil.js"() {
+  "node_modules/zod/v3/helpers/parseUtil.js"() {
     init_errors();
     init_en();
     makeIssue = (params) => {
@@ -551,16 +551,16 @@ var init_parseUtil = __esm({
   }
 });
 
-// ../../../node_modules/zod/v3/helpers/typeAliases.js
+// node_modules/zod/v3/helpers/typeAliases.js
 var init_typeAliases = __esm({
-  "../../../node_modules/zod/v3/helpers/typeAliases.js"() {
+  "node_modules/zod/v3/helpers/typeAliases.js"() {
   }
 });
 
-// ../../../node_modules/zod/v3/helpers/errorUtil.js
+// node_modules/zod/v3/helpers/errorUtil.js
 var errorUtil;
 var init_errorUtil = __esm({
-  "../../../node_modules/zod/v3/helpers/errorUtil.js"() {
+  "node_modules/zod/v3/helpers/errorUtil.js"() {
     (function(errorUtil2) {
       errorUtil2.errToObj = (message) => typeof message === "string" ? { message } : message || {};
       errorUtil2.toString = (message) => typeof message === "string" ? message : message?.message;
@@ -568,7 +568,7 @@ var init_errorUtil = __esm({
   }
 });
 
-// ../../../node_modules/zod/v3/types.js
+// node_modules/zod/v3/types.js
 function processCreateParams(params) {
   if (!params)
     return {};
@@ -762,7 +762,7 @@ function custom(check2, _params = {}, fatal) {
 }
 var ParseInputLazyPath, handleResult, ZodType, cuidRegex, cuid2Regex, ulidRegex, uuidRegex, nanoidRegex, jwtRegex, durationRegex, emailRegex, _emojiRegex, emojiRegex, ipv4Regex, ipv4CidrRegex, ipv6Regex, ipv6CidrRegex, base64Regex, base64urlRegex, dateRegexSource, dateRegex, ZodString, ZodNumber, ZodBigInt, ZodBoolean, ZodDate, ZodSymbol, ZodUndefined, ZodNull, ZodAny, ZodUnknown, ZodNever, ZodVoid, ZodArray, ZodObject, ZodUnion, getDiscriminator, ZodDiscriminatedUnion, ZodIntersection, ZodTuple, ZodRecord, ZodMap, ZodSet, ZodFunction, ZodLazy, ZodLiteral, ZodEnum, ZodNativeEnum, ZodPromise, ZodEffects, ZodOptional, ZodNullable, ZodDefault, ZodCatch, ZodNaN, BRAND, ZodBranded, ZodPipeline, ZodReadonly, late, ZodFirstPartyTypeKind, instanceOfType, stringType, numberType, nanType, bigIntType, booleanType, dateType, symbolType, undefinedType, nullType, anyType, unknownType, neverType, voidType, arrayType, objectType, strictObjectType, unionType, discriminatedUnionType, intersectionType, tupleType, recordType, mapType, setType, functionType, lazyType, literalType, enumType, nativeEnumType, promiseType, effectsType, optionalType, nullableType, preprocessType, pipelineType, ostring, onumber, oboolean, coerce, NEVER;
 var init_types = __esm({
-  "../../../node_modules/zod/v3/types.js"() {
+  "node_modules/zod/v3/types.js"() {
     init_ZodError();
     init_errors();
     init_errorUtil();
@@ -4024,7 +4024,7 @@ var init_types = __esm({
   }
 });
 
-// ../../../node_modules/zod/v3/external.js
+// node_modules/zod/v3/external.js
 var external_exports = {};
 __export(external_exports, {
   BRAND: () => BRAND,
@@ -4136,7 +4136,7 @@ __export(external_exports, {
   void: () => voidType
 });
 var init_external = __esm({
-  "../../../node_modules/zod/v3/external.js"() {
+  "node_modules/zod/v3/external.js"() {
     init_errors();
     init_parseUtil();
     init_typeAliases();
@@ -4146,9 +4146,9 @@ var init_external = __esm({
   }
 });
 
-// ../../../node_modules/ajv/dist/compile/codegen/code.js
+// node_modules/ajv/dist/compile/codegen/code.js
 var require_code = __commonJS({
-  "../../../node_modules/ajv/dist/compile/codegen/code.js"(exports2) {
+  "node_modules/ajv/dist/compile/codegen/code.js"(exports2) {
     "use strict";
     Object.defineProperty(exports2, "__esModule", { value: true });
     exports2.regexpCode = exports2.getEsmExportName = exports2.getProperty = exports2.safeStringify = exports2.stringify = exports2.strConcat = exports2.addCodeArg = exports2.str = exports2._ = exports2.nil = exports2._Code = exports2.Name = exports2.IDENTIFIER = exports2._CodeOrName = void 0;
@@ -4300,9 +4300,9 @@ var require_code = __commonJS({
   }
 });
 
-// ../../../node_modules/ajv/dist/compile/codegen/scope.js
+// node_modules/ajv/dist/compile/codegen/scope.js
 var require_scope = __commonJS({
-  "../../../node_modules/ajv/dist/compile/codegen/scope.js"(exports2) {
+  "node_modules/ajv/dist/compile/codegen/scope.js"(exports2) {
     "use strict";
     Object.defineProperty(exports2, "__esModule", { value: true });
     exports2.ValueScope = exports2.ValueScopeName = exports2.Scope = exports2.varKinds = exports2.UsedValueState = void 0;
@@ -4445,9 +4445,9 @@ var require_scope = __commonJS({
   }
 });
 
-// ../../../node_modules/ajv/dist/compile/codegen/index.js
+// node_modules/ajv/dist/compile/codegen/index.js
 var require_codegen = __commonJS({
-  "../../../node_modules/ajv/dist/compile/codegen/index.js"(exports2) {
+  "node_modules/ajv/dist/compile/codegen/index.js"(exports2) {
     "use strict";
     Object.defineProperty(exports2, "__esModule", { value: true });
     exports2.or = exports2.and = exports2.not = exports2.CodeGen = exports2.operators = exports2.varKinds = exports2.ValueScopeName = exports2.ValueScope = exports2.Scope = exports2.Name = exports2.regexpCode = exports2.stringify = exports2.getProperty = exports2.nil = exports2.strConcat = exports2.str = exports2._ = void 0;
@@ -5165,9 +5165,9 @@ var require_codegen = __commonJS({
   }
 });
 
-// ../../../node_modules/ajv/dist/compile/util.js
+// node_modules/ajv/dist/compile/util.js
 var require_util = __commonJS({
-  "../../../node_modules/ajv/dist/compile/util.js"(exports2) {
+  "node_modules/ajv/dist/compile/util.js"(exports2) {
     "use strict";
     Object.defineProperty(exports2, "__esModule", { value: true });
     exports2.checkStrictMode = exports2.getErrorPath = exports2.Type = exports2.useFunc = exports2.setEvaluated = exports2.evaluatedPropsToName = exports2.mergeEvaluated = exports2.eachItem = exports2.unescapeJsonPointer = exports2.escapeJsonPointer = exports2.escapeFragment = exports2.unescapeFragment = exports2.schemaRefOrVal = exports2.schemaHasRulesButRef = exports2.schemaHasRules = exports2.checkUnknownRules = exports2.alwaysValidSchema = exports2.toHash = void 0;
@@ -5332,9 +5332,9 @@ var require_util = __commonJS({
   }
 });
 
-// ../../../node_modules/ajv/dist/compile/names.js
+// node_modules/ajv/dist/compile/names.js
 var require_names = __commonJS({
-  "../../../node_modules/ajv/dist/compile/names.js"(exports2) {
+  "node_modules/ajv/dist/compile/names.js"(exports2) {
     "use strict";
     Object.defineProperty(exports2, "__esModule", { value: true });
     var codegen_1 = require_codegen();
@@ -5371,9 +5371,9 @@ var require_names = __commonJS({
   }
 });
 
-// ../../../node_modules/ajv/dist/compile/errors.js
+// node_modules/ajv/dist/compile/errors.js
 var require_errors = __commonJS({
-  "../../../node_modules/ajv/dist/compile/errors.js"(exports2) {
+  "node_modules/ajv/dist/compile/errors.js"(exports2) {
     "use strict";
     Object.defineProperty(exports2, "__esModule", { value: true });
     exports2.extendErrors = exports2.resetErrorsCount = exports2.reportExtraError = exports2.reportError = exports2.keyword$DataError = exports2.keywordError = void 0;
@@ -5493,9 +5493,9 @@ var require_errors = __commonJS({
   }
 });
 
-// ../../../node_modules/ajv/dist/compile/validate/boolSchema.js
+// node_modules/ajv/dist/compile/validate/boolSchema.js
 var require_boolSchema = __commonJS({
-  "../../../node_modules/ajv/dist/compile/validate/boolSchema.js"(exports2) {
+  "node_modules/ajv/dist/compile/validate/boolSchema.js"(exports2) {
     "use strict";
     Object.defineProperty(exports2, "__esModule", { value: true });
     exports2.boolOrEmptySchema = exports2.topBoolOrEmptySchema = void 0;
@@ -5544,9 +5544,9 @@ var require_boolSchema = __commonJS({
   }
 });
 
-// ../../../node_modules/ajv/dist/compile/rules.js
+// node_modules/ajv/dist/compile/rules.js
 var require_rules = __commonJS({
-  "../../../node_modules/ajv/dist/compile/rules.js"(exports2) {
+  "node_modules/ajv/dist/compile/rules.js"(exports2) {
     "use strict";
     Object.defineProperty(exports2, "__esModule", { value: true });
     exports2.getRules = exports2.isJSONType = void 0;
@@ -5575,9 +5575,9 @@ var require_rules = __commonJS({
   }
 });
 
-// ../../../node_modules/ajv/dist/compile/validate/applicability.js
+// node_modules/ajv/dist/compile/validate/applicability.js
 var require_applicability = __commonJS({
-  "../../../node_modules/ajv/dist/compile/validate/applicability.js"(exports2) {
+  "node_modules/ajv/dist/compile/validate/applicability.js"(exports2) {
     "use strict";
     Object.defineProperty(exports2, "__esModule", { value: true });
     exports2.shouldUseRule = exports2.shouldUseGroup = exports2.schemaHasRulesForType = void 0;
@@ -5598,9 +5598,9 @@ var require_applicability = __commonJS({
   }
 });
 
-// ../../../node_modules/ajv/dist/compile/validate/dataType.js
+// node_modules/ajv/dist/compile/validate/dataType.js
 var require_dataType = __commonJS({
-  "../../../node_modules/ajv/dist/compile/validate/dataType.js"(exports2) {
+  "node_modules/ajv/dist/compile/validate/dataType.js"(exports2) {
     "use strict";
     Object.defineProperty(exports2, "__esModule", { value: true });
     exports2.reportTypeError = exports2.checkDataTypes = exports2.checkDataType = exports2.coerceAndCheckDataType = exports2.getJSONTypes = exports2.getSchemaTypes = exports2.DataType = void 0;
@@ -5782,9 +5782,9 @@ var require_dataType = __commonJS({
   }
 });
 
-// ../../../node_modules/ajv/dist/compile/validate/defaults.js
+// node_modules/ajv/dist/compile/validate/defaults.js
 var require_defaults = __commonJS({
-  "../../../node_modules/ajv/dist/compile/validate/defaults.js"(exports2) {
+  "node_modules/ajv/dist/compile/validate/defaults.js"(exports2) {
     "use strict";
     Object.defineProperty(exports2, "__esModule", { value: true });
     exports2.assignDefaults = void 0;
@@ -5819,9 +5819,9 @@ var require_defaults = __commonJS({
   }
 });
 
-// ../../../node_modules/ajv/dist/vocabularies/code.js
+// node_modules/ajv/dist/vocabularies/code.js
 var require_code2 = __commonJS({
-  "../../../node_modules/ajv/dist/vocabularies/code.js"(exports2) {
+  "node_modules/ajv/dist/vocabularies/code.js"(exports2) {
     "use strict";
     Object.defineProperty(exports2, "__esModule", { value: true });
     exports2.validateUnion = exports2.validateArray = exports2.usePattern = exports2.callValidateCode = exports2.schemaProperties = exports2.allSchemaProperties = exports2.noPropertyInData = exports2.propertyInData = exports2.isOwnProperty = exports2.hasPropFunc = exports2.reportMissingProp = exports2.checkMissingProp = exports2.checkReportMissingProp = void 0;
@@ -5952,9 +5952,9 @@ var require_code2 = __commonJS({
   }
 });
 
-// ../../../node_modules/ajv/dist/compile/validate/keyword.js
+// node_modules/ajv/dist/compile/validate/keyword.js
 var require_keyword = __commonJS({
-  "../../../node_modules/ajv/dist/compile/validate/keyword.js"(exports2) {
+  "node_modules/ajv/dist/compile/validate/keyword.js"(exports2) {
     "use strict";
     Object.defineProperty(exports2, "__esModule", { value: true });
     exports2.validateKeywordUsage = exports2.validSchemaType = exports2.funcKeywordCode = exports2.macroKeywordCode = void 0;
@@ -6070,9 +6070,9 @@ var require_keyword = __commonJS({
   }
 });
 
-// ../../../node_modules/ajv/dist/compile/validate/subschema.js
+// node_modules/ajv/dist/compile/validate/subschema.js
 var require_subschema = __commonJS({
-  "../../../node_modules/ajv/dist/compile/validate/subschema.js"(exports2) {
+  "node_modules/ajv/dist/compile/validate/subschema.js"(exports2) {
     "use strict";
     Object.defineProperty(exports2, "__esModule", { value: true });
     exports2.extendSubschemaMode = exports2.extendSubschemaData = exports2.getSubschema = void 0;
@@ -6153,9 +6153,9 @@ var require_subschema = __commonJS({
   }
 });
 
-// ../../../node_modules/fast-deep-equal/index.js
+// node_modules/fast-deep-equal/index.js
 var require_fast_deep_equal = __commonJS({
-  "../../../node_modules/fast-deep-equal/index.js"(exports2, module) {
+  "node_modules/fast-deep-equal/index.js"(exports2, module) {
     "use strict";
     module.exports = function equal(a2, b) {
       if (a2 === b) return true;
@@ -6188,9 +6188,9 @@ var require_fast_deep_equal = __commonJS({
   }
 });
 
-// ../../../node_modules/json-schema-traverse/index.js
+// node_modules/json-schema-traverse/index.js
 var require_json_schema_traverse = __commonJS({
-  "../../../node_modules/json-schema-traverse/index.js"(exports2, module) {
+  "node_modules/json-schema-traverse/index.js"(exports2, module) {
     "use strict";
     var traverse = module.exports = function(schema, opts, cb) {
       if (typeof opts == "function") {
@@ -6276,9 +6276,9 @@ var require_json_schema_traverse = __commonJS({
   }
 });
 
-// ../../../node_modules/ajv/dist/compile/resolve.js
+// node_modules/ajv/dist/compile/resolve.js
 var require_resolve = __commonJS({
-  "../../../node_modules/ajv/dist/compile/resolve.js"(exports2) {
+  "node_modules/ajv/dist/compile/resolve.js"(exports2) {
     "use strict";
     Object.defineProperty(exports2, "__esModule", { value: true });
     exports2.getSchemaRefs = exports2.resolveUrl = exports2.normalizeId = exports2._getFullPath = exports2.getFullPath = exports2.inlineRef = void 0;
@@ -6432,9 +6432,9 @@ var require_resolve = __commonJS({
   }
 });
 
-// ../../../node_modules/ajv/dist/compile/validate/index.js
+// node_modules/ajv/dist/compile/validate/index.js
 var require_validate = __commonJS({
-  "../../../node_modules/ajv/dist/compile/validate/index.js"(exports2) {
+  "node_modules/ajv/dist/compile/validate/index.js"(exports2) {
     "use strict";
     Object.defineProperty(exports2, "__esModule", { value: true });
     exports2.getData = exports2.KeywordCxt = exports2.validateFunctionCode = void 0;
@@ -6940,9 +6940,9 @@ var require_validate = __commonJS({
   }
 });
 
-// ../../../node_modules/ajv/dist/runtime/validation_error.js
+// node_modules/ajv/dist/runtime/validation_error.js
 var require_validation_error = __commonJS({
-  "../../../node_modules/ajv/dist/runtime/validation_error.js"(exports2) {
+  "node_modules/ajv/dist/runtime/validation_error.js"(exports2) {
     "use strict";
     Object.defineProperty(exports2, "__esModule", { value: true });
     var ValidationError = class extends Error {
@@ -6956,9 +6956,9 @@ var require_validation_error = __commonJS({
   }
 });
 
-// ../../../node_modules/ajv/dist/compile/ref_error.js
+// node_modules/ajv/dist/compile/ref_error.js
 var require_ref_error = __commonJS({
-  "../../../node_modules/ajv/dist/compile/ref_error.js"(exports2) {
+  "node_modules/ajv/dist/compile/ref_error.js"(exports2) {
     "use strict";
     Object.defineProperty(exports2, "__esModule", { value: true });
     var resolve_1 = require_resolve();
@@ -6973,9 +6973,9 @@ var require_ref_error = __commonJS({
   }
 });
 
-// ../../../node_modules/ajv/dist/compile/index.js
+// node_modules/ajv/dist/compile/index.js
 var require_compile = __commonJS({
-  "../../../node_modules/ajv/dist/compile/index.js"(exports2) {
+  "node_modules/ajv/dist/compile/index.js"(exports2) {
     "use strict";
     Object.defineProperty(exports2, "__esModule", { value: true });
     exports2.resolveSchema = exports2.getCompilingSchema = exports2.resolveRef = exports2.compileSchema = exports2.SchemaEnv = void 0;
@@ -7097,7 +7097,7 @@ var require_compile = __commonJS({
       const schOrFunc = root.refs[ref];
       if (schOrFunc)
         return schOrFunc;
-      let _sch = resolve11.call(this, root, ref);
+      let _sch = resolve13.call(this, root, ref);
       if (_sch === void 0) {
         const schema = (_a = root.localRefs) === null || _a === void 0 ? void 0 : _a[ref];
         const { schemaId } = this.opts;
@@ -7124,7 +7124,7 @@ var require_compile = __commonJS({
     function sameSchemaEnv(s1, s2) {
       return s1.schema === s2.schema && s1.root === s2.root && s1.baseId === s2.baseId;
     }
-    function resolve11(root, ref) {
+    function resolve13(root, ref) {
       let sch;
       while (typeof (sch = this.refs[ref]) == "string")
         ref = sch;
@@ -7197,9 +7197,9 @@ var require_compile = __commonJS({
   }
 });
 
-// ../../../node_modules/ajv/dist/refs/data.json
+// node_modules/ajv/dist/refs/data.json
 var require_data = __commonJS({
-  "../../../node_modules/ajv/dist/refs/data.json"(exports2, module) {
+  "node_modules/ajv/dist/refs/data.json"(exports2, module) {
     module.exports = {
       $id: "https://raw.githubusercontent.com/ajv-validator/ajv/master/lib/refs/data.json#",
       description: "Meta-schema for $data reference (JSON AnySchema extension proposal)",
@@ -7216,9 +7216,9 @@ var require_data = __commonJS({
   }
 });
 
-// ../../../node_modules/fast-uri/lib/utils.js
+// node_modules/fast-uri/lib/utils.js
 var require_utils = __commonJS({
-  "../../../node_modules/fast-uri/lib/utils.js"(exports2, module) {
+  "node_modules/fast-uri/lib/utils.js"(exports2, module) {
     "use strict";
     var isUUID = RegExp.prototype.test.bind(/^[\da-f]{8}-[\da-f]{4}-[\da-f]{4}-[\da-f]{4}-[\da-f]{12}$/iu);
     var isIPv4 = RegExp.prototype.test.bind(/^(?:(?:25[0-5]|2[0-4]\d|1\d{2}|[1-9]\d|\d)\.){3}(?:25[0-5]|2[0-4]\d|1\d{2}|[1-9]\d|\d)$/u);
@@ -7340,28 +7340,28 @@ var require_utils = __commonJS({
       for (let i2 = left.length; i2 < parts.length; i2++) expanded.push(parts[i2]);
       return compressIPv6ZeroRun(expanded);
     }
-    function normalizeIPv6(host) {
-      const bracketed = host[0] === "[" && host[host.length - 1] === "]";
-      const hasBracket = host[0] === "[" || host[host.length - 1] === "]";
-      if (hasBracket && !bracketed) return { host, isIPV6: false, error: true };
-      let input = bracketed ? host.slice(1, -1) : host;
+    function normalizeIPv6(host2) {
+      const bracketed = host2[0] === "[" && host2[host2.length - 1] === "]";
+      const hasBracket = host2[0] === "[" || host2[host2.length - 1] === "]";
+      if (hasBracket && !bracketed) return { host: host2, isIPV6: false, error: true };
+      let input = bracketed ? host2.slice(1, -1) : host2;
       if (bracketed && isIPvFuture(input)) {
         input = input.toLowerCase();
         return { host: `[${input}]`, escapedHost: input, isIPV6: false, isIPVFuture: true };
       }
       if (findToken(input, ":") < 2) {
-        return { host, isIPV6: false, error: bracketed };
+        return { host: host2, isIPV6: false, error: bracketed };
       }
       let zoneIdentifier = "";
       const zoneSeparator = input.indexOf("%");
       if (zoneSeparator !== -1) {
         const separatorLength = input.slice(zoneSeparator, zoneSeparator + 3).toLowerCase() === "%25" ? 3 : 1;
         zoneIdentifier = input.slice(zoneSeparator + separatorLength);
-        if (!isZoneIdentifier(zoneIdentifier)) return { host, isIPV6: false, error: true };
+        if (!isZoneIdentifier(zoneIdentifier)) return { host: host2, isIPV6: false, error: true };
         input = input.slice(0, zoneSeparator);
       }
       const address = normalizeIPv6Address(input);
-      if (address === void 0) return { host, isIPV6: false, error: true };
+      if (address === void 0) return { host: host2, isIPV6: false, error: true };
       return {
         host: address + (zoneIdentifier ? "%" + zoneIdentifier : ""),
         escapedHost: address + (zoneIdentifier ? "%25" + zoneIdentifier : ""),
@@ -7453,10 +7453,10 @@ var require_utils = __commonJS({
     var HOST_DELIMS = { "@": "%40", "/": "%2F", "?": "%3F", "#": "%23", ":": "%3A" };
     var HOST_DELIM_RE = /[@/?#:]/g;
     var HOST_DELIM_NO_COLON_RE = /[@/?#]/g;
-    function reescapeHostDelimiters(host, isIP) {
+    function reescapeHostDelimiters(host2, isIP) {
       const re = isIP ? HOST_DELIM_NO_COLON_RE : HOST_DELIM_RE;
       re.lastIndex = 0;
-      return host.replace(re, (ch) => HOST_DELIMS[ch]);
+      return host2.replace(re, (ch) => HOST_DELIMS[ch]);
     }
     function normalizePercentEncoding(input, decodeUnreserved = false) {
       if (input.indexOf("%") === -1) {
@@ -7672,20 +7672,20 @@ var require_utils = __commonJS({
         uriTokens.push("@");
       }
       if (component.host !== void 0) {
-        let host = component.host;
-        if (!isIPv4(host)) {
-          let ipV6res = normalizeIPv6(host);
+        let host2 = component.host;
+        if (!isIPv4(host2)) {
+          let ipV6res = normalizeIPv6(host2);
           if (ipV6res.isIPV6 !== true && ipV6res.isIPVFuture !== true) {
-            host = normalizePercentEncoding(host, true);
-            ipV6res = normalizeIPv6(host);
+            host2 = normalizePercentEncoding(host2, true);
+            ipV6res = normalizeIPv6(host2);
           }
           if (ipV6res.isIPV6 === true || ipV6res.isIPVFuture === true) {
-            host = `[${ipV6res.escapedHost}]`;
+            host2 = `[${ipV6res.escapedHost}]`;
           } else {
-            host = reescapeHostDelimiters(host, false);
+            host2 = reescapeHostDelimiters(host2, false);
           }
         }
-        uriTokens.push(host);
+        uriTokens.push(host2);
       }
       if (typeof component.port === "number" || typeof component.port === "string") {
         const port = String(component.port);
@@ -7718,9 +7718,9 @@ var require_utils = __commonJS({
   }
 });
 
-// ../../../node_modules/fast-uri/lib/schemes.js
+// node_modules/fast-uri/lib/schemes.js
 var require_schemes = __commonJS({
-  "../../../node_modules/fast-uri/lib/schemes.js"(exports2, module) {
+  "node_modules/fast-uri/lib/schemes.js"(exports2, module) {
     "use strict";
     var { isUUID } = require_utils();
     var URN_REG = /^([\da-z][\d\-a-z]{0,31}):((?:[\w!$'()*+,\-./:;=@]|%[\da-f]{2})+)$/iu;
@@ -7929,9 +7929,9 @@ var require_schemes = __commonJS({
   }
 });
 
-// ../../../node_modules/fast-uri/index.js
+// node_modules/fast-uri/index.js
 var require_fast_uri = __commonJS({
-  "../../../node_modules/fast-uri/index.js"(exports2, module) {
+  "node_modules/fast-uri/index.js"(exports2, module) {
     "use strict";
     var { normalizeIPv6, removeDotSegments, recomposeAuthority, normalizePercentEncoding, normalizePathEncoding, serializePathEncoding, normalizeQueryFragmentEncoding, encodeQuery, encodeFragment, reescapeHostDelimiters, isIPv4, nonSimpleDomain } = require_utils();
     var { SCHEMES, getSchemeHandler } = require_schemes();
@@ -7950,11 +7950,11 @@ var require_fast_uri = __commonJS({
         normalizeString(uri, options);
       } else if (typeof uri === "object") {
         uri = /** @type {T} */
-        parse4(serialize3(uri, options), options);
+        parse6(serialize3(uri, options), options);
       }
       return uri;
     }
-    function resolve11(baseURI, relativeURI, options) {
+    function resolve13(baseURI, relativeURI, options) {
       const schemelessOptions = options ? Object.assign({ scheme: "null" }, options) : { scheme: "null" };
       const {
         parsed: baseParsed,
@@ -7987,49 +7987,49 @@ var require_fast_uri = __commonJS({
       schemelessOptions.skipEscape = true;
       return serialize3(resolved, schemelessOptions);
     }
-    function resolveComponent(base, relative4, options, skipNormalization) {
+    function resolveComponent(base, relative6, options, skipNormalization) {
       const target = {};
       if (!skipNormalization) {
-        base = parse4(serialize3(base, options), options);
-        relative4 = parse4(serialize3(relative4, options), options);
+        base = parse6(serialize3(base, options), options);
+        relative6 = parse6(serialize3(relative6, options), options);
       }
       options = options || {};
-      if (!options.tolerant && relative4.scheme) {
-        target.scheme = relative4.scheme;
-        target.userinfo = relative4.userinfo;
-        target.host = relative4.host;
-        target.port = relative4.port;
-        target.path = removeDotSegments(relative4.path || "");
-        target.query = relative4.query;
+      if (!options.tolerant && relative6.scheme) {
+        target.scheme = relative6.scheme;
+        target.userinfo = relative6.userinfo;
+        target.host = relative6.host;
+        target.port = relative6.port;
+        target.path = removeDotSegments(relative6.path || "");
+        target.query = relative6.query;
       } else {
-        if (relative4.userinfo !== void 0 || relative4.host !== void 0 || relative4.port !== void 0) {
-          target.userinfo = relative4.userinfo;
-          target.host = relative4.host;
-          target.port = relative4.port;
-          target.path = removeDotSegments(relative4.path || "");
-          target.query = relative4.query;
+        if (relative6.userinfo !== void 0 || relative6.host !== void 0 || relative6.port !== void 0) {
+          target.userinfo = relative6.userinfo;
+          target.host = relative6.host;
+          target.port = relative6.port;
+          target.path = removeDotSegments(relative6.path || "");
+          target.query = relative6.query;
         } else {
-          if (!relative4.path) {
+          if (!relative6.path) {
             target.path = base.path;
-            if (relative4.query !== void 0) {
-              target.query = relative4.query;
+            if (relative6.query !== void 0) {
+              target.query = relative6.query;
             } else {
               target.query = base.query;
             }
           } else {
-            if (relative4.path[0] === "/") {
-              target.path = removeDotSegments(relative4.path);
+            if (relative6.path[0] === "/") {
+              target.path = removeDotSegments(relative6.path);
             } else {
               if ((base.userinfo !== void 0 || base.host !== void 0 || base.port !== void 0) && !base.path) {
-                target.path = "/" + relative4.path;
+                target.path = "/" + relative6.path;
               } else if (!base.path) {
-                target.path = relative4.path;
+                target.path = relative6.path;
               } else {
-                target.path = base.path.slice(0, base.path.lastIndexOf("/") + 1) + relative4.path;
+                target.path = base.path.slice(0, base.path.lastIndexOf("/") + 1) + relative6.path;
               }
               target.path = removeDotSegments(target.path);
             }
-            target.query = relative4.query;
+            target.query = relative6.query;
           }
           target.userinfo = base.userinfo;
           target.host = base.host;
@@ -8037,7 +8037,7 @@ var require_fast_uri = __commonJS({
         }
         target.scheme = base.scheme;
       }
-      target.fragment = relative4.fragment;
+      target.fragment = relative6.fragment;
       return target;
     }
     function equal(uriA, uriB, options) {
@@ -8136,12 +8136,12 @@ var require_fast_uri = __commonJS({
       }
       return false;
     }
-    function isIPLiteral(host) {
-      return host[0] === "[" && host[host.length - 1] === "]";
+    function isIPLiteral(host2) {
+      return host2[0] === "[" && host2[host2.length - 1] === "]";
     }
     function hasMalformedComponentPercentEncoding(matches) {
-      const host = matches[4];
-      return hasMalformedPercentEncoding(matches[3]) || host !== void 0 && !isIPLiteral(host) && hasMalformedPercentEncoding(host) || hasMalformedPercentEncoding(matches[6]) || hasMalformedPercentEncoding(matches[7]) || hasMalformedPercentEncoding(matches[8]);
+      const host2 = matches[4];
+      return hasMalformedPercentEncoding(matches[3]) || host2 !== void 0 && !isIPLiteral(host2) && hasMalformedPercentEncoding(host2) || hasMalformedPercentEncoding(matches[6]) || hasMalformedPercentEncoding(matches[7]) || hasMalformedPercentEncoding(matches[8]);
     }
     function canonicalizeHost(parsed, options, schemeHandler, isIP) {
       if (!options.unicodeSupport && (!schemeHandler || !schemeHandler.unicodeSupport) && parsed.host && !isIPLiteral(parsed.host) && (options.domainHost || schemeHandler && schemeHandler.domainHost) && isIP === false && nonSimpleDomain(parsed.host)) {
@@ -8262,11 +8262,11 @@ var require_fast_uri = __commonJS({
           malformedHost = canonicalizeHost(parsed, options, schemeHandler, isIP);
         }
         if (uri.indexOf("%") !== -1 && parsed.host !== void 0 && !malformedIPLiteral) {
-          let host = isIP ? parsed.host : normalizePercentEncoding(parsed.host, true);
+          let host2 = isIP ? parsed.host : normalizePercentEncoding(parsed.host, true);
           if (!isIP) {
-            host = normalizePercentEncoding(host.toLowerCase());
+            host2 = normalizePercentEncoding(host2.toLowerCase());
           }
-          parsed.host = reescapeHostDelimiters(host, isIP);
+          parsed.host = reescapeHostDelimiters(host2, isIP);
         }
         if (!schemeHandler || schemeHandler && !schemeHandler.skipNormalize) {
           if (parsed.path) {
@@ -8290,7 +8290,7 @@ var require_fast_uri = __commonJS({
       }
       return { parsed, malformedAuthorityOrPort, malformedPercentEncoding, malformedSchemeSpecific, malformedHost, malformedScheme };
     }
-    function parse4(uri, opts) {
+    function parse6(uri, opts) {
       return parseWithStatus(uri, opts).parsed;
     }
     function normalizeString(uri, opts) {
@@ -8323,11 +8323,11 @@ var require_fast_uri = __commonJS({
     var fastUri = {
       SCHEMES,
       normalize,
-      resolve: resolve11,
+      resolve: resolve13,
       resolveComponent,
       equal,
       serialize: serialize3,
-      parse: parse4
+      parse: parse6
     };
     module.exports = fastUri;
     module.exports.default = fastUri;
@@ -8335,9 +8335,9 @@ var require_fast_uri = __commonJS({
   }
 });
 
-// ../../../node_modules/ajv/dist/runtime/uri.js
+// node_modules/ajv/dist/runtime/uri.js
 var require_uri = __commonJS({
-  "../../../node_modules/ajv/dist/runtime/uri.js"(exports2) {
+  "node_modules/ajv/dist/runtime/uri.js"(exports2) {
     "use strict";
     Object.defineProperty(exports2, "__esModule", { value: true });
     var uri = require_fast_uri();
@@ -8346,9 +8346,9 @@ var require_uri = __commonJS({
   }
 });
 
-// ../../../node_modules/ajv/dist/core.js
+// node_modules/ajv/dist/core.js
 var require_core = __commonJS({
-  "../../../node_modules/ajv/dist/core.js"(exports2) {
+  "node_modules/ajv/dist/core.js"(exports2) {
     "use strict";
     Object.defineProperty(exports2, "__esModule", { value: true });
     exports2.CodeGen = exports2.Name = exports2.nil = exports2.stringify = exports2.str = exports2._ = exports2.KeywordCxt = void 0;
@@ -8957,9 +8957,9 @@ var require_core = __commonJS({
   }
 });
 
-// ../../../node_modules/ajv/dist/vocabularies/core/id.js
+// node_modules/ajv/dist/vocabularies/core/id.js
 var require_id = __commonJS({
-  "../../../node_modules/ajv/dist/vocabularies/core/id.js"(exports2) {
+  "node_modules/ajv/dist/vocabularies/core/id.js"(exports2) {
     "use strict";
     Object.defineProperty(exports2, "__esModule", { value: true });
     var def = {
@@ -8972,9 +8972,9 @@ var require_id = __commonJS({
   }
 });
 
-// ../../../node_modules/ajv/dist/vocabularies/core/ref.js
+// node_modules/ajv/dist/vocabularies/core/ref.js
 var require_ref = __commonJS({
-  "../../../node_modules/ajv/dist/vocabularies/core/ref.js"(exports2) {
+  "node_modules/ajv/dist/vocabularies/core/ref.js"(exports2) {
     "use strict";
     Object.defineProperty(exports2, "__esModule", { value: true });
     exports2.callRef = exports2.getValidate = void 0;
@@ -9094,9 +9094,9 @@ var require_ref = __commonJS({
   }
 });
 
-// ../../../node_modules/ajv/dist/vocabularies/core/index.js
+// node_modules/ajv/dist/vocabularies/core/index.js
 var require_core2 = __commonJS({
-  "../../../node_modules/ajv/dist/vocabularies/core/index.js"(exports2) {
+  "node_modules/ajv/dist/vocabularies/core/index.js"(exports2) {
     "use strict";
     Object.defineProperty(exports2, "__esModule", { value: true });
     var id_1 = require_id();
@@ -9115,9 +9115,9 @@ var require_core2 = __commonJS({
   }
 });
 
-// ../../../node_modules/ajv/dist/vocabularies/validation/limitNumber.js
+// node_modules/ajv/dist/vocabularies/validation/limitNumber.js
 var require_limitNumber = __commonJS({
-  "../../../node_modules/ajv/dist/vocabularies/validation/limitNumber.js"(exports2) {
+  "node_modules/ajv/dist/vocabularies/validation/limitNumber.js"(exports2) {
     "use strict";
     Object.defineProperty(exports2, "__esModule", { value: true });
     var codegen_1 = require_codegen();
@@ -9147,9 +9147,9 @@ var require_limitNumber = __commonJS({
   }
 });
 
-// ../../../node_modules/ajv/dist/vocabularies/validation/multipleOf.js
+// node_modules/ajv/dist/vocabularies/validation/multipleOf.js
 var require_multipleOf = __commonJS({
-  "../../../node_modules/ajv/dist/vocabularies/validation/multipleOf.js"(exports2) {
+  "node_modules/ajv/dist/vocabularies/validation/multipleOf.js"(exports2) {
     "use strict";
     Object.defineProperty(exports2, "__esModule", { value: true });
     var codegen_1 = require_codegen();
@@ -9175,9 +9175,9 @@ var require_multipleOf = __commonJS({
   }
 });
 
-// ../../../node_modules/ajv/dist/runtime/ucs2length.js
+// node_modules/ajv/dist/runtime/ucs2length.js
 var require_ucs2length = __commonJS({
-  "../../../node_modules/ajv/dist/runtime/ucs2length.js"(exports2) {
+  "node_modules/ajv/dist/runtime/ucs2length.js"(exports2) {
     "use strict";
     Object.defineProperty(exports2, "__esModule", { value: true });
     function ucs2length(str) {
@@ -9201,9 +9201,9 @@ var require_ucs2length = __commonJS({
   }
 });
 
-// ../../../node_modules/ajv/dist/vocabularies/validation/limitLength.js
+// node_modules/ajv/dist/vocabularies/validation/limitLength.js
 var require_limitLength = __commonJS({
-  "../../../node_modules/ajv/dist/vocabularies/validation/limitLength.js"(exports2) {
+  "node_modules/ajv/dist/vocabularies/validation/limitLength.js"(exports2) {
     "use strict";
     Object.defineProperty(exports2, "__esModule", { value: true });
     var codegen_1 = require_codegen();
@@ -9233,9 +9233,9 @@ var require_limitLength = __commonJS({
   }
 });
 
-// ../../../node_modules/ajv/dist/vocabularies/validation/pattern.js
+// node_modules/ajv/dist/vocabularies/validation/pattern.js
 var require_pattern = __commonJS({
-  "../../../node_modules/ajv/dist/vocabularies/validation/pattern.js"(exports2) {
+  "node_modules/ajv/dist/vocabularies/validation/pattern.js"(exports2) {
     "use strict";
     Object.defineProperty(exports2, "__esModule", { value: true });
     var code_1 = require_code2();
@@ -9270,9 +9270,9 @@ var require_pattern = __commonJS({
   }
 });
 
-// ../../../node_modules/ajv/dist/vocabularies/validation/limitProperties.js
+// node_modules/ajv/dist/vocabularies/validation/limitProperties.js
 var require_limitProperties = __commonJS({
-  "../../../node_modules/ajv/dist/vocabularies/validation/limitProperties.js"(exports2) {
+  "node_modules/ajv/dist/vocabularies/validation/limitProperties.js"(exports2) {
     "use strict";
     Object.defineProperty(exports2, "__esModule", { value: true });
     var codegen_1 = require_codegen();
@@ -9299,9 +9299,9 @@ var require_limitProperties = __commonJS({
   }
 });
 
-// ../../../node_modules/ajv/dist/vocabularies/validation/required.js
+// node_modules/ajv/dist/vocabularies/validation/required.js
 var require_required = __commonJS({
-  "../../../node_modules/ajv/dist/vocabularies/validation/required.js"(exports2) {
+  "node_modules/ajv/dist/vocabularies/validation/required.js"(exports2) {
     "use strict";
     Object.defineProperty(exports2, "__esModule", { value: true });
     var code_1 = require_code2();
@@ -9381,9 +9381,9 @@ var require_required = __commonJS({
   }
 });
 
-// ../../../node_modules/ajv/dist/vocabularies/validation/limitItems.js
+// node_modules/ajv/dist/vocabularies/validation/limitItems.js
 var require_limitItems = __commonJS({
-  "../../../node_modules/ajv/dist/vocabularies/validation/limitItems.js"(exports2) {
+  "node_modules/ajv/dist/vocabularies/validation/limitItems.js"(exports2) {
     "use strict";
     Object.defineProperty(exports2, "__esModule", { value: true });
     var codegen_1 = require_codegen();
@@ -9410,9 +9410,9 @@ var require_limitItems = __commonJS({
   }
 });
 
-// ../../../node_modules/ajv/dist/runtime/equal.js
+// node_modules/ajv/dist/runtime/equal.js
 var require_equal = __commonJS({
-  "../../../node_modules/ajv/dist/runtime/equal.js"(exports2) {
+  "node_modules/ajv/dist/runtime/equal.js"(exports2) {
     "use strict";
     Object.defineProperty(exports2, "__esModule", { value: true });
     var equal = require_fast_deep_equal();
@@ -9421,9 +9421,9 @@ var require_equal = __commonJS({
   }
 });
 
-// ../../../node_modules/ajv/dist/vocabularies/validation/uniqueItems.js
+// node_modules/ajv/dist/vocabularies/validation/uniqueItems.js
 var require_uniqueItems = __commonJS({
-  "../../../node_modules/ajv/dist/vocabularies/validation/uniqueItems.js"(exports2) {
+  "node_modules/ajv/dist/vocabularies/validation/uniqueItems.js"(exports2) {
     "use strict";
     Object.defineProperty(exports2, "__esModule", { value: true });
     var dataType_1 = require_dataType();
@@ -9488,9 +9488,9 @@ var require_uniqueItems = __commonJS({
   }
 });
 
-// ../../../node_modules/ajv/dist/vocabularies/validation/const.js
+// node_modules/ajv/dist/vocabularies/validation/const.js
 var require_const = __commonJS({
-  "../../../node_modules/ajv/dist/vocabularies/validation/const.js"(exports2) {
+  "node_modules/ajv/dist/vocabularies/validation/const.js"(exports2) {
     "use strict";
     Object.defineProperty(exports2, "__esModule", { value: true });
     var codegen_1 = require_codegen();
@@ -9517,9 +9517,9 @@ var require_const = __commonJS({
   }
 });
 
-// ../../../node_modules/ajv/dist/vocabularies/validation/enum.js
+// node_modules/ajv/dist/vocabularies/validation/enum.js
 var require_enum = __commonJS({
-  "../../../node_modules/ajv/dist/vocabularies/validation/enum.js"(exports2) {
+  "node_modules/ajv/dist/vocabularies/validation/enum.js"(exports2) {
     "use strict";
     Object.defineProperty(exports2, "__esModule", { value: true });
     var codegen_1 = require_codegen();
@@ -9566,9 +9566,9 @@ var require_enum = __commonJS({
   }
 });
 
-// ../../../node_modules/ajv/dist/vocabularies/validation/index.js
+// node_modules/ajv/dist/vocabularies/validation/index.js
 var require_validation = __commonJS({
-  "../../../node_modules/ajv/dist/vocabularies/validation/index.js"(exports2) {
+  "node_modules/ajv/dist/vocabularies/validation/index.js"(exports2) {
     "use strict";
     Object.defineProperty(exports2, "__esModule", { value: true });
     var limitNumber_1 = require_limitNumber();
@@ -9604,9 +9604,9 @@ var require_validation = __commonJS({
   }
 });
 
-// ../../../node_modules/ajv/dist/vocabularies/applicator/additionalItems.js
+// node_modules/ajv/dist/vocabularies/applicator/additionalItems.js
 var require_additionalItems = __commonJS({
-  "../../../node_modules/ajv/dist/vocabularies/applicator/additionalItems.js"(exports2) {
+  "node_modules/ajv/dist/vocabularies/applicator/additionalItems.js"(exports2) {
     "use strict";
     Object.defineProperty(exports2, "__esModule", { value: true });
     exports2.validateAdditionalItems = void 0;
@@ -9657,9 +9657,9 @@ var require_additionalItems = __commonJS({
   }
 });
 
-// ../../../node_modules/ajv/dist/vocabularies/applicator/items.js
+// node_modules/ajv/dist/vocabularies/applicator/items.js
 var require_items = __commonJS({
-  "../../../node_modules/ajv/dist/vocabularies/applicator/items.js"(exports2) {
+  "node_modules/ajv/dist/vocabularies/applicator/items.js"(exports2) {
     "use strict";
     Object.defineProperty(exports2, "__esModule", { value: true });
     exports2.validateTuple = void 0;
@@ -9714,9 +9714,9 @@ var require_items = __commonJS({
   }
 });
 
-// ../../../node_modules/ajv/dist/vocabularies/applicator/prefixItems.js
+// node_modules/ajv/dist/vocabularies/applicator/prefixItems.js
 var require_prefixItems = __commonJS({
-  "../../../node_modules/ajv/dist/vocabularies/applicator/prefixItems.js"(exports2) {
+  "node_modules/ajv/dist/vocabularies/applicator/prefixItems.js"(exports2) {
     "use strict";
     Object.defineProperty(exports2, "__esModule", { value: true });
     var items_1 = require_items();
@@ -9731,9 +9731,9 @@ var require_prefixItems = __commonJS({
   }
 });
 
-// ../../../node_modules/ajv/dist/vocabularies/applicator/items2020.js
+// node_modules/ajv/dist/vocabularies/applicator/items2020.js
 var require_items2020 = __commonJS({
-  "../../../node_modules/ajv/dist/vocabularies/applicator/items2020.js"(exports2) {
+  "node_modules/ajv/dist/vocabularies/applicator/items2020.js"(exports2) {
     "use strict";
     Object.defineProperty(exports2, "__esModule", { value: true });
     var codegen_1 = require_codegen();
@@ -9766,9 +9766,9 @@ var require_items2020 = __commonJS({
   }
 });
 
-// ../../../node_modules/ajv/dist/vocabularies/applicator/contains.js
+// node_modules/ajv/dist/vocabularies/applicator/contains.js
 var require_contains = __commonJS({
-  "../../../node_modules/ajv/dist/vocabularies/applicator/contains.js"(exports2) {
+  "node_modules/ajv/dist/vocabularies/applicator/contains.js"(exports2) {
     "use strict";
     Object.defineProperty(exports2, "__esModule", { value: true });
     var codegen_1 = require_codegen();
@@ -9860,9 +9860,9 @@ var require_contains = __commonJS({
   }
 });
 
-// ../../../node_modules/ajv/dist/vocabularies/applicator/dependencies.js
+// node_modules/ajv/dist/vocabularies/applicator/dependencies.js
 var require_dependencies = __commonJS({
-  "../../../node_modules/ajv/dist/vocabularies/applicator/dependencies.js"(exports2) {
+  "node_modules/ajv/dist/vocabularies/applicator/dependencies.js"(exports2) {
     "use strict";
     Object.defineProperty(exports2, "__esModule", { value: true });
     exports2.validateSchemaDeps = exports2.validatePropertyDeps = exports2.error = void 0;
@@ -9954,9 +9954,9 @@ var require_dependencies = __commonJS({
   }
 });
 
-// ../../../node_modules/ajv/dist/vocabularies/applicator/propertyNames.js
+// node_modules/ajv/dist/vocabularies/applicator/propertyNames.js
 var require_propertyNames = __commonJS({
-  "../../../node_modules/ajv/dist/vocabularies/applicator/propertyNames.js"(exports2) {
+  "node_modules/ajv/dist/vocabularies/applicator/propertyNames.js"(exports2) {
     "use strict";
     Object.defineProperty(exports2, "__esModule", { value: true });
     var codegen_1 = require_codegen();
@@ -9997,9 +9997,9 @@ var require_propertyNames = __commonJS({
   }
 });
 
-// ../../../node_modules/ajv/dist/vocabularies/applicator/additionalProperties.js
+// node_modules/ajv/dist/vocabularies/applicator/additionalProperties.js
 var require_additionalProperties = __commonJS({
-  "../../../node_modules/ajv/dist/vocabularies/applicator/additionalProperties.js"(exports2) {
+  "node_modules/ajv/dist/vocabularies/applicator/additionalProperties.js"(exports2) {
     "use strict";
     Object.defineProperty(exports2, "__esModule", { value: true });
     var code_1 = require_code2();
@@ -10103,9 +10103,9 @@ var require_additionalProperties = __commonJS({
   }
 });
 
-// ../../../node_modules/ajv/dist/vocabularies/applicator/properties.js
+// node_modules/ajv/dist/vocabularies/applicator/properties.js
 var require_properties = __commonJS({
-  "../../../node_modules/ajv/dist/vocabularies/applicator/properties.js"(exports2) {
+  "node_modules/ajv/dist/vocabularies/applicator/properties.js"(exports2) {
     "use strict";
     Object.defineProperty(exports2, "__esModule", { value: true });
     var validate_1 = require_validate();
@@ -10161,9 +10161,9 @@ var require_properties = __commonJS({
   }
 });
 
-// ../../../node_modules/ajv/dist/vocabularies/applicator/patternProperties.js
+// node_modules/ajv/dist/vocabularies/applicator/patternProperties.js
 var require_patternProperties = __commonJS({
-  "../../../node_modules/ajv/dist/vocabularies/applicator/patternProperties.js"(exports2) {
+  "node_modules/ajv/dist/vocabularies/applicator/patternProperties.js"(exports2) {
     "use strict";
     Object.defineProperty(exports2, "__esModule", { value: true });
     var code_1 = require_code2();
@@ -10235,9 +10235,9 @@ var require_patternProperties = __commonJS({
   }
 });
 
-// ../../../node_modules/ajv/dist/vocabularies/applicator/not.js
+// node_modules/ajv/dist/vocabularies/applicator/not.js
 var require_not = __commonJS({
-  "../../../node_modules/ajv/dist/vocabularies/applicator/not.js"(exports2) {
+  "node_modules/ajv/dist/vocabularies/applicator/not.js"(exports2) {
     "use strict";
     Object.defineProperty(exports2, "__esModule", { value: true });
     var util_1 = require_util();
@@ -10266,9 +10266,9 @@ var require_not = __commonJS({
   }
 });
 
-// ../../../node_modules/ajv/dist/vocabularies/applicator/anyOf.js
+// node_modules/ajv/dist/vocabularies/applicator/anyOf.js
 var require_anyOf = __commonJS({
-  "../../../node_modules/ajv/dist/vocabularies/applicator/anyOf.js"(exports2) {
+  "node_modules/ajv/dist/vocabularies/applicator/anyOf.js"(exports2) {
     "use strict";
     Object.defineProperty(exports2, "__esModule", { value: true });
     var code_1 = require_code2();
@@ -10283,9 +10283,9 @@ var require_anyOf = __commonJS({
   }
 });
 
-// ../../../node_modules/ajv/dist/vocabularies/applicator/oneOf.js
+// node_modules/ajv/dist/vocabularies/applicator/oneOf.js
 var require_oneOf = __commonJS({
-  "../../../node_modules/ajv/dist/vocabularies/applicator/oneOf.js"(exports2) {
+  "node_modules/ajv/dist/vocabularies/applicator/oneOf.js"(exports2) {
     "use strict";
     Object.defineProperty(exports2, "__esModule", { value: true });
     var codegen_1 = require_codegen();
@@ -10341,9 +10341,9 @@ var require_oneOf = __commonJS({
   }
 });
 
-// ../../../node_modules/ajv/dist/vocabularies/applicator/allOf.js
+// node_modules/ajv/dist/vocabularies/applicator/allOf.js
 var require_allOf = __commonJS({
-  "../../../node_modules/ajv/dist/vocabularies/applicator/allOf.js"(exports2) {
+  "node_modules/ajv/dist/vocabularies/applicator/allOf.js"(exports2) {
     "use strict";
     Object.defineProperty(exports2, "__esModule", { value: true });
     var util_1 = require_util();
@@ -10368,9 +10368,9 @@ var require_allOf = __commonJS({
   }
 });
 
-// ../../../node_modules/ajv/dist/vocabularies/applicator/if.js
+// node_modules/ajv/dist/vocabularies/applicator/if.js
 var require_if = __commonJS({
-  "../../../node_modules/ajv/dist/vocabularies/applicator/if.js"(exports2) {
+  "node_modules/ajv/dist/vocabularies/applicator/if.js"(exports2) {
     "use strict";
     Object.defineProperty(exports2, "__esModule", { value: true });
     var codegen_1 = require_codegen();
@@ -10437,9 +10437,9 @@ var require_if = __commonJS({
   }
 });
 
-// ../../../node_modules/ajv/dist/vocabularies/applicator/thenElse.js
+// node_modules/ajv/dist/vocabularies/applicator/thenElse.js
 var require_thenElse = __commonJS({
-  "../../../node_modules/ajv/dist/vocabularies/applicator/thenElse.js"(exports2) {
+  "node_modules/ajv/dist/vocabularies/applicator/thenElse.js"(exports2) {
     "use strict";
     Object.defineProperty(exports2, "__esModule", { value: true });
     var util_1 = require_util();
@@ -10455,9 +10455,9 @@ var require_thenElse = __commonJS({
   }
 });
 
-// ../../../node_modules/ajv/dist/vocabularies/applicator/index.js
+// node_modules/ajv/dist/vocabularies/applicator/index.js
 var require_applicator = __commonJS({
-  "../../../node_modules/ajv/dist/vocabularies/applicator/index.js"(exports2) {
+  "node_modules/ajv/dist/vocabularies/applicator/index.js"(exports2) {
     "use strict";
     Object.defineProperty(exports2, "__esModule", { value: true });
     var additionalItems_1 = require_additionalItems();
@@ -10503,9 +10503,9 @@ var require_applicator = __commonJS({
   }
 });
 
-// ../../../node_modules/ajv/dist/vocabularies/format/format.js
+// node_modules/ajv/dist/vocabularies/format/format.js
 var require_format = __commonJS({
-  "../../../node_modules/ajv/dist/vocabularies/format/format.js"(exports2) {
+  "node_modules/ajv/dist/vocabularies/format/format.js"(exports2) {
     "use strict";
     Object.defineProperty(exports2, "__esModule", { value: true });
     var codegen_1 = require_codegen();
@@ -10593,9 +10593,9 @@ var require_format = __commonJS({
   }
 });
 
-// ../../../node_modules/ajv/dist/vocabularies/format/index.js
+// node_modules/ajv/dist/vocabularies/format/index.js
 var require_format2 = __commonJS({
-  "../../../node_modules/ajv/dist/vocabularies/format/index.js"(exports2) {
+  "node_modules/ajv/dist/vocabularies/format/index.js"(exports2) {
     "use strict";
     Object.defineProperty(exports2, "__esModule", { value: true });
     var format_1 = require_format();
@@ -10604,9 +10604,9 @@ var require_format2 = __commonJS({
   }
 });
 
-// ../../../node_modules/ajv/dist/vocabularies/metadata.js
+// node_modules/ajv/dist/vocabularies/metadata.js
 var require_metadata = __commonJS({
-  "../../../node_modules/ajv/dist/vocabularies/metadata.js"(exports2) {
+  "node_modules/ajv/dist/vocabularies/metadata.js"(exports2) {
     "use strict";
     Object.defineProperty(exports2, "__esModule", { value: true });
     exports2.contentVocabulary = exports2.metadataVocabulary = void 0;
@@ -10627,9 +10627,9 @@ var require_metadata = __commonJS({
   }
 });
 
-// ../../../node_modules/ajv/dist/vocabularies/draft7.js
+// node_modules/ajv/dist/vocabularies/draft7.js
 var require_draft7 = __commonJS({
-  "../../../node_modules/ajv/dist/vocabularies/draft7.js"(exports2) {
+  "node_modules/ajv/dist/vocabularies/draft7.js"(exports2) {
     "use strict";
     Object.defineProperty(exports2, "__esModule", { value: true });
     var core_1 = require_core2();
@@ -10649,9 +10649,9 @@ var require_draft7 = __commonJS({
   }
 });
 
-// ../../../node_modules/ajv/dist/vocabularies/discriminator/types.js
+// node_modules/ajv/dist/vocabularies/discriminator/types.js
 var require_types = __commonJS({
-  "../../../node_modules/ajv/dist/vocabularies/discriminator/types.js"(exports2) {
+  "node_modules/ajv/dist/vocabularies/discriminator/types.js"(exports2) {
     "use strict";
     Object.defineProperty(exports2, "__esModule", { value: true });
     exports2.DiscrError = void 0;
@@ -10663,9 +10663,9 @@ var require_types = __commonJS({
   }
 });
 
-// ../../../node_modules/ajv/dist/vocabularies/discriminator/index.js
+// node_modules/ajv/dist/vocabularies/discriminator/index.js
 var require_discriminator = __commonJS({
-  "../../../node_modules/ajv/dist/vocabularies/discriminator/index.js"(exports2) {
+  "node_modules/ajv/dist/vocabularies/discriminator/index.js"(exports2) {
     "use strict";
     Object.defineProperty(exports2, "__esModule", { value: true });
     var codegen_1 = require_codegen();
@@ -10768,9 +10768,9 @@ var require_discriminator = __commonJS({
   }
 });
 
-// ../../../node_modules/ajv/dist/refs/json-schema-draft-07.json
+// node_modules/ajv/dist/refs/json-schema-draft-07.json
 var require_json_schema_draft_07 = __commonJS({
-  "../../../node_modules/ajv/dist/refs/json-schema-draft-07.json"(exports2, module) {
+  "node_modules/ajv/dist/refs/json-schema-draft-07.json"(exports2, module) {
     module.exports = {
       $schema: "http://json-schema.org/draft-07/schema#",
       $id: "http://json-schema.org/draft-07/schema#",
@@ -10925,9 +10925,9 @@ var require_json_schema_draft_07 = __commonJS({
   }
 });
 
-// ../../../node_modules/ajv/dist/ajv.js
+// node_modules/ajv/dist/ajv.js
 var require_ajv = __commonJS({
-  "../../../node_modules/ajv/dist/ajv.js"(exports2, module) {
+  "node_modules/ajv/dist/ajv.js"(exports2, module) {
     "use strict";
     Object.defineProperty(exports2, "__esModule", { value: true });
     exports2.MissingRefError = exports2.ValidationError = exports2.CodeGen = exports2.Name = exports2.nil = exports2.stringify = exports2.str = exports2._ = exports2.KeywordCxt = exports2.Ajv = void 0;
@@ -10995,9 +10995,9 @@ var require_ajv = __commonJS({
   }
 });
 
-// ../../../node_modules/ajv-formats/dist/formats.js
+// node_modules/ajv-formats/dist/formats.js
 var require_formats = __commonJS({
-  "../../../node_modules/ajv-formats/dist/formats.js"(exports2) {
+  "node_modules/ajv-formats/dist/formats.js"(exports2) {
     "use strict";
     Object.defineProperty(exports2, "__esModule", { value: true });
     exports2.formatNames = exports2.fastFormats = exports2.fullFormats = void 0;
@@ -11198,9 +11198,9 @@ var require_formats = __commonJS({
   }
 });
 
-// ../../../node_modules/ajv-formats/dist/limit.js
+// node_modules/ajv-formats/dist/limit.js
 var require_limit = __commonJS({
-  "../../../node_modules/ajv-formats/dist/limit.js"(exports2) {
+  "node_modules/ajv-formats/dist/limit.js"(exports2) {
     "use strict";
     Object.defineProperty(exports2, "__esModule", { value: true });
     exports2.formatLimitDefinition = void 0;
@@ -11270,9 +11270,9 @@ var require_limit = __commonJS({
   }
 });
 
-// ../../../node_modules/ajv-formats/dist/index.js
+// node_modules/ajv-formats/dist/index.js
 var require_dist = __commonJS({
-  "../../../node_modules/ajv-formats/dist/index.js"(exports2, module) {
+  "node_modules/ajv-formats/dist/index.js"(exports2, module) {
     "use strict";
     Object.defineProperty(exports2, "__esModule", { value: true });
     var formats_1 = require_formats();
@@ -11312,15 +11312,15 @@ var require_dist = __commonJS({
   }
 });
 
-// ../../../node_modules/zod/index.js
+// node_modules/zod/index.js
 var init_zod = __esm({
-  "../../../node_modules/zod/index.js"() {
+  "node_modules/zod/index.js"() {
     init_external();
     init_external();
   }
 });
 
-// ../../../node_modules/is-plain-obj/index.js
+// node_modules/is-plain-obj/index.js
 function isPlainObject3(value) {
   if (typeof value !== "object" || value === null) {
     return false;
@@ -11329,15 +11329,15 @@ function isPlainObject3(value) {
   return (prototype === null || prototype === Object.prototype || Object.getPrototypeOf(prototype) === null) && !(Symbol.toStringTag in value) && !(Symbol.iterator in value);
 }
 var init_is_plain_obj = __esm({
-  "../../../node_modules/is-plain-obj/index.js"() {
+  "node_modules/is-plain-obj/index.js"() {
   }
 });
 
-// ../../../node_modules/execa/lib/arguments/file-url.js
+// node_modules/execa/lib/arguments/file-url.js
 import { fileURLToPath } from "node:url";
 var safeNormalizeFileUrl, normalizeDenoExecPath, isDenoExecPath, normalizeFileUrl;
 var init_file_url = __esm({
-  "../../../node_modules/execa/lib/arguments/file-url.js"() {
+  "node_modules/execa/lib/arguments/file-url.js"() {
     safeNormalizeFileUrl = (file, name) => {
       const fileString = normalizeFileUrl(normalizeDenoExecPath(file));
       if (typeof fileString !== "string") {
@@ -11351,10 +11351,10 @@ var init_file_url = __esm({
   }
 });
 
-// ../../../node_modules/execa/lib/methods/parameters.js
+// node_modules/execa/lib/methods/parameters.js
 var normalizeParameters;
 var init_parameters = __esm({
-  "../../../node_modules/execa/lib/methods/parameters.js"() {
+  "node_modules/execa/lib/methods/parameters.js"() {
     init_is_plain_obj();
     init_file_url();
     normalizeParameters = (rawFile, rawArguments = [], rawOptions = {}) => {
@@ -11379,11 +11379,11 @@ var init_parameters = __esm({
   }
 });
 
-// ../../../node_modules/execa/lib/utils/uint-array.js
+// node_modules/execa/lib/utils/uint-array.js
 import { StringDecoder } from "node:string_decoder";
 var objectToString, isArrayBuffer, isUint8Array, bufferToUint8Array, textEncoder, stringToUint8Array, textDecoder, uint8ArrayToString, joinToString, uint8ArraysToStrings, joinToUint8Array, stringsToUint8Arrays, concatUint8Arrays, getJoinLength;
 var init_uint_array = __esm({
-  "../../../node_modules/execa/lib/utils/uint-array.js"() {
+  "node_modules/execa/lib/utils/uint-array.js"() {
     ({ toString: objectToString } = Object.prototype);
     isArrayBuffer = (value) => objectToString.call(value) === "[object ArrayBuffer]";
     isUint8Array = (value) => objectToString.call(value) === "[object Uint8Array]";
@@ -11431,11 +11431,11 @@ var init_uint_array = __esm({
   }
 });
 
-// ../../../node_modules/execa/lib/methods/template.js
+// node_modules/execa/lib/methods/template.js
 import { ChildProcess } from "node:child_process";
 var isTemplateString, parseTemplates, parseTemplate, splitByWhitespaces, DELIMITERS, ESCAPE_LENGTH, concatTokens, parseExpression, getSubprocessResult;
 var init_template = __esm({
-  "../../../node_modules/execa/lib/methods/template.js"() {
+  "node_modules/execa/lib/methods/template.js"() {
     init_is_plain_obj();
     init_uint_array();
     isTemplateString = (templates) => Array.isArray(templates) && Array.isArray(templates.raw);
@@ -11539,11 +11539,11 @@ var init_template = __esm({
   }
 });
 
-// ../../../node_modules/execa/lib/utils/standard-stream.js
+// node_modules/execa/lib/utils/standard-stream.js
 import process3 from "node:process";
 var isStandardStream, STANDARD_STREAMS, STANDARD_STREAMS_ALIASES, getStreamName;
 var init_standard_stream = __esm({
-  "../../../node_modules/execa/lib/utils/standard-stream.js"() {
+  "node_modules/execa/lib/utils/standard-stream.js"() {
     isStandardStream = (stream) => STANDARD_STREAMS.includes(stream);
     STANDARD_STREAMS = [process3.stdin, process3.stdout, process3.stderr];
     STANDARD_STREAMS_ALIASES = ["stdin", "stdout", "stderr"];
@@ -11551,11 +11551,11 @@ var init_standard_stream = __esm({
   }
 });
 
-// ../../../node_modules/execa/lib/arguments/specific.js
+// node_modules/execa/lib/arguments/specific.js
 import { debuglog } from "node:util";
 var normalizeFdSpecificOptions, normalizeFdSpecificOption, getStdioLength, normalizeFdSpecificValue, normalizeOptionObject, compareFdName, getFdNameOrder, parseFdName, parseFd, FD_REGEXP, addDefaultValue, verboseDefault, DEFAULT_OPTIONS, FD_SPECIFIC_OPTIONS, getFdSpecificValue;
 var init_specific = __esm({
-  "../../../node_modules/execa/lib/arguments/specific.js"() {
+  "node_modules/execa/lib/arguments/specific.js"() {
     init_is_plain_obj();
     init_standard_stream();
     normalizeFdSpecificOptions = (options) => {
@@ -11629,10 +11629,10 @@ Please set the "stdio" option to ensure that file descriptor exists.`);
   }
 });
 
-// ../../../node_modules/execa/lib/verbose/values.js
+// node_modules/execa/lib/verbose/values.js
 var isVerbose, isFullVerbose, getVerboseFunction, getFdVerbose, getFdGenericVerbose, isVerboseFunction, VERBOSE_VALUES;
 var init_values = __esm({
-  "../../../node_modules/execa/lib/verbose/values.js"() {
+  "node_modules/execa/lib/verbose/values.js"() {
     init_specific();
     isVerbose = ({ verbose }, fdNumber) => getFdVerbose(verbose, fdNumber) !== "none";
     isFullVerbose = ({ verbose }, fdNumber) => !["none", "short"].includes(getFdVerbose(verbose, fdNumber));
@@ -11647,12 +11647,12 @@ var init_values = __esm({
   }
 });
 
-// ../../../node_modules/execa/lib/arguments/escape.js
+// node_modules/execa/lib/arguments/escape.js
 import { platform } from "node:process";
 import { stripVTControlCharacters } from "node:util";
 var joinCommand, escapeLines, escapeControlCharacters, escapeControlCharacter, getSpecialCharRegExp, SPECIAL_CHAR_REGEXP, COMMON_ESCAPES, ASTRAL_START, quoteString, NO_ESCAPE_REGEXP;
 var init_escape = __esm({
-  "../../../node_modules/execa/lib/arguments/escape.js"() {
+  "node_modules/execa/lib/arguments/escape.js"() {
     joinCommand = (filePath, rawArguments) => {
       const fileAndArguments = [filePath, ...rawArguments];
       const command = fileAndArguments.join(" ");
@@ -11697,7 +11697,7 @@ var init_escape = __esm({
   }
 });
 
-// ../../../node_modules/is-unicode-supported/index.js
+// node_modules/is-unicode-supported/index.js
 import process4 from "node:process";
 function isUnicodeSupported() {
   const { env } = process4;
@@ -11708,14 +11708,14 @@ function isUnicodeSupported() {
   return Boolean(env.WT_SESSION) || Boolean(env.TERMINUS_SUBLIME) || env.ConEmuTask === "{cmd::Cmder}" || TERM_PROGRAM === "Terminus-Sublime" || TERM_PROGRAM === "vscode" || TERM === "xterm-256color" || TERM === "alacritty" || TERM === "rxvt-unicode" || TERM === "rxvt-unicode-256color" || env.TERMINAL_EMULATOR === "JetBrains-JediTerm";
 }
 var init_is_unicode_supported = __esm({
-  "../../../node_modules/is-unicode-supported/index.js"() {
+  "node_modules/is-unicode-supported/index.js"() {
   }
 });
 
-// ../../../node_modules/figures/index.js
+// node_modules/figures/index.js
 var common, specialMainSymbols, specialFallbackSymbols, mainSymbols, fallbackSymbols, shouldUseMain, figures, figures_default, replacements;
 var init_figures = __esm({
-  "../../../node_modules/figures/index.js"() {
+  "node_modules/figures/index.js"() {
     init_is_unicode_supported();
     common = {
       circleQuestionMark: "(?)",
@@ -11994,11 +11994,11 @@ var init_figures = __esm({
   }
 });
 
-// ../../../node_modules/yoctocolors/base.js
+// node_modules/yoctocolors/base.js
 import tty from "node:tty";
 var hasColors, format, reset, bold, dim, italic, underline, underlineDouble, underlineCurly, underlineDotted, underlineDashed, overline, inverse, hidden, strikethrough, black, red, green, yellow, blue, magenta, cyan, white, gray, bgBlack, bgRed, bgGreen, bgYellow, bgBlue, bgMagenta, bgCyan, bgWhite, bgGray, redBright, greenBright, yellowBright, blueBright, magentaBright, cyanBright, whiteBright, bgRedBright, bgGreenBright, bgYellowBright, bgBlueBright, bgMagentaBright, bgCyanBright, bgWhiteBright, underlineBlack, underlineRed, underlineGreen, underlineYellow, underlineBlue, underlineMagenta, underlineCyan, underlineWhite, underlineGray, underlineRedBright, underlineGreenBright, underlineYellowBright, underlineBlueBright, underlineMagentaBright, underlineCyanBright, underlineWhiteBright;
 var init_base = __esm({
-  "../../../node_modules/yoctocolors/base.js"() {
+  "node_modules/yoctocolors/base.js"() {
     hasColors = tty?.WriteStream?.prototype?.hasColors?.() ?? false;
     format = (open3, close) => {
       if (!hasColors) {
@@ -12089,18 +12089,18 @@ var init_base = __esm({
   }
 });
 
-// ../../../node_modules/yoctocolors/index.js
+// node_modules/yoctocolors/index.js
 var init_yoctocolors = __esm({
-  "../../../node_modules/yoctocolors/index.js"() {
+  "node_modules/yoctocolors/index.js"() {
     init_base();
     init_base();
   }
 });
 
-// ../../../node_modules/execa/lib/verbose/default.js
+// node_modules/execa/lib/verbose/default.js
 var defaultVerboseFunction, serializeTimestamp, padField, getFinalIcon, ICONS, identity, COLORS;
 var init_default = __esm({
-  "../../../node_modules/execa/lib/verbose/default.js"() {
+  "node_modules/execa/lib/verbose/default.js"() {
     init_figures();
     init_yoctocolors();
     defaultVerboseFunction = ({
@@ -12143,10 +12143,10 @@ var init_default = __esm({
   }
 });
 
-// ../../../node_modules/execa/lib/verbose/custom.js
+// node_modules/execa/lib/verbose/custom.js
 var applyVerboseOnLines, applyVerboseFunction, appendNewline;
 var init_custom = __esm({
-  "../../../node_modules/execa/lib/verbose/custom.js"() {
+  "node_modules/execa/lib/verbose/custom.js"() {
     init_values();
     applyVerboseOnLines = (printedLines, verboseInfo, fdNumber) => {
       const verboseFunction = getVerboseFunction(verboseInfo, fdNumber);
@@ -12166,11 +12166,11 @@ var init_custom = __esm({
   }
 });
 
-// ../../../node_modules/execa/lib/verbose/log.js
+// node_modules/execa/lib/verbose/log.js
 import { inspect } from "node:util";
 var verboseLog, getVerboseObject, getPrintedLines, getPrintedLine, serializeVerboseMessage, TAB_SIZE;
 var init_log = __esm({
-  "../../../node_modules/execa/lib/verbose/log.js"() {
+  "node_modules/execa/lib/verbose/log.js"() {
     init_escape();
     init_default();
     init_custom();
@@ -12209,10 +12209,10 @@ var init_log = __esm({
   }
 });
 
-// ../../../node_modules/execa/lib/verbose/start.js
+// node_modules/execa/lib/verbose/start.js
 var logCommand;
 var init_start = __esm({
-  "../../../node_modules/execa/lib/verbose/start.js"() {
+  "node_modules/execa/lib/verbose/start.js"() {
     init_values();
     init_log();
     logCommand = (escapedCommand, verboseInfo) => {
@@ -12228,10 +12228,10 @@ var init_start = __esm({
   }
 });
 
-// ../../../node_modules/execa/lib/verbose/info.js
+// node_modules/execa/lib/verbose/info.js
 var getVerboseInfo, getCommandId, COMMAND_ID, validateVerbose;
 var init_info = __esm({
-  "../../../node_modules/execa/lib/verbose/info.js"() {
+  "node_modules/execa/lib/verbose/info.js"() {
     init_values();
     getVerboseInfo = (verbose, escapedCommand, rawOptions) => {
       validateVerbose(verbose);
@@ -12262,20 +12262,20 @@ var init_info = __esm({
   }
 });
 
-// ../../../node_modules/execa/lib/return/duration.js
+// node_modules/execa/lib/return/duration.js
 import { hrtime } from "node:process";
 var getStartTime, getDurationMs;
 var init_duration = __esm({
-  "../../../node_modules/execa/lib/return/duration.js"() {
+  "node_modules/execa/lib/return/duration.js"() {
     getStartTime = () => hrtime.bigint();
     getDurationMs = (startTime) => Number(hrtime.bigint() - startTime) / 1e6;
   }
 });
 
-// ../../../node_modules/execa/lib/arguments/command.js
+// node_modules/execa/lib/arguments/command.js
 var handleCommand;
 var init_command = __esm({
-  "../../../node_modules/execa/lib/arguments/command.js"() {
+  "node_modules/execa/lib/arguments/command.js"() {
     init_start();
     init_info();
     init_duration();
@@ -12297,9 +12297,9 @@ var init_command = __esm({
   }
 });
 
-// ../../../node_modules/isexe/windows.js
+// node_modules/isexe/windows.js
 var require_windows = __commonJS({
-  "../../../node_modules/isexe/windows.js"(exports2, module) {
+  "node_modules/isexe/windows.js"(exports2, module) {
     module.exports = isexe;
     isexe.sync = sync;
     var fs = __require("fs");
@@ -12320,15 +12320,15 @@ var require_windows = __commonJS({
       }
       return false;
     }
-    function checkStat(stat8, path12, options) {
-      if (!stat8.isSymbolicLink() && !stat8.isFile()) {
+    function checkStat(stat10, path12, options) {
+      if (!stat10.isSymbolicLink() && !stat10.isFile()) {
         return false;
       }
       return checkPathExt(path12, options);
     }
     function isexe(path12, options, cb) {
-      fs.stat(path12, function(er, stat8) {
-        cb(er, er ? false : checkStat(stat8, path12, options));
+      fs.stat(path12, function(er, stat10) {
+        cb(er, er ? false : checkStat(stat10, path12, options));
       });
     }
     function sync(path12, options) {
@@ -12337,27 +12337,27 @@ var require_windows = __commonJS({
   }
 });
 
-// ../../../node_modules/isexe/mode.js
+// node_modules/isexe/mode.js
 var require_mode = __commonJS({
-  "../../../node_modules/isexe/mode.js"(exports2, module) {
+  "node_modules/isexe/mode.js"(exports2, module) {
     module.exports = isexe;
     isexe.sync = sync;
     var fs = __require("fs");
     function isexe(path12, options, cb) {
-      fs.stat(path12, function(er, stat8) {
-        cb(er, er ? false : checkStat(stat8, options));
+      fs.stat(path12, function(er, stat10) {
+        cb(er, er ? false : checkStat(stat10, options));
       });
     }
     function sync(path12, options) {
       return checkStat(fs.statSync(path12), options);
     }
-    function checkStat(stat8, options) {
-      return stat8.isFile() && checkMode(stat8, options);
+    function checkStat(stat10, options) {
+      return stat10.isFile() && checkMode(stat10, options);
     }
-    function checkMode(stat8, options) {
-      var mod = stat8.mode;
-      var uid = stat8.uid;
-      var gid = stat8.gid;
+    function checkMode(stat10, options) {
+      var mod = stat10.mode;
+      var uid = stat10.uid;
+      var gid = stat10.gid;
       var myUid = options.uid !== void 0 ? options.uid : process.getuid && process.getuid();
       var myGid = options.gid !== void 0 ? options.gid : process.getgid && process.getgid();
       var u2 = parseInt("100", 8);
@@ -12370,9 +12370,9 @@ var require_mode = __commonJS({
   }
 });
 
-// ../../../node_modules/isexe/index.js
+// node_modules/isexe/index.js
 var require_isexe = __commonJS({
-  "../../../node_modules/isexe/index.js"(exports2, module) {
+  "node_modules/isexe/index.js"(exports2, module) {
     var fs = __require("fs");
     var core;
     if (process.platform === "win32" || global.TESTING_WINDOWS) {
@@ -12391,12 +12391,12 @@ var require_isexe = __commonJS({
         if (typeof Promise !== "function") {
           throw new TypeError("callback not provided");
         }
-        return new Promise(function(resolve11, reject) {
+        return new Promise(function(resolve13, reject) {
           isexe(path12, options || {}, function(er, is) {
             if (er) {
               reject(er);
             } else {
-              resolve11(is);
+              resolve13(is);
             }
           });
         });
@@ -12425,9 +12425,9 @@ var require_isexe = __commonJS({
   }
 });
 
-// ../../../node_modules/which/which.js
+// node_modules/which/which.js
 var require_which = __commonJS({
-  "../../../node_modules/which/which.js"(exports2, module) {
+  "node_modules/which/which.js"(exports2, module) {
     var isWindows = process.platform === "win32" || process.env.OSTYPE === "cygwin" || process.env.OSTYPE === "msys";
     var path12 = __require("path");
     var COLON = isWindows ? ";" : ":";
@@ -12462,27 +12462,27 @@ var require_which = __commonJS({
         opt = {};
       const { pathEnv, pathExt, pathExtExe } = getPathInfo(cmd, opt);
       const found = [];
-      const step = (i2) => new Promise((resolve11, reject) => {
+      const step = (i2) => new Promise((resolve13, reject) => {
         if (i2 === pathEnv.length)
-          return opt.all && found.length ? resolve11(found) : reject(getNotFoundError(cmd));
+          return opt.all && found.length ? resolve13(found) : reject(getNotFoundError(cmd));
         const ppRaw = pathEnv[i2];
         const pathPart = /^".*"$/.test(ppRaw) ? ppRaw.slice(1, -1) : ppRaw;
         const pCmd = path12.join(pathPart, cmd);
         const p = !pathPart && /^\.[\\\/]/.test(cmd) ? cmd.slice(0, 2) + pCmd : pCmd;
-        resolve11(subStep(p, i2, 0));
+        resolve13(subStep(p, i2, 0));
       });
-      const subStep = (p, i2, ii) => new Promise((resolve11, reject) => {
+      const subStep = (p, i2, ii) => new Promise((resolve13, reject) => {
         if (ii === pathExt.length)
-          return resolve11(step(i2 + 1));
+          return resolve13(step(i2 + 1));
         const ext = pathExt[ii];
         isexe(p + ext, { pathExt: pathExtExe }, (er, is) => {
           if (!er && is) {
             if (opt.all)
               found.push(p + ext);
             else
-              return resolve11(p + ext);
+              return resolve13(p + ext);
           }
-          return resolve11(subStep(p, i2, ii + 1));
+          return resolve13(subStep(p, i2, ii + 1));
         });
       });
       return cb ? step(0).then((res) => cb(null, res), cb) : step(0);
@@ -12521,9 +12521,9 @@ var require_which = __commonJS({
   }
 });
 
-// ../../../node_modules/path-key/index.js
+// node_modules/path-key/index.js
 var require_path_key = __commonJS({
-  "../../../node_modules/path-key/index.js"(exports2, module) {
+  "node_modules/path-key/index.js"(exports2, module) {
     "use strict";
     var pathKey4 = (options = {}) => {
       const environment = options.env || process.env;
@@ -12538,9 +12538,9 @@ var require_path_key = __commonJS({
   }
 });
 
-// ../../../node_modules/cross-spawn/lib/util/resolveCommand.js
+// node_modules/cross-spawn/lib/util/resolveCommand.js
 var require_resolveCommand = __commonJS({
-  "../../../node_modules/cross-spawn/lib/util/resolveCommand.js"(exports2, module) {
+  "node_modules/cross-spawn/lib/util/resolveCommand.js"(exports2, module) {
     "use strict";
     var path12 = __require("path");
     var which = require_which();
@@ -12580,9 +12580,9 @@ var require_resolveCommand = __commonJS({
   }
 });
 
-// ../../../node_modules/cross-spawn/lib/util/escape.js
+// node_modules/cross-spawn/lib/util/escape.js
 var require_escape = __commonJS({
-  "../../../node_modules/cross-spawn/lib/util/escape.js"(exports2, module) {
+  "node_modules/cross-spawn/lib/util/escape.js"(exports2, module) {
     "use strict";
     var metaCharsRegExp = /([()\][%!^"`<>&|;, *?])/g;
     function escapeCommand(arg) {
@@ -12605,17 +12605,17 @@ var require_escape = __commonJS({
   }
 });
 
-// ../../../node_modules/shebang-regex/index.js
+// node_modules/shebang-regex/index.js
 var require_shebang_regex = __commonJS({
-  "../../../node_modules/shebang-regex/index.js"(exports2, module) {
+  "node_modules/shebang-regex/index.js"(exports2, module) {
     "use strict";
     module.exports = /^#!(.*)/;
   }
 });
 
-// ../../../node_modules/shebang-command/index.js
+// node_modules/shebang-command/index.js
 var require_shebang_command = __commonJS({
-  "../../../node_modules/shebang-command/index.js"(exports2, module) {
+  "node_modules/shebang-command/index.js"(exports2, module) {
     "use strict";
     var shebangRegex = require_shebang_regex();
     module.exports = (string3 = "") => {
@@ -12633,9 +12633,9 @@ var require_shebang_command = __commonJS({
   }
 });
 
-// ../../../node_modules/cross-spawn/lib/util/readShebang.js
+// node_modules/cross-spawn/lib/util/readShebang.js
 var require_readShebang = __commonJS({
-  "../../../node_modules/cross-spawn/lib/util/readShebang.js"(exports2, module) {
+  "node_modules/cross-spawn/lib/util/readShebang.js"(exports2, module) {
     "use strict";
     var fs = __require("fs");
     var shebangCommand = require_shebang_command();
@@ -12655,9 +12655,9 @@ var require_readShebang = __commonJS({
   }
 });
 
-// ../../../node_modules/cross-spawn/lib/parse.js
+// node_modules/cross-spawn/lib/parse.js
 var require_parse = __commonJS({
-  "../../../node_modules/cross-spawn/lib/parse.js"(exports2, module) {
+  "node_modules/cross-spawn/lib/parse.js"(exports2, module) {
     "use strict";
     var path12 = __require("path");
     var resolveCommand = require_resolveCommand();
@@ -12694,7 +12694,7 @@ var require_parse = __commonJS({
       }
       return parsed;
     }
-    function parse4(command, args, options) {
+    function parse6(command, args, options) {
       if (args && !Array.isArray(args)) {
         options = args;
         args = null;
@@ -12713,13 +12713,13 @@ var require_parse = __commonJS({
       };
       return options.shell ? parsed : parseNonShell(parsed);
     }
-    module.exports = parse4;
+    module.exports = parse6;
   }
 });
 
-// ../../../node_modules/cross-spawn/lib/enoent.js
+// node_modules/cross-spawn/lib/enoent.js
 var require_enoent = __commonJS({
-  "../../../node_modules/cross-spawn/lib/enoent.js"(exports2, module) {
+  "node_modules/cross-spawn/lib/enoent.js"(exports2, module) {
     "use strict";
     var isWin = process.platform === "win32";
     function notFoundError(original, syscall) {
@@ -12767,21 +12767,21 @@ var require_enoent = __commonJS({
   }
 });
 
-// ../../../node_modules/cross-spawn/index.js
+// node_modules/cross-spawn/index.js
 var require_cross_spawn = __commonJS({
-  "../../../node_modules/cross-spawn/index.js"(exports2, module) {
+  "node_modules/cross-spawn/index.js"(exports2, module) {
     "use strict";
     var cp2 = __require("child_process");
-    var parse4 = require_parse();
+    var parse6 = require_parse();
     var enoent = require_enoent();
     function spawn2(command, args, options) {
-      const parsed = parse4(command, args, options);
+      const parsed = parse6(command, args, options);
       const spawned = cp2.spawn(parsed.command, parsed.args, parsed.options);
       enoent.hookChildProcess(spawned, parsed);
       return spawned;
     }
     function spawnSync2(command, args, options) {
-      const parsed = parse4(command, args, options);
+      const parsed = parse6(command, args, options);
       const result = cp2.spawnSync(parsed.command, parsed.args, parsed.options);
       result.error = result.error || enoent.verifyENOENTSync(result.status, parsed);
       return result;
@@ -12789,12 +12789,12 @@ var require_cross_spawn = __commonJS({
     module.exports = spawn2;
     module.exports.spawn = spawn2;
     module.exports.sync = spawnSync2;
-    module.exports._parse = parse4;
+    module.exports._parse = parse6;
     module.exports._enoent = enoent;
   }
 });
 
-// ../../../node_modules/npm-run-path/node_modules/path-key/index.js
+// node_modules/npm-run-path/node_modules/path-key/index.js
 function pathKey(options = {}) {
   const {
     env = process.env,
@@ -12806,17 +12806,17 @@ function pathKey(options = {}) {
   return Object.keys(env).reverse().find((key) => key.toUpperCase() === "PATH") || "Path";
 }
 var init_path_key = __esm({
-  "../../../node_modules/npm-run-path/node_modules/path-key/index.js"() {
+  "node_modules/npm-run-path/node_modules/path-key/index.js"() {
   }
 });
 
-// ../../../node_modules/unicorn-magic/default.js
+// node_modules/unicorn-magic/default.js
 var init_default2 = __esm({
-  "../../../node_modules/unicorn-magic/default.js"() {
+  "node_modules/unicorn-magic/default.js"() {
   }
 });
 
-// ../../../node_modules/unicorn-magic/node.js
+// node_modules/unicorn-magic/node.js
 import { promisify } from "node:util";
 import { execFile as execFileCallback, execFileSync as execFileSyncOriginal } from "node:child_process";
 import path from "node:path";
@@ -12839,19 +12839,19 @@ function traversePathUp(startPath) {
 }
 var execFileOriginal, TEN_MEGABYTES_IN_BYTES;
 var init_node = __esm({
-  "../../../node_modules/unicorn-magic/node.js"() {
+  "node_modules/unicorn-magic/node.js"() {
     init_default2();
     execFileOriginal = promisify(execFileCallback);
     TEN_MEGABYTES_IN_BYTES = 10 * 1024 * 1024;
   }
 });
 
-// ../../../node_modules/npm-run-path/index.js
+// node_modules/npm-run-path/index.js
 import process5 from "node:process";
 import path2 from "node:path";
 var npmRunPath, applyPreferLocal, applyExecPath, npmRunPathEnv;
 var init_npm_run_path = __esm({
-  "../../../node_modules/npm-run-path/index.js"() {
+  "node_modules/npm-run-path/index.js"() {
     init_path_key();
     init_node();
     npmRunPath = ({
@@ -12896,10 +12896,10 @@ var init_npm_run_path = __esm({
   }
 });
 
-// ../../../node_modules/execa/lib/return/final-error.js
+// node_modules/execa/lib/return/final-error.js
 var getFinalError, DiscardedError, setErrorName, isExecaError, execaErrorSymbol, isErrorInstance, ExecaError, ExecaSyncError;
 var init_final_error = __esm({
-  "../../../node_modules/execa/lib/return/final-error.js"() {
+  "node_modules/execa/lib/return/final-error.js"() {
     getFinalError = (originalError, message, isSync) => {
       const ErrorClass = isSync ? ExecaSyncError : ExecaError;
       const options = originalError instanceof DiscardedError ? {} : { cause: originalError };
@@ -12933,10 +12933,10 @@ var init_final_error = __esm({
   }
 });
 
-// ../../../node_modules/human-signals/build/src/realtime.js
+// node_modules/human-signals/build/src/realtime.js
 var getRealtimeSignals, getRealtimeSignal, SIGRTMIN, SIGRTMAX;
 var init_realtime = __esm({
-  "../../../node_modules/human-signals/build/src/realtime.js"() {
+  "node_modules/human-signals/build/src/realtime.js"() {
     getRealtimeSignals = () => {
       const length = SIGRTMAX - SIGRTMIN + 1;
       return Array.from({ length }, getRealtimeSignal);
@@ -12953,10 +12953,10 @@ var init_realtime = __esm({
   }
 });
 
-// ../../../node_modules/human-signals/build/src/core.js
+// node_modules/human-signals/build/src/core.js
 var SIGNALS;
 var init_core = __esm({
-  "../../../node_modules/human-signals/build/src/core.js"() {
+  "node_modules/human-signals/build/src/core.js"() {
     SIGNALS = [
       {
         name: "SIGHUP",
@@ -13231,11 +13231,11 @@ var init_core = __esm({
   }
 });
 
-// ../../../node_modules/human-signals/build/src/signals.js
+// node_modules/human-signals/build/src/signals.js
 import { constants } from "node:os";
 var getSignals, normalizeSignal;
 var init_signals = __esm({
-  "../../../node_modules/human-signals/build/src/signals.js"() {
+  "node_modules/human-signals/build/src/signals.js"() {
     init_core();
     init_realtime();
     getSignals = () => {
@@ -13261,11 +13261,11 @@ var init_signals = __esm({
   }
 });
 
-// ../../../node_modules/human-signals/build/src/main.js
+// node_modules/human-signals/build/src/main.js
 import { constants as constants2 } from "node:os";
 var getSignalsByName, getSignalByName, signalsByName, getSignalsByNumber, getSignalByNumber, findSignalByNumber, signalsByNumber;
 var init_main = __esm({
-  "../../../node_modules/human-signals/build/src/main.js"() {
+  "node_modules/human-signals/build/src/main.js"() {
     init_realtime();
     init_signals();
     getSignalsByName = () => {
@@ -13320,11 +13320,11 @@ var init_main = __esm({
   }
 });
 
-// ../../../node_modules/execa/lib/terminate/signal.js
+// node_modules/execa/lib/terminate/signal.js
 import { constants as constants3 } from "node:os";
 var normalizeKillSignal, normalizeSignalArgument, normalizeSignal2, normalizeSignalInteger, getSignalsIntegerToName, signalsIntegerToName, normalizeSignalName, getAvailableSignals, getAvailableSignalNames, getAvailableSignalIntegers, getSignalDescription;
 var init_signal = __esm({
-  "../../../node_modules/execa/lib/terminate/signal.js"() {
+  "node_modules/execa/lib/terminate/signal.js"() {
     init_main();
     normalizeKillSignal = (killSignal) => {
       const optionName = "option `killSignal`";
@@ -13371,11 +13371,11 @@ Available signal numbers: ${getAvailableSignalIntegers()}.`;
   }
 });
 
-// ../../../node_modules/execa/lib/terminate/kill.js
+// node_modules/execa/lib/terminate/kill.js
 import { setTimeout as setTimeout2 } from "node:timers/promises";
 var normalizeForceKillAfterDelay, DEFAULT_FORCE_KILL_TIMEOUT, subprocessKill, parseKillArguments, emitKillError, setKillTimeout, killOnTimeout;
 var init_kill = __esm({
-  "../../../node_modules/execa/lib/terminate/kill.js"() {
+  "node_modules/execa/lib/terminate/kill.js"() {
     init_final_error();
     init_signal();
     normalizeForceKillAfterDelay = (forceKillAfterDelay) => {
@@ -13446,11 +13446,11 @@ var init_kill = __esm({
   }
 });
 
-// ../../../node_modules/execa/lib/utils/abort-signal.js
+// node_modules/execa/lib/utils/abort-signal.js
 import { once } from "node:events";
 var onAbortedSignal;
 var init_abort_signal = __esm({
-  "../../../node_modules/execa/lib/utils/abort-signal.js"() {
+  "node_modules/execa/lib/utils/abort-signal.js"() {
     onAbortedSignal = async (mainSignal, stopSignal) => {
       if (!mainSignal.aborted) {
         await once(mainSignal, "abort", { signal: stopSignal });
@@ -13459,10 +13459,10 @@ var init_abort_signal = __esm({
   }
 });
 
-// ../../../node_modules/execa/lib/terminate/cancel.js
+// node_modules/execa/lib/terminate/cancel.js
 var validateCancelSignal, throwOnCancel, terminateOnCancel;
 var init_cancel = __esm({
-  "../../../node_modules/execa/lib/terminate/cancel.js"() {
+  "node_modules/execa/lib/terminate/cancel.js"() {
     init_abort_signal();
     validateCancelSignal = ({ cancelSignal }) => {
       if (cancelSignal !== void 0 && Object.prototype.toString.call(cancelSignal) !== "[object AbortSignal]") {
@@ -13479,10 +13479,10 @@ var init_cancel = __esm({
   }
 });
 
-// ../../../node_modules/execa/lib/ipc/validation.js
+// node_modules/execa/lib/ipc/validation.js
 var validateIpcMethod, validateIpcOption, validateConnection, throwOnEarlyDisconnect, throwOnStrictDeadlockError, getStrictResponseError, throwOnMissingStrict, throwOnStrictDisconnect, getAbortDisconnectError, throwOnMissingParent, handleEpipeError, handleSerializationError, isSerializationError, SERIALIZATION_ERROR_CODES, SERIALIZATION_ERROR_MESSAGES, getMethodName, getNamespaceName, getOtherProcessName, disconnect;
 var init_validation = __esm({
-  "../../../node_modules/execa/lib/ipc/validation.js"() {
+  "node_modules/execa/lib/ipc/validation.js"() {
     validateIpcMethod = ({ methodName, isSubprocess, ipc, isConnected: isConnected2 }) => {
       validateIpcOption(methodName, isSubprocess, ipc);
       validateConnection(methodName, isSubprocess, isConnected2);
@@ -13556,24 +13556,24 @@ const [receivedMessage] = await Promise.all([
   }
 });
 
-// ../../../node_modules/execa/lib/utils/deferred.js
+// node_modules/execa/lib/utils/deferred.js
 var createDeferred;
 var init_deferred = __esm({
-  "../../../node_modules/execa/lib/utils/deferred.js"() {
+  "node_modules/execa/lib/utils/deferred.js"() {
     createDeferred = () => {
       const methods = {};
-      const promise = new Promise((resolve11, reject) => {
-        Object.assign(methods, { resolve: resolve11, reject });
+      const promise = new Promise((resolve13, reject) => {
+        Object.assign(methods, { resolve: resolve13, reject });
       });
       return Object.assign(promise, methods);
     };
   }
 });
 
-// ../../../node_modules/execa/lib/arguments/fd-options.js
+// node_modules/execa/lib/arguments/fd-options.js
 var getToStream, getFromStream, SUBPROCESS_OPTIONS, getFdNumber, parseFdNumber, validateFdNumber, getInvalidStdioOptionMessage, getInvalidStdioOption, getUsedDescriptor, getOptionName, serializeOptionValue;
 var init_fd_options = __esm({
-  "../../../node_modules/execa/lib/arguments/fd-options.js"() {
+  "node_modules/execa/lib/arguments/fd-options.js"() {
     init_specific();
     getToStream = (destination, to = "stdin") => {
       const isWritable = true;
@@ -13656,11 +13656,11 @@ Please set this option with "pipe" instead.`;
   }
 });
 
-// ../../../node_modules/execa/lib/utils/max-listeners.js
+// node_modules/execa/lib/utils/max-listeners.js
 import { addAbortListener } from "node:events";
 var incrementMaxListeners;
 var init_max_listeners = __esm({
-  "../../../node_modules/execa/lib/utils/max-listeners.js"() {
+  "node_modules/execa/lib/utils/max-listeners.js"() {
     incrementMaxListeners = (eventEmitter, maxListenersIncrement, signal) => {
       const maxListeners = eventEmitter.getMaxListeners();
       if (maxListeners === 0 || maxListeners === Number.POSITIVE_INFINITY) {
@@ -13674,10 +13674,10 @@ var init_max_listeners = __esm({
   }
 });
 
-// ../../../node_modules/execa/lib/ipc/reference.js
+// node_modules/execa/lib/ipc/reference.js
 var addReference, addReferenceCount, removeReference, removeReferenceCount, undoAddedReferences, redoAddedReferences;
 var init_reference = __esm({
-  "../../../node_modules/execa/lib/ipc/reference.js"() {
+  "node_modules/execa/lib/ipc/reference.js"() {
     addReference = (channel, reference) => {
       if (reference) {
         addReferenceCount(channel);
@@ -13709,12 +13709,12 @@ var init_reference = __esm({
   }
 });
 
-// ../../../node_modules/execa/lib/ipc/incoming.js
+// node_modules/execa/lib/ipc/incoming.js
 import { once as once2 } from "node:events";
 import { scheduler } from "node:timers/promises";
 var onMessage, onDisconnect, INCOMING_MESSAGES;
 var init_incoming = __esm({
-  "../../../node_modules/execa/lib/ipc/incoming.js"() {
+  "node_modules/execa/lib/ipc/incoming.js"() {
     init_outgoing();
     init_reference();
     init_strict();
@@ -13761,11 +13761,11 @@ var init_incoming = __esm({
   }
 });
 
-// ../../../node_modules/execa/lib/ipc/forward.js
+// node_modules/execa/lib/ipc/forward.js
 import { EventEmitter } from "node:events";
 var getIpcEmitter, IPC_EMITTERS, forwardEvents, isConnected;
 var init_forward = __esm({
-  "../../../node_modules/execa/lib/ipc/forward.js"() {
+  "node_modules/execa/lib/ipc/forward.js"() {
     init_incoming();
     init_reference();
     getIpcEmitter = (anyProcess, channel, isSubprocess) => {
@@ -13808,11 +13808,11 @@ var init_forward = __esm({
   }
 });
 
-// ../../../node_modules/execa/lib/ipc/strict.js
+// node_modules/execa/lib/ipc/strict.js
 import { once as once3 } from "node:events";
 var handleSendStrict, count, validateStrictDeadlock, handleStrictRequest, handleStrictResponse, waitForStrictResponse, STRICT_RESPONSES, throwOnDisconnect, REQUEST_TYPE, RESPONSE_TYPE;
 var init_strict = __esm({
-  "../../../node_modules/execa/lib/ipc/strict.js"() {
+  "node_modules/execa/lib/ipc/strict.js"() {
     init_deferred();
     init_max_listeners();
     init_send();
@@ -13903,10 +13903,10 @@ var init_strict = __esm({
   }
 });
 
-// ../../../node_modules/execa/lib/ipc/outgoing.js
+// node_modules/execa/lib/ipc/outgoing.js
 var startSendMessage, endSendMessage, waitForOutgoingMessages, OUTGOING_MESSAGES, hasMessageListeners, getMinListenerCount;
 var init_outgoing = __esm({
-  "../../../node_modules/execa/lib/ipc/outgoing.js"() {
+  "node_modules/execa/lib/ipc/outgoing.js"() {
     init_deferred();
     init_specific();
     init_fd_options();
@@ -13939,11 +13939,11 @@ var init_outgoing = __esm({
   }
 });
 
-// ../../../node_modules/execa/lib/ipc/send.js
+// node_modules/execa/lib/ipc/send.js
 import { promisify as promisify2 } from "node:util";
 var sendMessage, sendMessageAsync, sendOneMessage, getSendMethod, PROCESS_SEND_METHODS;
 var init_send = __esm({
-  "../../../node_modules/execa/lib/ipc/send.js"() {
+  "node_modules/execa/lib/ipc/send.js"() {
     init_validation();
     init_outgoing();
     init_strict();
@@ -14018,11 +14018,11 @@ var init_send = __esm({
   }
 });
 
-// ../../../node_modules/execa/lib/ipc/graceful.js
+// node_modules/execa/lib/ipc/graceful.js
 import { scheduler as scheduler2 } from "node:timers/promises";
 var sendAbort, getCancelSignal, startIpc, cancelListening, handleAbort, GRACEFUL_CANCEL_TYPE, abortOnDisconnect, cancelController;
 var init_graceful = __esm({
-  "../../../node_modules/execa/lib/ipc/graceful.js"() {
+  "node_modules/execa/lib/ipc/graceful.js"() {
     init_send();
     init_forward();
     init_validation();
@@ -14078,10 +14078,10 @@ var init_graceful = __esm({
   }
 });
 
-// ../../../node_modules/execa/lib/terminate/graceful.js
+// node_modules/execa/lib/terminate/graceful.js
 var validateGracefulCancel, throwOnGracefulCancel, sendOnAbort, getReason;
 var init_graceful2 = __esm({
-  "../../../node_modules/execa/lib/terminate/graceful.js"() {
+  "node_modules/execa/lib/terminate/graceful.js"() {
     init_abort_signal();
     init_graceful();
     init_kill();
@@ -14142,11 +14142,11 @@ var init_graceful2 = __esm({
   }
 });
 
-// ../../../node_modules/execa/lib/terminate/timeout.js
+// node_modules/execa/lib/terminate/timeout.js
 import { setTimeout as setTimeout3 } from "node:timers/promises";
 var validateTimeout, throwOnTimeout, killAfterTimeout;
 var init_timeout = __esm({
-  "../../../node_modules/execa/lib/terminate/timeout.js"() {
+  "node_modules/execa/lib/terminate/timeout.js"() {
     init_final_error();
     validateTimeout = ({ timeout }) => {
       if (timeout !== void 0 && (!Number.isFinite(timeout) || timeout < 0)) {
@@ -14163,12 +14163,12 @@ var init_timeout = __esm({
   }
 });
 
-// ../../../node_modules/execa/lib/methods/node.js
+// node_modules/execa/lib/methods/node.js
 import { execPath, execArgv } from "node:process";
 import path3 from "node:path";
 var mapNode, handleNodeOption;
 var init_node2 = __esm({
-  "../../../node_modules/execa/lib/methods/node.js"() {
+  "node_modules/execa/lib/methods/node.js"() {
     init_file_url();
     mapNode = ({ options }) => {
       if (options.node === false) {
@@ -14210,11 +14210,11 @@ var init_node2 = __esm({
   }
 });
 
-// ../../../node_modules/execa/lib/ipc/ipc-input.js
+// node_modules/execa/lib/ipc/ipc-input.js
 import { serialize } from "node:v8";
 var validateIpcInputOption, validateAdvancedInput, validateJsonInput, validateIpcInput, sendIpcInput;
 var init_ipc_input = __esm({
-  "../../../node_modules/execa/lib/ipc/ipc-input.js"() {
+  "node_modules/execa/lib/ipc/ipc-input.js"() {
     validateIpcInputOption = ({ ipcInput, ipc, serialization }) => {
       if (ipcInput === void 0) {
         return;
@@ -14251,10 +14251,10 @@ var init_ipc_input = __esm({
   }
 });
 
-// ../../../node_modules/execa/lib/arguments/encoding-option.js
+// node_modules/execa/lib/arguments/encoding-option.js
 var validateEncoding, TEXT_ENCODINGS, BINARY_ENCODINGS, ENCODINGS, getCorrectEncoding, ENCODING_ALIASES, serializeEncoding;
 var init_encoding_option = __esm({
-  "../../../node_modules/execa/lib/arguments/encoding-option.js"() {
+  "node_modules/execa/lib/arguments/encoding-option.js"() {
     validateEncoding = ({ encoding }) => {
       if (ENCODINGS.has(encoding)) {
         return;
@@ -14298,13 +14298,13 @@ Please rename it to one of: ${correctEncodings}.`);
   }
 });
 
-// ../../../node_modules/execa/lib/arguments/cwd.js
+// node_modules/execa/lib/arguments/cwd.js
 import { statSync } from "node:fs";
 import path4 from "node:path";
 import process6 from "node:process";
 var normalizeCwd, getDefaultCwd, fixCwdError;
 var init_cwd = __esm({
-  "../../../node_modules/execa/lib/arguments/cwd.js"() {
+  "node_modules/execa/lib/arguments/cwd.js"() {
     init_file_url();
     normalizeCwd = (cwd = getDefaultCwd()) => {
       const cwdString = safeNormalizeFileUrl(cwd, 'The "cwd" option');
@@ -14340,12 +14340,12 @@ ${originalMessage}`;
   }
 });
 
-// ../../../node_modules/execa/lib/arguments/options.js
+// node_modules/execa/lib/arguments/options.js
 import path5 from "node:path";
 import process7 from "node:process";
 var import_cross_spawn, normalizeOptions, addDefaultOptions, getEnv;
 var init_options = __esm({
-  "../../../node_modules/execa/lib/arguments/options.js"() {
+  "node_modules/execa/lib/arguments/options.js"() {
     import_cross_spawn = __toESM(require_cross_spawn(), 1);
     init_npm_run_path();
     init_kill();
@@ -14431,15 +14431,15 @@ var init_options = __esm({
   }
 });
 
-// ../../../node_modules/execa/lib/arguments/shell.js
+// node_modules/execa/lib/arguments/shell.js
 var concatenateShell;
 var init_shell = __esm({
-  "../../../node_modules/execa/lib/arguments/shell.js"() {
+  "node_modules/execa/lib/arguments/shell.js"() {
     concatenateShell = (file, commandArguments, options) => options.shell && commandArguments.length > 0 ? [[file, ...commandArguments].join(" "), [], options] : [file, commandArguments, options];
   }
 });
 
-// ../../../node_modules/strip-final-newline/index.js
+// node_modules/strip-final-newline/index.js
 function stripFinalNewline(input) {
   if (typeof input === "string") {
     return stripFinalNewlineString(input);
@@ -14451,7 +14451,7 @@ function stripFinalNewline(input) {
 }
 var stripFinalNewlineString, stripFinalNewlineBinary, LF, LF_BINARY, CR, CR_BINARY;
 var init_strip_final_newline = __esm({
-  "../../../node_modules/strip-final-newline/index.js"() {
+  "node_modules/strip-final-newline/index.js"() {
     stripFinalNewlineString = (input) => input.at(-1) === LF ? input.slice(0, input.at(-2) === CR ? -2 : -1) : input;
     stripFinalNewlineBinary = (input) => input.at(-1) === LF_BINARY ? input.subarray(0, input.at(-2) === CR_BINARY ? -2 : -1) : input;
     LF = "\n";
@@ -14461,7 +14461,7 @@ var init_strip_final_newline = __esm({
   }
 });
 
-// ../../../node_modules/is-stream/index.js
+// node_modules/is-stream/index.js
 function isStream(stream, { checkOpen = true } = {}) {
   return stream !== null && typeof stream === "object" && (stream.writable || stream.readable || !checkOpen || stream.writable === void 0 && stream.readable === void 0) && typeof stream.pipe === "function";
 }
@@ -14475,11 +14475,11 @@ function isDuplexStream(stream, options) {
   return isWritableStream(stream, options) && isReadableStream(stream, options);
 }
 var init_is_stream = __esm({
-  "../../../node_modules/is-stream/index.js"() {
+  "node_modules/is-stream/index.js"() {
   }
 });
 
-// ../../../node_modules/@sec-ant/readable-stream/dist/ponyfill/asyncIterator.js
+// node_modules/@sec-ant/readable-stream/dist/ponyfill/asyncIterator.js
 function i() {
   return this[n].next();
 }
@@ -14495,7 +14495,7 @@ function h({ preventCancel: r = false } = {}) {
 }
 var a, c, n, u;
 var init_asyncIterator = __esm({
-  "../../../node_modules/@sec-ant/readable-stream/dist/ponyfill/asyncIterator.js"() {
+  "node_modules/@sec-ant/readable-stream/dist/ponyfill/asyncIterator.js"() {
     a = Object.getPrototypeOf(
       Object.getPrototypeOf(
         /* istanbul ignore next */
@@ -14572,24 +14572,24 @@ var init_asyncIterator = __esm({
   }
 });
 
-// ../../../node_modules/@sec-ant/readable-stream/dist/ponyfill/fromAnyIterable.js
+// node_modules/@sec-ant/readable-stream/dist/ponyfill/fromAnyIterable.js
 var init_fromAnyIterable = __esm({
-  "../../../node_modules/@sec-ant/readable-stream/dist/ponyfill/fromAnyIterable.js"() {
+  "node_modules/@sec-ant/readable-stream/dist/ponyfill/fromAnyIterable.js"() {
   }
 });
 
-// ../../../node_modules/@sec-ant/readable-stream/dist/ponyfill/index.js
+// node_modules/@sec-ant/readable-stream/dist/ponyfill/index.js
 var init_ponyfill = __esm({
-  "../../../node_modules/@sec-ant/readable-stream/dist/ponyfill/index.js"() {
+  "node_modules/@sec-ant/readable-stream/dist/ponyfill/index.js"() {
     init_asyncIterator();
     init_fromAnyIterable();
   }
 });
 
-// ../../../node_modules/get-stream/source/stream.js
+// node_modules/get-stream/source/stream.js
 var getAsyncIterable, toString, getStreamIterable, handleStreamEnd, nodeImports;
 var init_stream = __esm({
-  "../../../node_modules/get-stream/source/stream.js"() {
+  "node_modules/get-stream/source/stream.js"() {
     init_is_stream();
     init_ponyfill();
     getAsyncIterable = (stream) => {
@@ -14641,10 +14641,10 @@ var init_stream = __esm({
   }
 });
 
-// ../../../node_modules/get-stream/source/contents.js
+// node_modules/get-stream/source/contents.js
 var getStreamContents, appendFinalChunk, appendChunk, addNewChunk, getChunkType, objectToString2, MaxBufferError;
 var init_contents = __esm({
-  "../../../node_modules/get-stream/source/contents.js"() {
+  "node_modules/get-stream/source/contents.js"() {
     init_stream();
     getStreamContents = async (stream, { init, convertChunk, getSize, truncateChunk, addChunk, getFinalChunk, finalize }, { maxBuffer = Number.POSITIVE_INFINITY } = {}) => {
       const asyncIterable = getAsyncIterable(stream);
@@ -14742,10 +14742,10 @@ var init_contents = __esm({
   }
 });
 
-// ../../../node_modules/get-stream/source/utils.js
+// node_modules/get-stream/source/utils.js
 var identity2, noop, getContentsProperty, throwObjectStream, getLengthProperty;
 var init_utils = __esm({
-  "../../../node_modules/get-stream/source/utils.js"() {
+  "node_modules/get-stream/source/utils.js"() {
     identity2 = (value) => value;
     noop = () => void 0;
     getContentsProperty = ({ contents }) => contents;
@@ -14756,13 +14756,13 @@ var init_utils = __esm({
   }
 });
 
-// ../../../node_modules/get-stream/source/array.js
+// node_modules/get-stream/source/array.js
 async function getStreamAsArray(stream, options) {
   return getStreamContents(stream, arrayMethods, options);
 }
 var initArray, increment, addArrayChunk, arrayMethods;
 var init_array = __esm({
-  "../../../node_modules/get-stream/source/array.js"() {
+  "node_modules/get-stream/source/array.js"() {
     init_contents();
     init_utils();
     initArray = () => ({ contents: [] });
@@ -14790,13 +14790,13 @@ var init_array = __esm({
   }
 });
 
-// ../../../node_modules/get-stream/source/array-buffer.js
+// node_modules/get-stream/source/array-buffer.js
 async function getStreamAsArrayBuffer(stream, options) {
   return getStreamContents(stream, arrayBufferMethods, options);
 }
 var initArrayBuffer, useTextEncoder, textEncoder2, useUint8Array, useUint8ArrayWithOffset, truncateArrayBufferChunk, addArrayBufferChunk, resizeArrayBufferSlow, resizeArrayBuffer, getNewContentsLength, SCALE_FACTOR, finalizeArrayBuffer, hasArrayBufferResize, arrayBufferMethods;
 var init_array_buffer = __esm({
-  "../../../node_modules/get-stream/source/array-buffer.js"() {
+  "node_modules/get-stream/source/array-buffer.js"() {
     init_contents();
     init_utils();
     initArrayBuffer = () => ({ contents: new ArrayBuffer(0) });
@@ -14850,13 +14850,13 @@ var init_array_buffer = __esm({
   }
 });
 
-// ../../../node_modules/get-stream/source/string.js
+// node_modules/get-stream/source/string.js
 async function getStreamAsString(stream, options) {
   return getStreamContents(stream, stringMethods, options);
 }
 var initString, useTextDecoder, addStringChunk, truncateStringChunk, getFinalStringChunk, stringMethods;
 var init_string = __esm({
-  "../../../node_modules/get-stream/source/string.js"() {
+  "node_modules/get-stream/source/string.js"() {
     init_contents();
     init_utils();
     initString = () => ({ contents: "", textDecoder: new TextDecoder() });
@@ -14886,9 +14886,9 @@ var init_string = __esm({
   }
 });
 
-// ../../../node_modules/get-stream/source/exports.js
+// node_modules/get-stream/source/exports.js
 var init_exports = __esm({
-  "../../../node_modules/get-stream/source/exports.js"() {
+  "node_modules/get-stream/source/exports.js"() {
     init_array();
     init_array_buffer();
     init_string();
@@ -14896,21 +14896,21 @@ var init_exports = __esm({
   }
 });
 
-// ../../../node_modules/get-stream/source/index.js
+// node_modules/get-stream/source/index.js
 import { on } from "node:events";
 import { finished } from "node:stream/promises";
 var init_source = __esm({
-  "../../../node_modules/get-stream/source/index.js"() {
+  "node_modules/get-stream/source/index.js"() {
     init_stream();
     init_exports();
     Object.assign(nodeImports, { on, finished });
   }
 });
 
-// ../../../node_modules/execa/lib/io/max-buffer.js
+// node_modules/execa/lib/io/max-buffer.js
 var handleMaxBuffer, getMaxBufferUnit, checkIpcMaxBuffer, getMaxBufferMessage, getMaxBufferInfo, isMaxBufferSync, truncateMaxBufferSync, getMaxBufferSync;
 var init_max_buffer = __esm({
-  "../../../node_modules/execa/lib/io/max-buffer.js"() {
+  "node_modules/execa/lib/io/max-buffer.js"() {
     init_source();
     init_standard_stream();
     init_specific();
@@ -14974,11 +14974,11 @@ var init_max_buffer = __esm({
   }
 });
 
-// ../../../node_modules/execa/lib/return/message.js
+// node_modules/execa/lib/return/message.js
 import { inspect as inspect2 } from "node:util";
 var createMessages, getErrorPrefix, getForcefulSuffix, getOriginalMessage, serializeIpcMessage, serializeMessagePart, serializeMessageItem;
 var init_message = __esm({
-  "../../../node_modules/execa/lib/return/message.js"() {
+  "node_modules/execa/lib/return/message.js"() {
     init_strip_final_newline();
     init_uint_array();
     init_cwd();
@@ -15105,10 +15105,10 @@ ${originalMessage}`;
   }
 });
 
-// ../../../node_modules/execa/lib/return/result.js
+// node_modules/execa/lib/return/result.js
 var makeSuccessResult, makeEarlyError, makeError, getErrorProperties, omitUndefinedProperties, normalizeExitPayload;
 var init_result = __esm({
-  "../../../node_modules/execa/lib/return/result.js"() {
+  "node_modules/execa/lib/return/result.js"() {
     init_signal();
     init_duration();
     init_final_error();
@@ -15287,7 +15287,7 @@ var init_result = __esm({
   }
 });
 
-// ../../../node_modules/parse-ms/index.js
+// node_modules/parse-ms/index.js
 function parseNumber(milliseconds) {
   return {
     days: Math.trunc(milliseconds / 864e5),
@@ -15326,12 +15326,12 @@ function parseMilliseconds(milliseconds) {
 }
 var toZeroIfInfinity;
 var init_parse_ms = __esm({
-  "../../../node_modules/parse-ms/index.js"() {
+  "node_modules/parse-ms/index.js"() {
     toZeroIfInfinity = (value) => Number.isFinite(value) ? value : 0;
   }
 });
 
-// ../../../node_modules/pretty-ms/index.js
+// node_modules/pretty-ms/index.js
 function prettyMilliseconds(milliseconds, options) {
   const isBigInt = typeof milliseconds === "bigint";
   if (!isBigInt && !Number.isFinite(milliseconds)) {
@@ -15428,7 +15428,7 @@ function prettyMilliseconds(milliseconds, options) {
 }
 var isZero, pluralize, SECOND_ROUNDING_EPSILON, ONE_DAY_IN_MILLISECONDS;
 var init_pretty_ms = __esm({
-  "../../../node_modules/pretty-ms/index.js"() {
+  "node_modules/pretty-ms/index.js"() {
     init_parse_ms();
     isZero = (value) => value === 0 || value === 0n;
     pluralize = (word, count2) => count2 === 1 || count2 === 1n ? word : `${word}s`;
@@ -15437,10 +15437,10 @@ var init_pretty_ms = __esm({
   }
 });
 
-// ../../../node_modules/execa/lib/verbose/error.js
+// node_modules/execa/lib/verbose/error.js
 var logError;
 var init_error = __esm({
-  "../../../node_modules/execa/lib/verbose/error.js"() {
+  "node_modules/execa/lib/verbose/error.js"() {
     init_log();
     logError = (result, verboseInfo) => {
       if (result.failed) {
@@ -15455,10 +15455,10 @@ var init_error = __esm({
   }
 });
 
-// ../../../node_modules/execa/lib/verbose/complete.js
+// node_modules/execa/lib/verbose/complete.js
 var logResult, logDuration;
 var init_complete = __esm({
-  "../../../node_modules/execa/lib/verbose/complete.js"() {
+  "node_modules/execa/lib/verbose/complete.js"() {
     init_pretty_ms();
     init_values();
     init_log();
@@ -15482,10 +15482,10 @@ var init_complete = __esm({
   }
 });
 
-// ../../../node_modules/execa/lib/return/reject.js
+// node_modules/execa/lib/return/reject.js
 var handleResult2;
 var init_reject = __esm({
-  "../../../node_modules/execa/lib/return/reject.js"() {
+  "node_modules/execa/lib/return/reject.js"() {
     init_complete();
     handleResult2 = (result, verboseInfo, { reject }) => {
       logResult(result, verboseInfo);
@@ -15497,10 +15497,10 @@ var init_reject = __esm({
   }
 });
 
-// ../../../node_modules/execa/lib/stdio/type.js
+// node_modules/execa/lib/stdio/type.js
 var getStdioItemType, getTransformObjectType, getDuplexType, getTransformStreamType, validateNonGeneratorType, checkUndefinedOption, getGeneratorObjectType, checkBooleanOption, isGenerator, isAsyncGenerator, isSyncGenerator, isTransformOptions, isUrl, isRegularUrl, isFilePathObject, FILE_PATH_KEYS, isFilePathString, isUnknownStdioString, KNOWN_STDIO_STRINGS, isReadableStream2, isWritableStream2, isWebStream, isTransformStream, isAsyncIterableObject, isIterableObject, isObject2, TRANSFORM_TYPES, FILE_TYPES, SPECIAL_DUPLICATE_TYPES_SYNC, SPECIAL_DUPLICATE_TYPES, FORBID_DUPLICATE_TYPES, TYPE_TO_MESSAGE;
 var init_type = __esm({
-  "../../../node_modules/execa/lib/stdio/type.js"() {
+  "node_modules/execa/lib/stdio/type.js"() {
     init_is_stream();
     init_is_plain_obj();
     init_uint_array();
@@ -15631,10 +15631,10 @@ var init_type = __esm({
   }
 });
 
-// ../../../node_modules/execa/lib/transform/object-mode.js
+// node_modules/execa/lib/transform/object-mode.js
 var getTransformObjectModes, getOutputObjectModes, getInputObjectModes, getFdObjectMode;
 var init_object_mode = __esm({
-  "../../../node_modules/execa/lib/transform/object-mode.js"() {
+  "node_modules/execa/lib/transform/object-mode.js"() {
     init_type();
     getTransformObjectModes = (objectMode, index, newTransforms, direction) => direction === "output" ? getOutputObjectModes(objectMode, index, newTransforms) : getInputObjectModes(objectMode, index, newTransforms);
     getOutputObjectModes = (objectMode, index, newTransforms) => {
@@ -15657,10 +15657,10 @@ var init_object_mode = __esm({
   }
 });
 
-// ../../../node_modules/execa/lib/transform/normalize.js
+// node_modules/execa/lib/transform/normalize.js
 var normalizeTransforms, getTransforms, normalizeTransform, normalizeDuplex, normalizeTransformStream, normalizeGenerator, sortTransforms;
 var init_normalize = __esm({
-  "../../../node_modules/execa/lib/transform/normalize.js"() {
+  "node_modules/execa/lib/transform/normalize.js"() {
     init_is_plain_obj();
     init_encoding_option();
     init_type();
@@ -15760,11 +15760,11 @@ var init_normalize = __esm({
   }
 });
 
-// ../../../node_modules/execa/lib/stdio/direction.js
+// node_modules/execa/lib/stdio/direction.js
 import process8 from "node:process";
 var getStreamDirection, getStdioItemDirection, KNOWN_DIRECTIONS, anyDirection, alwaysInput, guessStreamDirection, getStandardStreamDirection, DEFAULT_DIRECTION;
 var init_direction = __esm({
-  "../../../node_modules/execa/lib/stdio/direction.js"() {
+  "node_modules/execa/lib/stdio/direction.js"() {
     init_is_stream();
     init_type();
     getStreamDirection = (stdioItems, fdNumber, optionName) => {
@@ -15817,18 +15817,18 @@ var init_direction = __esm({
   }
 });
 
-// ../../../node_modules/execa/lib/ipc/array.js
+// node_modules/execa/lib/ipc/array.js
 var normalizeIpcStdioArray;
 var init_array2 = __esm({
-  "../../../node_modules/execa/lib/ipc/array.js"() {
+  "node_modules/execa/lib/ipc/array.js"() {
     normalizeIpcStdioArray = (stdioArray, ipc) => ipc && !stdioArray.includes("ipc") ? [...stdioArray, "ipc"] : stdioArray;
   }
 });
 
-// ../../../node_modules/execa/lib/stdio/stdio-option.js
+// node_modules/execa/lib/stdio/stdio-option.js
 var normalizeStdioOption, getStdioArray, hasAlias, addDefaultValue2, normalizeStdioSync, isOutputPipeOnly;
 var init_stdio_option = __esm({
-  "../../../node_modules/execa/lib/stdio/stdio-option.js"() {
+  "node_modules/execa/lib/stdio/stdio-option.js"() {
     init_standard_stream();
     init_array2();
     init_values();
@@ -15867,12 +15867,12 @@ var init_stdio_option = __esm({
   }
 });
 
-// ../../../node_modules/execa/lib/stdio/native.js
+// node_modules/execa/lib/stdio/native.js
 import { readFileSync } from "node:fs";
 import tty2 from "node:tty";
 var handleNativeStream, handleNativeStreamSync, getTargetFd, getTargetFdNumber, handleNativeStreamAsync, getStandardStream;
 var init_native = __esm({
-  "../../../node_modules/execa/lib/stdio/native.js"() {
+  "node_modules/execa/lib/stdio/native.js"() {
     init_is_stream();
     init_standard_stream();
     init_uint_array();
@@ -15945,10 +15945,10 @@ var init_native = __esm({
   }
 });
 
-// ../../../node_modules/execa/lib/stdio/input-option.js
+// node_modules/execa/lib/stdio/input-option.js
 var handleInputOptions, handleInputOption, getInputType, handleInputFileOption, getInputFileType;
 var init_input_option = __esm({
-  "../../../node_modules/execa/lib/stdio/input-option.js"() {
+  "node_modules/execa/lib/stdio/input-option.js"() {
     init_is_stream();
     init_uint_array();
     init_type();
@@ -15989,10 +15989,10 @@ var init_input_option = __esm({
   }
 });
 
-// ../../../node_modules/execa/lib/stdio/duplicate.js
+// node_modules/execa/lib/stdio/duplicate.js
 var filterDuplicates, getDuplicateStream, getOtherStdioItems, validateDuplicateStreamSync, getDuplicateStreamInstance, hasSameValue, validateDuplicateTransform, throwOnDuplicateStream;
 var init_duplicate = __esm({
-  "../../../node_modules/execa/lib/stdio/duplicate.js"() {
+  "node_modules/execa/lib/stdio/duplicate.js"() {
     init_type();
     filterDuplicates = (stdioItems) => stdioItems.filter((stdioItemOne, indexOne) => stdioItems.every((stdioItemTwo, indexTwo) => stdioItemOne.value !== stdioItemTwo.value || indexOne >= indexTwo || stdioItemOne.type === "generator" || stdioItemOne.type === "asyncGenerator"));
     getDuplicateStream = ({ stdioItem: { type, value, optionName }, direction, fileDescriptors, isSync }) => {
@@ -16070,10 +16070,10 @@ var init_duplicate = __esm({
   }
 });
 
-// ../../../node_modules/execa/lib/stdio/handle.js
+// node_modules/execa/lib/stdio/handle.js
 var handleStdio, getFileDescriptor, initializeStdioItems, initializeStdioItem, validateStdioArray, INVALID_STDIO_ARRAY_OPTIONS, validateStreams, validateFileStdio, validateFileObjectMode, getFinalFileDescriptors, getFinalFileDescriptor, addStreamProperties, cleanupCustomStreams, forwardStdio;
 var init_handle = __esm({
-  "../../../node_modules/execa/lib/stdio/handle.js"() {
+  "node_modules/execa/lib/stdio/handle.js"() {
     init_standard_stream();
     init_normalize();
     init_object_mode();
@@ -16244,11 +16244,11 @@ For example, you can use the \`pathToFileURL()\` method of the \`url\` core modu
   }
 });
 
-// ../../../node_modules/execa/lib/stdio/handle-sync.js
+// node_modules/execa/lib/stdio/handle-sync.js
 import { readFileSync as readFileSync2 } from "node:fs";
 var handleStdioSync, forbiddenIfSync, forbiddenNativeIfSync, throwInvalidSyncValue, addProperties, addPropertiesSync;
 var init_handle_sync = __esm({
-  "../../../node_modules/execa/lib/stdio/handle-sync.js"() {
+  "node_modules/execa/lib/stdio/handle-sync.js"() {
     init_uint_array();
     init_handle();
     init_type();
@@ -16299,20 +16299,20 @@ var init_handle_sync = __esm({
   }
 });
 
-// ../../../node_modules/execa/lib/io/strip-newline.js
+// node_modules/execa/lib/io/strip-newline.js
 var stripNewline, getStripFinalNewline;
 var init_strip_newline = __esm({
-  "../../../node_modules/execa/lib/io/strip-newline.js"() {
+  "node_modules/execa/lib/io/strip-newline.js"() {
     init_strip_final_newline();
     stripNewline = (value, { stripFinalNewline: stripFinalNewline2 }, fdNumber) => getStripFinalNewline(stripFinalNewline2, fdNumber) && value !== void 0 && !Array.isArray(value) ? stripFinalNewline(value) : value;
     getStripFinalNewline = (stripFinalNewline2, fdNumber) => fdNumber === "all" ? stripFinalNewline2[1] || stripFinalNewline2[2] : stripFinalNewline2[fdNumber];
   }
 });
 
-// ../../../node_modules/execa/lib/transform/split.js
+// node_modules/execa/lib/transform/split.js
 var getSplitLinesGenerator, splitLinesSync, splitLinesItemSync, initializeSplitLines, splitGenerator, getNewlineLength, linesFinal, getAppendNewlineGenerator, appendNewlineGenerator, concatString, linesStringInfo, concatUint8Array, linesUint8ArrayInfo;
 var init_split = __esm({
-  "../../../node_modules/execa/lib/transform/split.js"() {
+  "node_modules/execa/lib/transform/split.js"() {
     getSplitLinesGenerator = (binary, preserveNewlines, skipped, state) => binary || skipped ? void 0 : initializeSplitLines(preserveNewlines, state);
     splitLinesSync = (chunk, preserveNewlines, objectMode) => objectMode ? chunk.flatMap((item) => splitLinesItemSync(item, preserveNewlines)) : splitLinesItemSync(chunk, preserveNewlines);
     splitLinesItemSync = (chunk, preserveNewlines) => {
@@ -16394,11 +16394,11 @@ var init_split = __esm({
   }
 });
 
-// ../../../node_modules/execa/lib/transform/validate.js
+// node_modules/execa/lib/transform/validate.js
 import { Buffer as Buffer2 } from "node:buffer";
 var getValidateTransformInput, validateStringTransformInput, getValidateTransformReturn, validateObjectTransformReturn, validateStringTransformReturn, validateEmptyReturn;
 var init_validate = __esm({
-  "../../../node_modules/execa/lib/transform/validate.js"() {
+  "node_modules/execa/lib/transform/validate.js"() {
     init_uint_array();
     getValidateTransformInput = (writableObjectMode, optionName) => writableObjectMode ? void 0 : validateStringTransformInput.bind(void 0, optionName);
     validateStringTransformInput = function* (optionName, chunk) {
@@ -16429,12 +16429,12 @@ Instead, \`yield\` should either be called with a value, or not be called at all
   }
 });
 
-// ../../../node_modules/execa/lib/transform/encoding-transform.js
+// node_modules/execa/lib/transform/encoding-transform.js
 import { Buffer as Buffer3 } from "node:buffer";
 import { StringDecoder as StringDecoder2 } from "node:string_decoder";
 var getEncodingTransformGenerator, encodingUint8ArrayGenerator, encodingStringGenerator, encodingStringFinal;
 var init_encoding_transform = __esm({
-  "../../../node_modules/execa/lib/transform/encoding-transform.js"() {
+  "node_modules/execa/lib/transform/encoding-transform.js"() {
     init_uint_array();
     getEncodingTransformGenerator = (binary, encoding, skipped) => {
       if (skipped) {
@@ -16470,11 +16470,11 @@ var init_encoding_transform = __esm({
   }
 });
 
-// ../../../node_modules/execa/lib/transform/run-async.js
+// node_modules/execa/lib/transform/run-async.js
 import { callbackify } from "node:util";
 var pushChunks, transformChunk, finalChunks, generatorFinalChunks, destroyTransform, identityGenerator;
 var init_run_async = __esm({
-  "../../../node_modules/execa/lib/transform/run-async.js"() {
+  "node_modules/execa/lib/transform/run-async.js"() {
     pushChunks = callbackify(async (getChunks, state, getChunksArguments, transformStream) => {
       state.currentIterable = getChunks(...getChunksArguments);
       try {
@@ -16523,10 +16523,10 @@ var init_run_async = __esm({
   }
 });
 
-// ../../../node_modules/execa/lib/transform/run-sync.js
+// node_modules/execa/lib/transform/run-sync.js
 var pushChunksSync, runTransformSync, transformChunkSync, finalChunksSync, generatorFinalChunksSync, identityGenerator2;
 var init_run_sync = __esm({
-  "../../../node_modules/execa/lib/transform/run-sync.js"() {
+  "node_modules/execa/lib/transform/run-sync.js"() {
     pushChunksSync = (getChunksSync, getChunksArguments, transformStream, done) => {
       try {
         for (const chunk of getChunksSync(...getChunksArguments)) {
@@ -16570,11 +16570,11 @@ var init_run_sync = __esm({
   }
 });
 
-// ../../../node_modules/execa/lib/transform/generator.js
+// node_modules/execa/lib/transform/generator.js
 import { Transform, getDefaultHighWaterMark } from "node:stream";
 var generatorToStream, runGeneratorsSync, addInternalGenerators;
 var init_generator = __esm({
-  "../../../node_modules/execa/lib/transform/generator.js"() {
+  "node_modules/execa/lib/transform/generator.js"() {
     init_type();
     init_split();
     init_validate();
@@ -16636,10 +16636,10 @@ var init_generator = __esm({
   }
 });
 
-// ../../../node_modules/execa/lib/io/input-sync.js
+// node_modules/execa/lib/io/input-sync.js
 var addInputOptionsSync, getInputFdNumbers, addInputOptionSync, applySingleInputGeneratorsSync, validateSerializable;
 var init_input_sync = __esm({
-  "../../../node_modules/execa/lib/io/input-sync.js"() {
+  "node_modules/execa/lib/io/input-sync.js"() {
     init_generator();
     init_uint_array();
     init_type();
@@ -16677,10 +16677,10 @@ var init_input_sync = __esm({
   }
 });
 
-// ../../../node_modules/execa/lib/verbose/output.js
+// node_modules/execa/lib/verbose/output.js
 var shouldLogOutput, fdUsesVerbose, PIPED_STDIO_VALUES, logLines, logLinesSync, isPipingStream, logLine;
 var init_output = __esm({
-  "../../../node_modules/execa/lib/verbose/output.js"() {
+  "node_modules/execa/lib/verbose/output.js"() {
     init_encoding_option();
     init_type();
     init_log();
@@ -16713,11 +16713,11 @@ var init_output = __esm({
   }
 });
 
-// ../../../node_modules/execa/lib/io/output-sync.js
+// node_modules/execa/lib/io/output-sync.js
 import { writeFileSync, appendFileSync } from "node:fs";
 var transformOutputSync, transformOutputResultSync, runOutputGeneratorsSync, serializeChunks, logOutputSync, writeToFiles;
 var init_output_sync = __esm({
-  "../../../node_modules/execa/lib/io/output-sync.js"() {
+  "node_modules/execa/lib/io/output-sync.js"() {
     init_output();
     init_generator();
     init_split();
@@ -16828,10 +16828,10 @@ var init_output_sync = __esm({
   }
 });
 
-// ../../../node_modules/execa/lib/resolve/all-sync.js
+// node_modules/execa/lib/resolve/all-sync.js
 var getAllSync;
 var init_all_sync = __esm({
-  "../../../node_modules/execa/lib/resolve/all-sync.js"() {
+  "node_modules/execa/lib/resolve/all-sync.js"() {
     init_uint_array();
     init_strip_newline();
     getAllSync = ([, stdout, stderr], options) => {
@@ -16858,11 +16858,11 @@ var init_all_sync = __esm({
   }
 });
 
-// ../../../node_modules/execa/lib/resolve/exit-async.js
+// node_modules/execa/lib/resolve/exit-async.js
 import { once as once4 } from "node:events";
 var waitForExit, waitForExitOrError, waitForSubprocessExit, waitForSuccessfulExit, isSubprocessErrorExit, isFailedExit;
 var init_exit_async = __esm({
-  "../../../node_modules/execa/lib/resolve/exit-async.js"() {
+  "node_modules/execa/lib/resolve/exit-async.js"() {
     init_final_error();
     waitForExit = async (subprocess, context) => {
       const [exitCode, signal] = await waitForExitOrError(subprocess);
@@ -16898,10 +16898,10 @@ var init_exit_async = __esm({
   }
 });
 
-// ../../../node_modules/execa/lib/resolve/exit-sync.js
+// node_modules/execa/lib/resolve/exit-sync.js
 var getExitResultSync, getResultError;
 var init_exit_sync = __esm({
-  "../../../node_modules/execa/lib/resolve/exit-sync.js"() {
+  "node_modules/execa/lib/resolve/exit-sync.js"() {
     init_final_error();
     init_max_buffer();
     init_exit_async();
@@ -16926,11 +16926,11 @@ var init_exit_sync = __esm({
   }
 });
 
-// ../../../node_modules/execa/lib/methods/main-sync.js
+// node_modules/execa/lib/methods/main-sync.js
 import { spawnSync } from "node:child_process";
 var execaCoreSync, handleSyncArguments, normalizeSyncOptions, validateSyncOptions, throwInvalidSyncOption, spawnSubprocessSync, runSubprocessSync, normalizeSpawnSyncOptions, getSyncResult;
 var init_main_sync = __esm({
-  "../../../node_modules/execa/lib/methods/main-sync.js"() {
+  "node_modules/execa/lib/methods/main-sync.js"() {
     init_command();
     init_options();
     init_shell();
@@ -17076,11 +17076,11 @@ var init_main_sync = __esm({
   }
 });
 
-// ../../../node_modules/execa/lib/ipc/get-one.js
+// node_modules/execa/lib/ipc/get-one.js
 import { once as once5, on as on2 } from "node:events";
 var getOneMessage, getOneMessageAsync, getMessage, throwOnDisconnect2, throwOnStrictError;
 var init_get_one = __esm({
-  "../../../node_modules/execa/lib/ipc/get-one.js"() {
+  "node_modules/execa/lib/ipc/get-one.js"() {
     init_validation();
     init_forward();
     init_reference();
@@ -17139,11 +17139,11 @@ var init_get_one = __esm({
   }
 });
 
-// ../../../node_modules/execa/lib/ipc/get-each.js
+// node_modules/execa/lib/ipc/get-each.js
 import { once as once6, on as on3 } from "node:events";
 var getEachMessage, loopOnMessages, stopOnDisconnect, abortOnStrictError, iterateOnMessages, throwIfStrictError;
 var init_get_each = __esm({
-  "../../../node_modules/execa/lib/ipc/get-each.js"() {
+  "node_modules/execa/lib/ipc/get-each.js"() {
     init_validation();
     init_forward();
     init_reference();
@@ -17226,11 +17226,11 @@ var init_get_each = __esm({
   }
 });
 
-// ../../../node_modules/execa/lib/ipc/methods.js
+// node_modules/execa/lib/ipc/methods.js
 import process9 from "node:process";
 var addIpcMethods, getIpcExport, getIpcMethods;
 var init_methods = __esm({
-  "../../../node_modules/execa/lib/ipc/methods.js"() {
+  "node_modules/execa/lib/ipc/methods.js"() {
     init_send();
     init_get_one();
     init_get_each();
@@ -17275,7 +17275,7 @@ var init_methods = __esm({
   }
 });
 
-// ../../../node_modules/execa/lib/return/early-error.js
+// node_modules/execa/lib/return/early-error.js
 import { ChildProcess as ChildProcess2 } from "node:child_process";
 import {
   PassThrough,
@@ -17285,7 +17285,7 @@ import {
 } from "node:stream";
 var handleEarlyError, createDummyStreams, createDummyStream, readable, writable, duplex, handleDummyPromise;
 var init_early_error = __esm({
-  "../../../node_modules/execa/lib/return/early-error.js"() {
+  "node_modules/execa/lib/return/early-error.js"() {
     init_handle();
     init_result();
     init_reject();
@@ -17337,13 +17337,13 @@ var init_early_error = __esm({
   }
 });
 
-// ../../../node_modules/execa/lib/stdio/handle-async.js
+// node_modules/execa/lib/stdio/handle-async.js
 import { createReadStream, createWriteStream } from "node:fs";
 import { Buffer as Buffer4 } from "node:buffer";
 import { Readable as Readable2, Writable as Writable2, Duplex as Duplex2 } from "node:stream";
 var handleStdioAsync, forbiddenIfAsync, addProperties2, addPropertiesAsync;
 var init_handle_async = __esm({
-  "../../../node_modules/execa/lib/stdio/handle-async.js"() {
+  "node_modules/execa/lib/stdio/handle-async.js"() {
     init_generator();
     init_handle();
     init_type();
@@ -17390,7 +17390,7 @@ var init_handle_async = __esm({
   }
 });
 
-// ../../../node_modules/@sindresorhus/merge-streams/index.js
+// node_modules/@sindresorhus/merge-streams/index.js
 import { on as on4, once as once7 } from "node:events";
 import { PassThrough as PassThroughStream, getDefaultHighWaterMark as getDefaultHighWaterMark2 } from "node:stream";
 import { finished as finished2 } from "node:stream/promises";
@@ -17415,7 +17415,7 @@ function mergeStreams(streams) {
 }
 var getHighWaterMark, MergedStream, onMergedStreamFinished, onMergedStreamEnd, onInputStreamsUnpipe, validateStream, endWhenStreamsDone, afterMergedStreamFinished, onInputStreamEnd, onInputStreamUnpipe, endStream, errorOrAbortStream, isAbortError, abortStream, errorStream, noop2, updateMaxListeners, PASSTHROUGH_LISTENERS_COUNT, PASSTHROUGH_LISTENERS_PER_STREAM;
 var init_merge_streams = __esm({
-  "../../../node_modules/@sindresorhus/merge-streams/index.js"() {
+  "node_modules/@sindresorhus/merge-streams/index.js"() {
     getHighWaterMark = (streams, objectMode) => {
       if (streams.length === 0) {
         return getDefaultHighWaterMark2(objectMode);
@@ -17612,11 +17612,11 @@ var init_merge_streams = __esm({
   }
 });
 
-// ../../../node_modules/execa/lib/io/pipeline.js
+// node_modules/execa/lib/io/pipeline.js
 import { finished as finished3 } from "node:stream/promises";
 var pipeStreams, onSourceFinish, endDestinationStream, onDestinationFinish, abortSourceStream;
 var init_pipeline = __esm({
-  "../../../node_modules/execa/lib/io/pipeline.js"() {
+  "node_modules/execa/lib/io/pipeline.js"() {
     init_standard_stream();
     pipeStreams = (source, destination) => {
       source.pipe(destination);
@@ -17656,10 +17656,10 @@ var init_pipeline = __esm({
   }
 });
 
-// ../../../node_modules/execa/lib/io/output-async.js
+// node_modules/execa/lib/io/output-async.js
 var pipeOutputAsync, pipeTransform, SUBPROCESS_STREAM_PROPERTIES, pipeStdioItem, setStandardStreamMaxListeners, MAX_LISTENERS_INCREMENT;
 var init_output_async = __esm({
-  "../../../node_modules/execa/lib/io/output-async.js"() {
+  "node_modules/execa/lib/io/output-async.js"() {
     init_merge_streams();
     init_standard_stream();
     init_max_listeners();
@@ -17718,10 +17718,10 @@ var init_output_async = __esm({
   }
 });
 
-// ../../../node_modules/signal-exit/dist/mjs/signals.js
+// node_modules/signal-exit/dist/mjs/signals.js
 var signals;
 var init_signals2 = __esm({
-  "../../../node_modules/signal-exit/dist/mjs/signals.js"() {
+  "node_modules/signal-exit/dist/mjs/signals.js"() {
     signals = [];
     signals.push("SIGHUP", "SIGINT", "SIGTERM");
     if (process.platform !== "win32") {
@@ -17747,10 +17747,10 @@ var init_signals2 = __esm({
   }
 });
 
-// ../../../node_modules/signal-exit/dist/mjs/index.js
+// node_modules/signal-exit/dist/mjs/index.js
 var processOk, kExitEmitter, global2, ObjectDefineProperty, Emitter, SignalExitBase, signalExitWrap, SignalExitFallback, SignalExit, process10, onExit, load, unload;
 var init_mjs = __esm({
-  "../../../node_modules/signal-exit/dist/mjs/index.js"() {
+  "node_modules/signal-exit/dist/mjs/index.js"() {
     init_signals2();
     processOk = (process11) => !!process11 && typeof process11 === "object" && typeof process11.removeListener === "function" && typeof process11.emit === "function" && typeof process11.reallyExit === "function" && typeof process11.listeners === "function" && typeof process11.kill === "function" && typeof process11.pid === "number" && typeof process11.on === "function";
     kExitEmitter = /* @__PURE__ */ Symbol.for("signal-exit emitter");
@@ -17986,11 +17986,11 @@ var init_mjs = __esm({
   }
 });
 
-// ../../../node_modules/execa/lib/terminate/cleanup.js
+// node_modules/execa/lib/terminate/cleanup.js
 import { addAbortListener as addAbortListener2 } from "node:events";
 var cleanupOnExit;
 var init_cleanup = __esm({
-  "../../../node_modules/execa/lib/terminate/cleanup.js"() {
+  "node_modules/execa/lib/terminate/cleanup.js"() {
     init_mjs();
     cleanupOnExit = (subprocess, { cleanup, detached }, { signal }) => {
       if (!cleanup || detached) {
@@ -18006,10 +18006,10 @@ var init_cleanup = __esm({
   }
 });
 
-// ../../../node_modules/execa/lib/pipe/pipe-arguments.js
+// node_modules/execa/lib/pipe/pipe-arguments.js
 var normalizePipeArguments, getDestinationStream, getDestination, mapDestinationArguments, getSourceStream;
 var init_pipe_arguments = __esm({
-  "../../../node_modules/execa/lib/pipe/pipe-arguments.js"() {
+  "node_modules/execa/lib/pipe/pipe-arguments.js"() {
     init_parameters();
     init_duration();
     init_fd_options();
@@ -18088,10 +18088,10 @@ var init_pipe_arguments = __esm({
   }
 });
 
-// ../../../node_modules/execa/lib/pipe/throw.js
+// node_modules/execa/lib/pipe/throw.js
 var handlePipeArgumentsError, getPipeArgumentsError, createNonCommandError, PIPE_COMMAND_MESSAGE;
 var init_throw = __esm({
-  "../../../node_modules/execa/lib/pipe/throw.js"() {
+  "node_modules/execa/lib/pipe/throw.js"() {
     init_result();
     init_pipeline();
     handlePipeArgumentsError = ({
@@ -18144,10 +18144,10 @@ var init_throw = __esm({
   }
 });
 
-// ../../../node_modules/execa/lib/pipe/sequence.js
+// node_modules/execa/lib/pipe/sequence.js
 var waitForBothSubprocesses;
 var init_sequence = __esm({
-  "../../../node_modules/execa/lib/pipe/sequence.js"() {
+  "node_modules/execa/lib/pipe/sequence.js"() {
     waitForBothSubprocesses = async (subprocessPromises) => {
       const [
         { status: sourceStatus, reason: sourceReason, value: sourceResult = sourceReason },
@@ -18167,11 +18167,11 @@ var init_sequence = __esm({
   }
 });
 
-// ../../../node_modules/execa/lib/pipe/streaming.js
+// node_modules/execa/lib/pipe/streaming.js
 import { finished as finished4 } from "node:stream/promises";
 var pipeSubprocessStream, pipeFirstSubprocessStream, pipeMoreSubprocessStream, cleanupMergedStreamsMap, MERGED_STREAMS, SOURCE_LISTENERS_PER_PIPE, DESTINATION_LISTENERS_PER_PIPE;
 var init_streaming = __esm({
-  "../../../node_modules/execa/lib/pipe/streaming.js"() {
+  "node_modules/execa/lib/pipe/streaming.js"() {
     init_merge_streams();
     init_max_listeners();
     init_pipeline();
@@ -18206,11 +18206,11 @@ var init_streaming = __esm({
   }
 });
 
-// ../../../node_modules/execa/lib/pipe/abort.js
+// node_modules/execa/lib/pipe/abort.js
 import { aborted as aborted2 } from "node:util";
 var unpipeOnAbort, unpipeOnSignalAbort;
 var init_abort = __esm({
-  "../../../node_modules/execa/lib/pipe/abort.js"() {
+  "node_modules/execa/lib/pipe/abort.js"() {
     init_throw();
     unpipeOnAbort = (unpipeSignal, unpipeContext) => unpipeSignal === void 0 ? [] : [unpipeOnSignalAbort(unpipeSignal, unpipeContext)];
     unpipeOnSignalAbort = async (unpipeSignal, { sourceStream, mergedStream, fileDescriptors, sourceOptions, startTime }) => {
@@ -18227,10 +18227,10 @@ var init_abort = __esm({
   }
 });
 
-// ../../../node_modules/execa/lib/pipe/setup.js
+// node_modules/execa/lib/pipe/setup.js
 var pipeToSubprocess, handlePipePromise, getSubprocessPromises;
 var init_setup = __esm({
-  "../../../node_modules/execa/lib/pipe/setup.js"() {
+  "node_modules/execa/lib/pipe/setup.js"() {
     init_is_plain_obj();
     init_pipe_arguments();
     init_throw();
@@ -18297,12 +18297,12 @@ var init_setup = __esm({
   }
 });
 
-// ../../../node_modules/execa/lib/io/iterate.js
+// node_modules/execa/lib/io/iterate.js
 import { on as on5 } from "node:events";
 import { getDefaultHighWaterMark as getDefaultHighWaterMark3 } from "node:stream";
 var iterateOnSubprocessStream, stopReadingOnExit, iterateForResult, stopReadingOnStreamEnd, iterateOnStream, DEFAULT_OBJECT_HIGH_WATER_MARK, HIGH_WATER_MARK, iterateOnData, getGenerators;
 var init_iterate = __esm({
-  "../../../node_modules/execa/lib/io/iterate.js"() {
+  "node_modules/execa/lib/io/iterate.js"() {
     init_encoding_transform();
     init_split();
     init_run_sync();
@@ -18398,11 +18398,11 @@ var init_iterate = __esm({
   }
 });
 
-// ../../../node_modules/execa/lib/io/contents.js
+// node_modules/execa/lib/io/contents.js
 import { setImmediate } from "node:timers/promises";
 var getStreamOutput, logOutputAsync, resumeStream, getStreamContents2, getBufferedData, handleBufferedData;
 var init_contents2 = __esm({
-  "../../../node_modules/execa/lib/io/contents.js"() {
+  "node_modules/execa/lib/io/contents.js"() {
     init_source();
     init_uint_array();
     init_output();
@@ -18501,11 +18501,11 @@ var init_contents2 = __esm({
   }
 });
 
-// ../../../node_modules/execa/lib/resolve/wait-stream.js
+// node_modules/execa/lib/resolve/wait-stream.js
 import { finished as finished5 } from "node:stream/promises";
 var waitForStream, handleStdinDestroy, spyOnStdinDestroy, setStdinCleanedUp, handleStreamError, shouldIgnoreStreamError, isInputFileDescriptor, isStreamAbort, isStreamEpipe;
 var init_wait_stream = __esm({
-  "../../../node_modules/execa/lib/resolve/wait-stream.js"() {
+  "node_modules/execa/lib/resolve/wait-stream.js"() {
     waitForStream = async (stream, fdNumber, streamInfo, { isSameDirection, stopOnExit = false } = {}) => {
       const state = handleStdinDestroy(stream, streamInfo);
       const abortController = new AbortController();
@@ -18559,10 +18559,10 @@ var init_wait_stream = __esm({
   }
 });
 
-// ../../../node_modules/execa/lib/resolve/stdio.js
+// node_modules/execa/lib/resolve/stdio.js
 var waitForStdioStreams, waitForSubprocessStream;
 var init_stdio = __esm({
-  "../../../node_modules/execa/lib/resolve/stdio.js"() {
+  "node_modules/execa/lib/resolve/stdio.js"() {
     init_contents2();
     init_wait_stream();
     waitForStdioStreams = ({ subprocess, encoding, buffer, maxBuffer, lines, stripFinalNewline: stripFinalNewline2, verboseInfo, streamInfo }) => subprocess.stdio.map((stream, fdNumber) => waitForSubprocessStream({
@@ -18607,10 +18607,10 @@ var init_stdio = __esm({
   }
 });
 
-// ../../../node_modules/execa/lib/resolve/all-async.js
+// node_modules/execa/lib/resolve/all-async.js
 var makeAllStream, waitForAllStream, getAllStream, getAllMixed;
 var init_all_async = __esm({
-  "../../../node_modules/execa/lib/resolve/all-async.js"() {
+  "node_modules/execa/lib/resolve/all-async.js"() {
     init_merge_streams();
     init_stdio();
     makeAllStream = ({ stdout, stderr }, { all }) => all && (stdout || stderr) ? mergeStreams([stdout, stderr].filter(Boolean)) : void 0;
@@ -18642,10 +18642,10 @@ var init_all_async = __esm({
   }
 });
 
-// ../../../node_modules/execa/lib/verbose/ipc.js
+// node_modules/execa/lib/verbose/ipc.js
 var shouldLogIpc, logIpcOutput;
 var init_ipc = __esm({
-  "../../../node_modules/execa/lib/verbose/ipc.js"() {
+  "node_modules/execa/lib/verbose/ipc.js"() {
     init_log();
     init_values();
     shouldLogIpc = (verboseInfo) => isFullVerbose(verboseInfo, "ipc");
@@ -18661,10 +18661,10 @@ var init_ipc = __esm({
   }
 });
 
-// ../../../node_modules/execa/lib/ipc/buffer-messages.js
+// node_modules/execa/lib/ipc/buffer-messages.js
 var waitForIpcOutput, getBufferedIpcOutput;
 var init_buffer_messages = __esm({
-  "../../../node_modules/execa/lib/ipc/buffer-messages.js"() {
+  "node_modules/execa/lib/ipc/buffer-messages.js"() {
     init_max_buffer();
     init_ipc();
     init_specific();
@@ -18708,11 +18708,11 @@ var init_buffer_messages = __esm({
   }
 });
 
-// ../../../node_modules/execa/lib/resolve/wait-subprocess.js
+// node_modules/execa/lib/resolve/wait-subprocess.js
 import { once as once8 } from "node:events";
 var waitForSubprocessResult, waitForOriginalStreams, waitForCustomStreamsEnd, throwOnSubprocessError;
 var init_wait_subprocess = __esm({
-  "../../../node_modules/execa/lib/resolve/wait-subprocess.js"() {
+  "node_modules/execa/lib/resolve/wait-subprocess.js"() {
     init_is_stream();
     init_timeout();
     init_cancel();
@@ -18843,10 +18843,10 @@ var init_wait_subprocess = __esm({
   }
 });
 
-// ../../../node_modules/execa/lib/convert/concurrent.js
+// node_modules/execa/lib/convert/concurrent.js
 var initializeConcurrentStreams, addConcurrentStream, waitForConcurrentStreams;
 var init_concurrent = __esm({
-  "../../../node_modules/execa/lib/convert/concurrent.js"() {
+  "node_modules/execa/lib/convert/concurrent.js"() {
     init_deferred();
     initializeConcurrentStreams = () => ({
       readableDestroy: /* @__PURE__ */ new WeakMap(),
@@ -18861,11 +18861,11 @@ var init_concurrent = __esm({
       const promises = weakMap.get(stream);
       const promise = createDeferred();
       promises.push(promise);
-      const resolve11 = promise.resolve.bind(promise);
-      return { resolve: resolve11, promises };
+      const resolve13 = promise.resolve.bind(promise);
+      return { resolve: resolve13, promises };
     };
-    waitForConcurrentStreams = async ({ resolve: resolve11, promises }, subprocess) => {
-      resolve11();
+    waitForConcurrentStreams = async ({ resolve: resolve13, promises }, subprocess) => {
+      resolve13();
       const [isSubprocessExit] = await Promise.race([
         Promise.allSettled([true, subprocess]),
         Promise.all([false, ...promises])
@@ -18875,11 +18875,11 @@ var init_concurrent = __esm({
   }
 });
 
-// ../../../node_modules/execa/lib/convert/shared.js
+// node_modules/execa/lib/convert/shared.js
 import { finished as finished6 } from "node:stream/promises";
 var safeWaitForSubprocessStdin, safeWaitForSubprocessStdout, waitForSubprocessStdin, waitForSubprocessStdout, waitForSubprocess, destroyOtherStream;
 var init_shared = __esm({
-  "../../../node_modules/execa/lib/convert/shared.js"() {
+  "node_modules/execa/lib/convert/shared.js"() {
     init_wait_stream();
     safeWaitForSubprocessStdin = async (subprocessStdin) => {
       if (subprocessStdin === void 0) {
@@ -18921,12 +18921,12 @@ var init_shared = __esm({
   }
 });
 
-// ../../../node_modules/execa/lib/convert/readable.js
+// node_modules/execa/lib/convert/readable.js
 import { Readable as Readable3 } from "node:stream";
 import { callbackify as callbackify2 } from "node:util";
 var createReadable, getSubprocessStdout, getReadableOptions, getReadableMethods, onRead, onStdoutFinished, onReadableDestroy, destroyOtherReadable;
 var init_readable = __esm({
-  "../../../node_modules/execa/lib/convert/readable.js"() {
+  "node_modules/execa/lib/convert/readable.js"() {
     init_encoding_option();
     init_fd_options();
     init_iterate();
@@ -19019,12 +19019,12 @@ var init_readable = __esm({
   }
 });
 
-// ../../../node_modules/execa/lib/convert/writable.js
+// node_modules/execa/lib/convert/writable.js
 import { Writable as Writable3 } from "node:stream";
 import { callbackify as callbackify3 } from "node:util";
 var createWritable, getSubprocessStdin, getWritableMethods, onWrite, onWritableFinal, onStdinFinished, onWritableDestroy, destroyOtherWritable;
 var init_writable = __esm({
-  "../../../node_modules/execa/lib/convert/writable.js"() {
+  "node_modules/execa/lib/convert/writable.js"() {
     init_fd_options();
     init_concurrent();
     init_shared();
@@ -19093,12 +19093,12 @@ var init_writable = __esm({
   }
 });
 
-// ../../../node_modules/execa/lib/convert/duplex.js
+// node_modules/execa/lib/convert/duplex.js
 import { Duplex as Duplex3 } from "node:stream";
 import { callbackify as callbackify4 } from "node:util";
 var createDuplex, onDuplexDestroy;
 var init_duplex = __esm({
-  "../../../node_modules/execa/lib/convert/duplex.js"() {
+  "node_modules/execa/lib/convert/duplex.js"() {
     init_encoding_option();
     init_readable();
     init_writable();
@@ -19155,10 +19155,10 @@ var init_duplex = __esm({
   }
 });
 
-// ../../../node_modules/execa/lib/convert/iterable.js
+// node_modules/execa/lib/convert/iterable.js
 var createIterable, iterateOnStdoutData;
 var init_iterable = __esm({
-  "../../../node_modules/execa/lib/convert/iterable.js"() {
+  "node_modules/execa/lib/convert/iterable.js"() {
     init_encoding_option();
     init_fd_options();
     init_iterate();
@@ -19192,10 +19192,10 @@ var init_iterable = __esm({
   }
 });
 
-// ../../../node_modules/execa/lib/convert/add.js
+// node_modules/execa/lib/convert/add.js
 var addConvertedStreams;
 var init_add = __esm({
-  "../../../node_modules/execa/lib/convert/add.js"() {
+  "node_modules/execa/lib/convert/add.js"() {
     init_concurrent();
     init_readable();
     init_writable();
@@ -19212,10 +19212,10 @@ var init_add = __esm({
   }
 });
 
-// ../../../node_modules/execa/lib/methods/promise.js
+// node_modules/execa/lib/methods/promise.js
 var mergePromise, nativePromisePrototype, descriptors;
 var init_promise = __esm({
-  "../../../node_modules/execa/lib/methods/promise.js"() {
+  "node_modules/execa/lib/methods/promise.js"() {
     mergePromise = (subprocess, promise) => {
       for (const [property, descriptor] of descriptors) {
         const value = descriptor.value.bind(promise);
@@ -19231,12 +19231,12 @@ var init_promise = __esm({
   }
 });
 
-// ../../../node_modules/execa/lib/methods/main-async.js
+// node_modules/execa/lib/methods/main-async.js
 import { setMaxListeners } from "node:events";
 import { spawn } from "node:child_process";
 var execaCoreAsync, handleAsyncArguments, handleAsyncOptions, spawnSubprocessAsync, handlePromise, getAsyncResult;
 var init_main_async = __esm({
-  "../../../node_modules/execa/lib/methods/main-async.js"() {
+  "node_modules/execa/lib/methods/main-async.js"() {
     init_source();
     init_command();
     init_options();
@@ -19413,10 +19413,10 @@ var init_main_async = __esm({
   }
 });
 
-// ../../../node_modules/execa/lib/methods/bind.js
+// node_modules/execa/lib/methods/bind.js
 var mergeOptions, mergeOption, DEEP_OPTIONS;
 var init_bind = __esm({
-  "../../../node_modules/execa/lib/methods/bind.js"() {
+  "node_modules/execa/lib/methods/bind.js"() {
     init_is_plain_obj();
     init_specific();
     mergeOptions = (boundOptions, options) => {
@@ -19438,10 +19438,10 @@ var init_bind = __esm({
   }
 });
 
-// ../../../node_modules/execa/lib/methods/create.js
+// node_modules/execa/lib/methods/create.js
 var createExeca, callBoundExeca, parseArguments;
 var init_create = __esm({
-  "../../../node_modules/execa/lib/methods/create.js"() {
+  "node_modules/execa/lib/methods/create.js"() {
     init_is_plain_obj();
     init_parameters();
     init_template();
@@ -19495,10 +19495,10 @@ var init_create = __esm({
   }
 });
 
-// ../../../node_modules/execa/lib/methods/command.js
+// node_modules/execa/lib/methods/command.js
 var mapCommandAsync, mapCommandSync, parseCommand, parseCommandString, SPACES_REGEXP;
 var init_command2 = __esm({
-  "../../../node_modules/execa/lib/methods/command.js"() {
+  "node_modules/execa/lib/methods/command.js"() {
     mapCommandAsync = ({ file, commandArguments }) => parseCommand(file, commandArguments);
     mapCommandSync = ({ file, commandArguments }) => ({ ...parseCommand(file, commandArguments), isSync: true });
     parseCommand = (command, unusedArguments) => {
@@ -19531,10 +19531,10 @@ var init_command2 = __esm({
   }
 });
 
-// ../../../node_modules/execa/lib/methods/script.js
+// node_modules/execa/lib/methods/script.js
 var setScriptSync, mapScriptAsync, mapScriptSync, getScriptOptions, getScriptStdinOption, deepScriptOptions;
 var init_script = __esm({
-  "../../../node_modules/execa/lib/methods/script.js"() {
+  "node_modules/execa/lib/methods/script.js"() {
     setScriptSync = (boundExeca, createNested, boundOptions) => {
       boundExeca.sync = createNested(mapScriptSync, boundOptions);
       boundExeca.s = boundExeca.sync;
@@ -19547,10 +19547,10 @@ var init_script = __esm({
   }
 });
 
-// ../../../node_modules/execa/index.js
+// node_modules/execa/index.js
 var execa, execaSync, execaCommand, execaCommandSync, execaNode, $, sendMessage2, getOneMessage2, getEachMessage2, getCancelSignal2;
 var init_execa = __esm({
-  "../../../node_modules/execa/index.js"() {
+  "node_modules/execa/index.js"() {
     init_create();
     init_command2();
     init_node2();
@@ -20563,7 +20563,7 @@ var init_project = __esm({
   }
 });
 
-// ../../../node_modules/fast-xml-parser/src/util.js
+// node_modules/fast-xml-parser/src/util.js
 function getAllMatches(string3, regex) {
   const matches = [];
   let match = regex.exec(string3);
@@ -20584,7 +20584,7 @@ function isExist(v) {
 }
 var nameStartChar, nameChar, nameRegexp, regexName, isName, DANGEROUS_PROPERTY_NAMES, criticalProperties;
 var init_util2 = __esm({
-  "../../../node_modules/fast-xml-parser/src/util.js"() {
+  "node_modules/fast-xml-parser/src/util.js"() {
     "use strict";
     nameStartChar = ":A-Za-z_\\u00C0-\\u00D6\\u00D8-\\u00F6\\u00F8-\\u02FF\\u0370-\\u037D\\u037F-\\u1FFF\\u200C-\\u200D\\u2070-\\u218F\\u2C00-\\u2FEF\\u3001-\\uD7FF\\uF900-\\uFDCF\\uFDF0-\\uFFFD";
     nameChar = nameStartChar + "\\-.\\d\\u00B7\\u0300-\\u036F\\u203F-\\u2040";
@@ -20610,7 +20610,7 @@ var init_util2 = __esm({
   }
 });
 
-// ../../../node_modules/fast-xml-parser/src/validator.js
+// node_modules/fast-xml-parser/src/validator.js
 function validate(xmlData, options) {
   options = Object.assign({}, defaultOptions2, options);
   const tags = [];
@@ -20956,7 +20956,7 @@ function getPositionFromMatch(match) {
 }
 var defaultOptions2, doubleQuote, singleQuote;
 var init_validator = __esm({
-  "../../../node_modules/fast-xml-parser/src/validator.js"() {
+  "node_modules/fast-xml-parser/src/validator.js"() {
     "use strict";
     init_util2();
     defaultOptions2 = {
@@ -20969,10 +20969,10 @@ var init_validator = __esm({
   }
 });
 
-// ../../../node_modules/@nodable/entities/src/entities.js
+// node_modules/@nodable/entities/src/entities.js
 var CURRENCY, XML, COMMON_HTML;
 var init_entities = __esm({
-  "../../../node_modules/@nodable/entities/src/entities.js"() {
+  "node_modules/@nodable/entities/src/entities.js"() {
     CURRENCY = {
       cent: "\xA2",
       pound: "\xA3",
@@ -21022,7 +21022,7 @@ var init_entities = __esm({
   }
 });
 
-// ../../../node_modules/@nodable/entities/src/EntityDecoder.js
+// node_modules/@nodable/entities/src/EntityDecoder.js
 function validateEntityName(name) {
   if (name[0] === "#") {
     throw new Error(`[EntityReplacer] Invalid character '#' in entity name: "${name}"`);
@@ -21071,7 +21071,7 @@ function parseNCRConfig(ncr) {
 }
 var ENTITY_ACTION, SPECIAL_CHARS, LIMIT_TIER_EXTERNAL, LIMIT_TIER_BASE, LIMIT_TIER_ALL, NCR_LEVEL, XML10_ALLOWED_C0, EntityDecoder;
 var init_EntityDecoder = __esm({
-  "../../../node_modules/@nodable/entities/src/EntityDecoder.js"() {
+  "node_modules/@nodable/entities/src/EntityDecoder.js"() {
     init_entities();
     ENTITY_ACTION = Object.freeze({
       /** Resolve and expand the entity normally. */
@@ -21472,15 +21472,15 @@ var init_EntityDecoder = __esm({
   }
 });
 
-// ../../../node_modules/@nodable/entities/src/index.js
+// node_modules/@nodable/entities/src/index.js
 var init_src = __esm({
-  "../../../node_modules/@nodable/entities/src/index.js"() {
+  "node_modules/@nodable/entities/src/index.js"() {
     init_EntityDecoder();
     init_entities();
   }
 });
 
-// ../../../node_modules/fast-xml-parser/src/xmlparser/OptionsBuilder.js
+// node_modules/fast-xml-parser/src/xmlparser/OptionsBuilder.js
 function validatePropertyName(propertyName, optionName) {
   if (typeof propertyName !== "string") {
     return;
@@ -21529,7 +21529,7 @@ function normalizeProcessEntities(value, htmlEntities) {
 }
 var defaultOnDangerousProperty, defaultOptions3, buildOptions;
 var init_OptionsBuilder = __esm({
-  "../../../node_modules/fast-xml-parser/src/xmlparser/OptionsBuilder.js"() {
+  "node_modules/fast-xml-parser/src/xmlparser/OptionsBuilder.js"() {
     init_util2();
     defaultOnDangerousProperty = (name) => {
       if (DANGEROUS_PROPERTY_NAMES.includes(name)) {
@@ -21621,10 +21621,10 @@ var init_OptionsBuilder = __esm({
   }
 });
 
-// ../../../node_modules/fast-xml-parser/src/xmlparser/xmlNode.js
+// node_modules/fast-xml-parser/src/xmlparser/xmlNode.js
 var METADATA_SYMBOL, XmlNode;
 var init_xmlNode = __esm({
-  "../../../node_modules/fast-xml-parser/src/xmlparser/xmlNode.js"() {
+  "node_modules/fast-xml-parser/src/xmlparser/xmlNode.js"() {
     "use strict";
     if (typeof Symbol !== "function") {
       METADATA_SYMBOL = "@@xmlMetadata";
@@ -21669,10 +21669,10 @@ var init_xmlNode = __esm({
   }
 });
 
-// ../../../node_modules/xml-naming/src/index.js
+// node_modules/xml-naming/src/index.js
 var nameStartChar10, nameChar10, nameStartChar11, nameChar11, buildRegexes, regexes10, regexes11, nameStartCharAscii, nameCharAscii, regexesAscii, getRegexes, qName;
 var init_src2 = __esm({
-  "../../../node_modules/xml-naming/src/index.js"() {
+  "node_modules/xml-naming/src/index.js"() {
     nameStartChar10 = ":A-Za-z_\xC0-\xD6\xD8-\xF6\xF8-\u02FF\u0370-\u037D\u037F-\u0486\u0488-\u1FFF\u200C-\u200D\u2070-\u218F\u2C00-\u2FEF\u3001-\uD7FF\uF900-\uFDCF\uFDF0-\uFFFD";
     nameChar10 = nameStartChar10 + "\\-\\.\\d\xB7\u0300-\u036F\u203F-\u2040";
     nameStartChar11 = ":A-Za-z_\xC0-\u02FF\u0370-\u037D\u037F-\u0486\u0488-\u1FFF\u200C-\u200D\u2070-\u218F\u2C00-\u2FEF\u3001-\uD7FF\uF900-\uFDCF\uFDF0-\uFFFD\u{10000}-\u{EFFFF}";
@@ -21702,7 +21702,7 @@ var init_src2 = __esm({
   }
 });
 
-// ../../../node_modules/fast-xml-parser/src/xmlparser/DocTypeReader.js
+// node_modules/fast-xml-parser/src/xmlparser/DocTypeReader.js
 function hasSeq(data, seq, i2) {
   for (let j = 0; j < seq.length; j++) {
     if (seq[j] !== data[i2 + j + 1]) return false;
@@ -21717,7 +21717,7 @@ function validateEntityName2(name, xmlVersion) {
 }
 var DocTypeReader, skipWhitespace;
 var init_DocTypeReader = __esm({
-  "../../../node_modules/fast-xml-parser/src/xmlparser/DocTypeReader.js"() {
+  "node_modules/fast-xml-parser/src/xmlparser/DocTypeReader.js"() {
     init_src2();
     DocTypeReader = class {
       constructor(options, xmlVersion) {
@@ -21999,10 +21999,10 @@ var init_DocTypeReader = __esm({
   }
 });
 
-// ../../../node_modules/anynum/digitTable.js
+// node_modules/anynum/digitTable.js
 var SCRIPT_ZEROS, NOT_DIGIT, HIGH_MAP, LOW_MAX, LOW_MIN, TABLE_OFFSET, TABLE_SIZE, TABLE;
 var init_digitTable = __esm({
-  "../../../node_modules/anynum/digitTable.js"() {
+  "node_modules/anynum/digitTable.js"() {
     SCRIPT_ZEROS = [
       // Basic Latin (ASCII) — included for completeness / pass-through
       48,
@@ -22154,7 +22154,7 @@ var init_digitTable = __esm({
   }
 });
 
-// ../../../node_modules/anynum/anynum.js
+// node_modules/anynum/anynum.js
 function anynum(str) {
   if (typeof str !== "string") return str;
   const len = str.length;
@@ -22228,7 +22228,7 @@ function anynum(str) {
 }
 var CHAR_0, CHAR_9, CHAR_MINUS, MINUS_SET, anynum_default;
 var init_anynum = __esm({
-  "../../../node_modules/anynum/anynum.js"() {
+  "node_modules/anynum/anynum.js"() {
     "use strict";
     init_digitTable();
     CHAR_0 = 48;
@@ -22239,7 +22239,7 @@ var init_anynum = __esm({
   }
 });
 
-// ../../../node_modules/strnum/strnum.js
+// node_modules/strnum/strnum.js
 function toNumber(str, options = {}) {
   options = Object.assign({}, consider, options);
   if (!str || typeof str !== "string") return str;
@@ -22362,7 +22362,7 @@ function handleInfinity(str, num3, options) {
 }
 var hexRegex, binRegex, octRegex, numRegex, consider, eNotationRegx;
 var init_strnum = __esm({
-  "../../../node_modules/strnum/strnum.js"() {
+  "node_modules/strnum/strnum.js"() {
     init_anynum();
     hexRegex = /^[-+]?0x[a-fA-F0-9]+$/;
     binRegex = /^0b[01]+$/;
@@ -22384,7 +22384,7 @@ var init_strnum = __esm({
   }
 });
 
-// ../../../node_modules/fast-xml-parser/src/ignoreAttributes.js
+// node_modules/fast-xml-parser/src/ignoreAttributes.js
 function getIgnoreAttributesFn(ignoreAttributes) {
   if (typeof ignoreAttributes === "function") {
     return ignoreAttributes;
@@ -22404,14 +22404,14 @@ function getIgnoreAttributesFn(ignoreAttributes) {
   return () => false;
 }
 var init_ignoreAttributes = __esm({
-  "../../../node_modules/fast-xml-parser/src/ignoreAttributes.js"() {
+  "node_modules/fast-xml-parser/src/ignoreAttributes.js"() {
   }
 });
 
-// ../../../node_modules/path-expression-matcher/src/Expression.js
+// node_modules/path-expression-matcher/src/Expression.js
 var Expression;
 var init_Expression = __esm({
-  "../../../node_modules/path-expression-matcher/src/Expression.js"() {
+  "node_modules/path-expression-matcher/src/Expression.js"() {
     Expression = class {
       /**
        * Create a new Expression
@@ -22576,10 +22576,10 @@ var init_Expression = __esm({
   }
 });
 
-// ../../../node_modules/path-expression-matcher/src/ExpressionSet.js
+// node_modules/path-expression-matcher/src/ExpressionSet.js
 var ExpressionSet;
 var init_ExpressionSet = __esm({
-  "../../../node_modules/path-expression-matcher/src/ExpressionSet.js"() {
+  "node_modules/path-expression-matcher/src/ExpressionSet.js"() {
     ExpressionSet = class {
       constructor() {
         this._byDepthAndTag = /* @__PURE__ */ new Map();
@@ -22750,10 +22750,10 @@ var init_ExpressionSet = __esm({
   }
 });
 
-// ../../../node_modules/path-expression-matcher/src/Matcher.js
+// node_modules/path-expression-matcher/src/Matcher.js
 var MatcherView, Matcher;
 var init_Matcher = __esm({
-  "../../../node_modules/path-expression-matcher/src/Matcher.js"() {
+  "node_modules/path-expression-matcher/src/Matcher.js"() {
     MatcherView = class {
       /**
        * @param {Matcher} matcher - The parent Matcher instance to read from.
@@ -23081,21 +23081,21 @@ var init_Matcher = __esm({
        * @returns {string}
        */
       toString(separator, includeNamespace = true) {
-        const sep3 = separator || this.separator;
-        const isDefault = sep3 === this.separator && includeNamespace === true;
+        const sep4 = separator || this.separator;
+        const isDefault = sep4 === this.separator && includeNamespace === true;
         if (isDefault) {
           if (this._pathStringCache !== null) {
             return this._pathStringCache;
           }
           const result = this.path.map(
             (n2) => n2.namespace ? `${n2.namespace}:${n2.tag}` : n2.tag
-          ).join(sep3);
+          ).join(sep4);
           this._pathStringCache = result;
           return result;
         }
         return this.path.map(
           (n2) => includeNamespace && n2.namespace ? `${n2.namespace}:${n2.tag}` : n2.tag
-        ).join(sep3);
+        ).join(sep4);
       }
       /**
        * Get path as array of tag names.
@@ -23272,19 +23272,19 @@ var init_Matcher = __esm({
   }
 });
 
-// ../../../node_modules/path-expression-matcher/src/index.js
+// node_modules/path-expression-matcher/src/index.js
 var init_src3 = __esm({
-  "../../../node_modules/path-expression-matcher/src/index.js"() {
+  "node_modules/path-expression-matcher/src/index.js"() {
     init_Expression();
     init_Matcher();
     init_ExpressionSet();
   }
 });
 
-// ../../../node_modules/is-unsafe/src/contexts/html.js
+// node_modules/is-unsafe/src/contexts/html.js
 var HTML_PATTERNS, html_default;
 var init_html = __esm({
-  "../../../node_modules/is-unsafe/src/contexts/html.js"() {
+  "node_modules/is-unsafe/src/contexts/html.js"() {
     HTML_PATTERNS = [
       {
         id: "html-script-open",
@@ -23379,10 +23379,10 @@ var init_html = __esm({
   }
 });
 
-// ../../../node_modules/is-unsafe/src/contexts/xml.js
+// node_modules/is-unsafe/src/contexts/xml.js
 var XML_PATTERNS, xml_default;
 var init_xml = __esm({
-  "../../../node_modules/is-unsafe/src/contexts/xml.js"() {
+  "node_modules/is-unsafe/src/contexts/xml.js"() {
     XML_PATTERNS = [
       {
         id: "xml-cdata-injection",
@@ -23452,10 +23452,10 @@ var init_xml = __esm({
   }
 });
 
-// ../../../node_modules/is-unsafe/src/contexts/svg.js
+// node_modules/is-unsafe/src/contexts/svg.js
 var SVG_PATTERNS, svg_default;
 var init_svg = __esm({
-  "../../../node_modules/is-unsafe/src/contexts/svg.js"() {
+  "node_modules/is-unsafe/src/contexts/svg.js"() {
     SVG_PATTERNS = [
       {
         id: "svg-script-element",
@@ -23529,10 +23529,10 @@ var init_svg = __esm({
   }
 });
 
-// ../../../node_modules/is-unsafe/src/contexts/sql.js
+// node_modules/is-unsafe/src/contexts/sql.js
 var SQL_PATTERNS, sql_default;
 var init_sql = __esm({
-  "../../../node_modules/is-unsafe/src/contexts/sql.js"() {
+  "node_modules/is-unsafe/src/contexts/sql.js"() {
     SQL_PATTERNS = [
       {
         id: "sql-block-comment-open",
@@ -23616,10 +23616,10 @@ var init_sql = __esm({
   }
 });
 
-// ../../../node_modules/is-unsafe/src/contexts/shell.js
+// node_modules/is-unsafe/src/contexts/shell.js
 var SHELL_PATTERNS, shell_default;
 var init_shell2 = __esm({
-  "../../../node_modules/is-unsafe/src/contexts/shell.js"() {
+  "node_modules/is-unsafe/src/contexts/shell.js"() {
     SHELL_PATTERNS = [
       {
         id: "shell-path-traversal-unix",
@@ -23719,10 +23719,10 @@ var init_shell2 = __esm({
   }
 });
 
-// ../../../node_modules/is-unsafe/src/contexts/redos.js
+// node_modules/is-unsafe/src/contexts/redos.js
 var REDOS_PATTERNS, redos_default;
 var init_redos = __esm({
-  "../../../node_modules/is-unsafe/src/contexts/redos.js"() {
+  "node_modules/is-unsafe/src/contexts/redos.js"() {
     REDOS_PATTERNS = [
       {
         id: "redos-nested-quantifier-plus",
@@ -23773,10 +23773,10 @@ var init_redos = __esm({
   }
 });
 
-// ../../../node_modules/is-unsafe/src/contexts/nosql.js
+// node_modules/is-unsafe/src/contexts/nosql.js
 var sep, NOSQL_PATTERNS, nosql_default;
 var init_nosql = __esm({
-  "../../../node_modules/is-unsafe/src/contexts/nosql.js"() {
+  "node_modules/is-unsafe/src/contexts/nosql.js"() {
     sep = `["'\\s]*:`;
     NOSQL_PATTERNS = [
       // ─── MongoDB $ operator injection ────────────────────────────────────────
@@ -23868,10 +23868,10 @@ var init_nosql = __esm({
   }
 });
 
-// ../../../node_modules/is-unsafe/src/contexts/log.js
+// node_modules/is-unsafe/src/contexts/log.js
 var LOG_PATTERNS, log_default;
 var init_log2 = __esm({
-  "../../../node_modules/is-unsafe/src/contexts/log.js"() {
+  "node_modules/is-unsafe/src/contexts/log.js"() {
     LOG_PATTERNS = [
       // ─── CRLF / newline injection ─────────────────────────────────────────────
       {
@@ -23947,10 +23947,10 @@ var init_log2 = __esm({
   }
 });
 
-// ../../../node_modules/is-unsafe/src/contexts/sql-strict.js
+// node_modules/is-unsafe/src/contexts/sql-strict.js
 var SQL_STRICT_EXTRA, SQL_STRICT_PATTERNS, sql_strict_default;
 var init_sql_strict = __esm({
-  "../../../node_modules/is-unsafe/src/contexts/sql-strict.js"() {
+  "node_modules/is-unsafe/src/contexts/sql-strict.js"() {
     init_sql();
     SQL_STRICT_EXTRA = [
       {
@@ -23974,7 +23974,7 @@ var init_sql_strict = __esm({
   }
 });
 
-// ../../../node_modules/is-unsafe/src/index.js
+// node_modules/is-unsafe/src/index.js
 function assertString(value) {
   if (typeof value !== "string") {
     throw new TypeError(
@@ -24029,7 +24029,7 @@ function isUnsafe(value, context) {
 }
 var VALID_CONTEXTS;
 var init_src4 = __esm({
-  "../../../node_modules/is-unsafe/src/index.js"() {
+  "node_modules/is-unsafe/src/index.js"() {
     init_html();
     init_xml();
     init_sql_strict();
@@ -24064,7 +24064,7 @@ var init_src4 = __esm({
   }
 });
 
-// ../../../node_modules/fast-xml-parser/src/xmlparser/OrderedObjParser.js
+// node_modules/fast-xml-parser/src/xmlparser/OrderedObjParser.js
 function extractRawAttributes(prefixedAttrs, options) {
   if (!prefixedAttrs) return {};
   const attrs = options.attributesGroupName ? prefixedAttrs[options.attributesGroupName] : prefixedAttrs;
@@ -24392,7 +24392,7 @@ function sanitizeName(name, options) {
 }
 var OrderedObjParser, attrsRegx, parseXml;
 var init_OrderedObjParser = __esm({
-  "../../../node_modules/fast-xml-parser/src/xmlparser/OrderedObjParser.js"() {
+  "node_modules/fast-xml-parser/src/xmlparser/OrderedObjParser.js"() {
     "use strict";
     init_util2();
     init_xmlNode();
@@ -24684,7 +24684,7 @@ var init_OrderedObjParser = __esm({
   }
 });
 
-// ../../../node_modules/fast-xml-parser/src/xmlparser/node2json.js
+// node_modules/fast-xml-parser/src/xmlparser/node2json.js
 function stripAttributePrefix(attrs, prefix) {
   if (!attrs || typeof attrs !== "object") return {};
   if (!prefix) return attrs;
@@ -24796,17 +24796,17 @@ function isLeafTag(obj, options) {
 }
 var METADATA_SYMBOL2;
 var init_node2json = __esm({
-  "../../../node_modules/fast-xml-parser/src/xmlparser/node2json.js"() {
+  "node_modules/fast-xml-parser/src/xmlparser/node2json.js"() {
     "use strict";
     init_xmlNode();
     METADATA_SYMBOL2 = XmlNode.getMetaDataSymbol();
   }
 });
 
-// ../../../node_modules/fast-xml-parser/src/xmlparser/XMLParser.js
+// node_modules/fast-xml-parser/src/xmlparser/XMLParser.js
 var XMLParser;
 var init_XMLParser = __esm({
-  "../../../node_modules/fast-xml-parser/src/xmlparser/XMLParser.js"() {
+  "node_modules/fast-xml-parser/src/xmlparser/XMLParser.js"() {
     init_OptionsBuilder();
     init_OrderedObjParser();
     init_node2json();
@@ -24877,9 +24877,9 @@ var init_XMLParser = __esm({
   }
 });
 
-// ../../../node_modules/fast-xml-parser/src/fxp.js
+// node_modules/fast-xml-parser/src/fxp.js
 var init_fxp = __esm({
-  "../../../node_modules/fast-xml-parser/src/fxp.js"() {
+  "node_modules/fast-xml-parser/src/fxp.js"() {
     "use strict";
     init_XMLParser();
   }
@@ -24955,9 +24955,9 @@ function decodeSafe(s) {
 function pathFromUrl(url) {
   const m = /^file:\/\/([^/]*)(\/.*)?$/i.exec(url.trim());
   if (!m) return decodeSafe(url.trim()).normalize("NFC");
-  const host = m[1] ?? "";
+  const host2 = m[1] ?? "";
   const rest = decodeSafe(m[2] ?? "/").normalize("NFC");
-  if (host && host.toLowerCase() !== "localhost") return `\\\\${host}${rest.replace(/\//g, "\\")}`;
+  if (host2 && host2.toLowerCase() !== "localhost") return `\\\\${host2}${rest.replace(/\//g, "\\")}`;
   if (/^\/[A-Za-z]:(\/|$)/.test(rest)) return rest.slice(1).replace(/\//g, "\\");
   return rest;
 }
@@ -28080,12 +28080,696 @@ var init_qc = __esm({
   }
 });
 
+// src/core/user-action.ts
+function userActionText(a2) {
+  return [
+    `\u3010${APP[a2.app]}\u3011 ${a2.title}`,
+    ...a2.steps.map((s, i2) => `${i2 + 1}. ${s}`),
+    `\u0E17\u0E33\u0E44\u0E21: ${a2.why}`,
+    `${FREQ[a2.frequency]} \xB7 ${a2.needsProject ? "\u0E15\u0E49\u0E2D\u0E07\u0E40\u0E1B\u0E34\u0E14\u0E42\u0E1B\u0E23\u0E40\u0E08\u0E01\u0E15\u0E4C" : "\u0E44\u0E21\u0E48\u0E15\u0E49\u0E2D\u0E07\u0E2A\u0E23\u0E49\u0E32\u0E07\u0E2B\u0E23\u0E37\u0E2D\u0E40\u0E1B\u0E34\u0E14\u0E42\u0E1B\u0E23\u0E40\u0E08\u0E01\u0E15\u0E4C"} \xB7 ${a2.keepOpen ? "\u0E15\u0E49\u0E2D\u0E07\u0E40\u0E1B\u0E34\u0E14\u0E42\u0E1B\u0E23\u0E41\u0E01\u0E23\u0E21\u0E04\u0E49\u0E32\u0E07\u0E44\u0E27\u0E49" : "\u0E44\u0E21\u0E48\u0E15\u0E49\u0E2D\u0E07\u0E40\u0E1B\u0E34\u0E14\u0E04\u0E49\u0E32\u0E07"}`,
+    `\u0E1B\u0E34\u0E14\u0E44\u0E14\u0E49\u0E40\u0E21\u0E37\u0E48\u0E2D: ${a2.closeAfter}`
+  ].join("\n");
+}
+function card(a2) {
+  return { ...a2, say: userActionText(a2) };
+}
+var UserActionError, FREQ, APP, ACTIONS;
+var init_user_action = __esm({
+  "src/core/user-action.ts"() {
+    "use strict";
+    UserActionError = class extends Error {
+      constructor(message, userAction) {
+        super(message);
+        this.userAction = userAction;
+      }
+      userAction;
+    };
+    FREQ = {
+      once: "\u0E17\u0E33\u0E04\u0E23\u0E31\u0E49\u0E07\u0E40\u0E14\u0E35\u0E22\u0E27 (\u0E04\u0E23\u0E31\u0E49\u0E07\u0E15\u0E48\u0E2D\u0E44\u0E1B\u0E44\u0E21\u0E48\u0E15\u0E49\u0E2D\u0E07\u0E17\u0E33\u0E2D\u0E35\u0E01)",
+      "after-update": "\u0E17\u0E33\u0E04\u0E23\u0E31\u0E49\u0E07\u0E40\u0E14\u0E35\u0E22\u0E27\u0E2B\u0E25\u0E31\u0E07\u0E2D\u0E31\u0E1B\u0E40\u0E14\u0E15",
+      "each-time": "\u0E17\u0E33\u0E40\u0E21\u0E37\u0E48\u0E2D\u0E40\u0E01\u0E34\u0E14\u0E02\u0E36\u0E49\u0E19\u0E40\u0E17\u0E48\u0E32\u0E19\u0E31\u0E49\u0E19"
+    };
+    APP = {
+      "after-effects": "After Effects",
+      premiere: "Premiere Pro",
+      ffmpeg: "ffmpeg",
+      disk: "\u0E14\u0E34\u0E2A\u0E01\u0E4C",
+      catcut: "CatCut"
+    };
+    ACTIONS = {
+      aeNotFound: () => ({
+        code: "ae-not-found",
+        app: "after-effects",
+        title: "\u0E44\u0E21\u0E48\u0E1E\u0E1A After Effects \u0E43\u0E19\u0E40\u0E04\u0E23\u0E37\u0E48\u0E2D\u0E07",
+        steps: ["\u0E15\u0E34\u0E14\u0E15\u0E31\u0E49\u0E07 After Effects \u0E08\u0E32\u0E01 Creative Cloud", "\u0E2B\u0E23\u0E37\u0E2D\u0E16\u0E49\u0E32\u0E15\u0E34\u0E14\u0E15\u0E31\u0E49\u0E07\u0E44\u0E27\u0E49\u0E17\u0E35\u0E48\u0E2D\u0E37\u0E48\u0E19 \u0E15\u0E31\u0E49\u0E07\u0E04\u0E48\u0E32 EDITMCP_AE_DIR \u0E40\u0E1B\u0E47\u0E19\u0E42\u0E1F\u0E25\u0E40\u0E14\u0E2D\u0E23\u0E4C\u0E02\u0E2D\u0E07 AE"],
+        why: "\u0E07\u0E32\u0E19\u0E01\u0E23\u0E32\u0E1F\u0E34\u0E01\u0E41\u0E25\u0E30\u0E02\u0E49\u0E2D\u0E04\u0E27\u0E32\u0E21 (ae_*) \u0E43\u0E0A\u0E49 After Effects \u0E17\u0E33\u0E40\u0E1A\u0E37\u0E49\u0E2D\u0E07\u0E2B\u0E25\u0E31\u0E07",
+        frequency: "once",
+        keepOpen: false,
+        closeAfter: "\u0E44\u0E21\u0E48\u0E15\u0E49\u0E2D\u0E07\u0E40\u0E1B\u0E34\u0E14 AE \u0E40\u0E25\u0E22",
+        needsProject: false
+      }),
+      aeFirstRun: (o2 = {}) => ({
+        code: "ae-first-run",
+        app: "after-effects",
+        title: "\u0E40\u0E1B\u0E34\u0E14 After Effects \u0E2B\u0E19\u0E36\u0E48\u0E07\u0E04\u0E23\u0E31\u0E49\u0E07\u0E40\u0E1E\u0E37\u0E48\u0E2D Sign in",
+        steps: [
+          "\u0E40\u0E1B\u0E34\u0E14 After Effects \u0E15\u0E32\u0E21\u0E1B\u0E01\u0E15\u0E34",
+          "\u0E16\u0E49\u0E32\u0E21\u0E35\u0E2B\u0E19\u0E49\u0E32 Sign in / License / What's New / Crash report \u0E43\u0E2B\u0E49\u0E1C\u0E48\u0E32\u0E19\u0E08\u0E19\u0E40\u0E2B\u0E47\u0E19\u0E2B\u0E19\u0E49\u0E32\u0E08\u0E2D\u0E2B\u0E25\u0E31\u0E01",
+          "\u0E1B\u0E34\u0E14 After Effects (\u0E44\u0E21\u0E48\u0E15\u0E49\u0E2D\u0E07\u0E2A\u0E23\u0E49\u0E32\u0E07\u0E2B\u0E23\u0E37\u0E2D Save \u0E42\u0E1B\u0E23\u0E40\u0E08\u0E01\u0E15\u0E4C)",
+          '\u0E1A\u0E2D\u0E01 AI \u0E27\u0E48\u0E32 "\u0E40\u0E1B\u0E34\u0E14 AE \u0E41\u0E25\u0E49\u0E27" \u0E41\u0E25\u0E49\u0E27 CatCut \u0E08\u0E30\u0E25\u0E2D\u0E07\u0E43\u0E2B\u0E21\u0E48\u0E40\u0E2D\u0E07'
+        ],
+        why: `CatCut \u0E2A\u0E31\u0E48\u0E07 AE \u0E41\u0E1A\u0E1A\u0E44\u0E21\u0E48\u0E21\u0E35\u0E2B\u0E19\u0E49\u0E32\u0E15\u0E48\u0E32\u0E07 \u0E41\u0E15\u0E48 AE \u0E1B\u0E34\u0E14\u0E15\u0E31\u0E27\u0E01\u0E48\u0E2D\u0E19\u0E23\u0E31\u0E19\u0E07\u0E32\u0E19${o2["detail"] ? ` (${o2["detail"]})` : ""} \u2014 \u0E21\u0E31\u0E01\u0E40\u0E01\u0E34\u0E14\u0E40\u0E21\u0E37\u0E48\u0E2D\u0E22\u0E31\u0E07\u0E44\u0E21\u0E48\u0E44\u0E14\u0E49 Sign in \u0E2B\u0E23\u0E37\u0E2D\u0E2B\u0E25\u0E31\u0E07\u0E2D\u0E31\u0E1B\u0E40\u0E14\u0E15 AE \u0E41\u0E25\u0E49\u0E27\u0E21\u0E35\u0E2B\u0E19\u0E49\u0E32\u0E15\u0E48\u0E32\u0E07\u0E41\u0E23\u0E01\u0E04\u0E49\u0E32\u0E07`,
+        frequency: "after-update",
+        keepOpen: false,
+        closeAfter: "\u0E17\u0E31\u0E19\u0E17\u0E35\u0E17\u0E35\u0E48\u0E40\u0E2B\u0E47\u0E19\u0E2B\u0E19\u0E49\u0E32\u0E08\u0E2D\u0E2B\u0E25\u0E31\u0E01\u0E02\u0E2D\u0E07 AE",
+        needsProject: false
+      }),
+      aeAllowScripts: () => ({
+        code: "ae-allow-scripts",
+        app: "after-effects",
+        title: "\u0E2D\u0E19\u0E38\u0E0D\u0E32\u0E15\u0E43\u0E2B\u0E49\u0E2A\u0E04\u0E23\u0E34\u0E1B\u0E15\u0E4C\u0E40\u0E02\u0E35\u0E22\u0E19\u0E44\u0E1F\u0E25\u0E4C\u0E43\u0E19 After Effects",
+        steps: [
+          "\u0E40\u0E1B\u0E34\u0E14 After Effects",
+          "Edit > Preferences > Scripting & Expressions",
+          '\u0E15\u0E34\u0E4A\u0E01 "Allow Scripts to Write Files and Access Network" \u0E41\u0E25\u0E49\u0E27\u0E01\u0E14 OK',
+          "\u0E1B\u0E34\u0E14 After Effects (\u0E44\u0E21\u0E48\u0E15\u0E49\u0E2D\u0E07\u0E2A\u0E23\u0E49\u0E32\u0E07\u0E2B\u0E23\u0E37\u0E2D Save \u0E42\u0E1B\u0E23\u0E40\u0E08\u0E01\u0E15\u0E4C)"
+        ],
+        why: 'CatCut \u0E2A\u0E48\u0E07\u0E1C\u0E25\u0E07\u0E32\u0E19\u0E08\u0E32\u0E01 AE \u0E01\u0E25\u0E31\u0E1A\u0E21\u0E32\u0E40\u0E1B\u0E47\u0E19\u0E44\u0E1F\u0E25\u0E4C \u0E16\u0E49\u0E32\u0E44\u0E21\u0E48\u0E15\u0E34\u0E4A\u0E01 \u0E07\u0E32\u0E19 AE \u0E17\u0E38\u0E01\u0E07\u0E32\u0E19\u0E08\u0E30\u0E25\u0E49\u0E21\u0E14\u0E49\u0E27\u0E22 "cannot write"',
+        frequency: "once",
+        keepOpen: false,
+        closeAfter: "\u0E17\u0E31\u0E19\u0E17\u0E35\u0E17\u0E35\u0E48\u0E01\u0E14 OK",
+        needsProject: false
+      }),
+      ffmpegMissing: (o2 = {}) => ({
+        code: "ffmpeg-missing",
+        app: "ffmpeg",
+        title: "\u0E44\u0E21\u0E48\u0E1E\u0E1A ffmpeg",
+        steps: ["\u0E15\u0E34\u0E14\u0E15\u0E31\u0E49\u0E07\u0E43\u0E2B\u0E21\u0E48\u0E14\u0E49\u0E27\u0E22 install.cmd \u0E02\u0E2D\u0E07 CatCut (\u0E21\u0E35 ffmpeg \u0E21\u0E32\u0E14\u0E49\u0E27\u0E22)", "\u0E2B\u0E23\u0E37\u0E2D\u0E15\u0E31\u0E49\u0E07 EDITMCP_FFMPEG / EDITMCP_FFPROBE \u0E43\u0E2B\u0E49\u0E0A\u0E35\u0E49\u0E44\u0E1B\u0E17\u0E35\u0E48\u0E44\u0E1F\u0E25\u0E4C"],
+        why: `\u0E17\u0E38\u0E01\u0E01\u0E32\u0E23\u0E15\u0E31\u0E14\u0E15\u0E48\u0E2D \u0E1B\u0E23\u0E30\u0E01\u0E2D\u0E1A\u0E44\u0E1F\u0E25\u0E4C \u0E41\u0E25\u0E30\u0E2A\u0E48\u0E07\u0E2D\u0E2D\u0E01\u0E43\u0E0A\u0E49 ffmpeg${o2["detail"] ? ` (${o2["detail"]})` : ""}`,
+        frequency: "once",
+        keepOpen: false,
+        closeAfter: "-",
+        needsProject: false
+      }),
+      premiereNotFound: () => ({
+        code: "premiere-not-found",
+        app: "premiere",
+        title: "\u0E44\u0E21\u0E48\u0E1E\u0E1A Premiere Pro \u0E43\u0E19\u0E40\u0E04\u0E23\u0E37\u0E48\u0E2D\u0E07",
+        steps: ["\u0E15\u0E34\u0E14\u0E15\u0E31\u0E49\u0E07 Premiere Pro \u0E08\u0E32\u0E01 Creative Cloud (\u0E16\u0E49\u0E32\u0E08\u0E30\u0E43\u0E0A\u0E49 Premiere)", "\u0E44\u0E21\u0E48\u0E43\u0E0A\u0E49 Premiere \u0E01\u0E47\u0E44\u0E14\u0E49: CatCut \u0E2A\u0E48\u0E07\u0E07\u0E32\u0E19\u0E40\u0E1B\u0E47\u0E19\u0E44\u0E1F\u0E25\u0E4C XML \u0E43\u0E2B\u0E49\u0E40\u0E1B\u0E34\u0E14\u0E20\u0E32\u0E22\u0E2B\u0E25\u0E31\u0E07\u0E44\u0E14\u0E49"],
+        why: "\u0E04\u0E33\u0E2A\u0E31\u0E48\u0E07 premiere_* \u0E17\u0E33\u0E07\u0E32\u0E19\u0E43\u0E19\u0E42\u0E1B\u0E23\u0E41\u0E01\u0E23\u0E21 Premiere",
+        frequency: "once",
+        keepOpen: false,
+        closeAfter: "-",
+        needsProject: false
+      }),
+      bridgeNotInstalled: () => ({
+        code: "bridge-not-installed",
+        app: "premiere",
+        title: "\u0E15\u0E34\u0E14\u0E15\u0E31\u0E49\u0E07 CatCut Bridge \u0E43\u0E19 Premiere",
+        steps: [
+          "Save \u0E07\u0E32\u0E19\u0E43\u0E19 Premiere \u0E41\u0E25\u0E49\u0E27\u0E1B\u0E34\u0E14 Premiere (\u0E16\u0E49\u0E32\u0E40\u0E1B\u0E34\u0E14\u0E2D\u0E22\u0E39\u0E48)",
+          "\u0E43\u0E2B\u0E49 AI \u0E23\u0E31\u0E19\u0E04\u0E33\u0E2A\u0E31\u0E48\u0E07 `catcut premiere-bridge install` (\u0E2B\u0E23\u0E37\u0E2D\u0E1E\u0E34\u0E21\u0E1E\u0E4C\u0E40\u0E2D\u0E07\u0E43\u0E19 Terminal)",
+          "\u0E44\u0E21\u0E48\u0E15\u0E49\u0E2D\u0E07\u0E40\u0E1B\u0E34\u0E14 Premiere \u0E40\u0E2D\u0E07: CatCut \u0E40\u0E1B\u0E34\u0E14\u0E43\u0E2B\u0E49\u0E1E\u0E23\u0E49\u0E2D\u0E21\u0E42\u0E1B\u0E23\u0E40\u0E08\u0E01\u0E15\u0E4C\u0E40\u0E21\u0E37\u0E48\u0E2D\u0E15\u0E49\u0E2D\u0E07\u0E43\u0E0A\u0E49"
+        ],
+        why: "Premiere \u0E44\u0E21\u0E48\u0E21\u0E35\u0E42\u0E2B\u0E21\u0E14\u0E2A\u0E31\u0E48\u0E07\u0E07\u0E32\u0E19\u0E40\u0E1A\u0E37\u0E49\u0E2D\u0E07\u0E2B\u0E25\u0E31\u0E07 CatCut \u0E08\u0E36\u0E07\u0E15\u0E49\u0E2D\u0E07\u0E21\u0E35\u0E15\u0E31\u0E27\u0E23\u0E31\u0E1A\u0E04\u0E33\u0E2A\u0E31\u0E48\u0E07\u0E40\u0E25\u0E47\u0E01 \u0E46 (bridge) \u0E2D\u0E22\u0E39\u0E48\u0E43\u0E19 Premiere",
+        frequency: "once",
+        keepOpen: false,
+        closeAfter: "\u0E44\u0E21\u0E48\u0E15\u0E49\u0E2D\u0E07\u0E40\u0E1B\u0E34\u0E14 Premiere \u0E23\u0E30\u0E2B\u0E27\u0E48\u0E32\u0E07\u0E15\u0E34\u0E14\u0E15\u0E31\u0E49\u0E07",
+        needsProject: false
+      }),
+      bridgeUpdate: (o2 = {}) => ({
+        code: "bridge-update",
+        app: "premiere",
+        title: "\u0E2D\u0E31\u0E1B\u0E40\u0E14\u0E15 CatCut Bridge \u0E43\u0E19 Premiere",
+        steps: [
+          "\u0E43\u0E2B\u0E49 AI \u0E23\u0E31\u0E19\u0E04\u0E33\u0E2A\u0E31\u0E48\u0E07 `catcut premiere-bridge install` (\u0E40\u0E1B\u0E34\u0E14 Premiere \u0E04\u0E49\u0E32\u0E07\u0E44\u0E27\u0E49\u0E44\u0E14\u0E49 \u0E44\u0E21\u0E48\u0E15\u0E49\u0E2D\u0E07\u0E1B\u0E34\u0E14)",
+          "\u0E16\u0E49\u0E32\u0E2B\u0E25\u0E31\u0E07\u0E08\u0E32\u0E01\u0E19\u0E31\u0E49\u0E19 CatCut \u0E02\u0E2D\u0E43\u0E2B\u0E49\u0E1B\u0E34\u0E14\u2013\u0E40\u0E1B\u0E34\u0E14 Premiere \u0E04\u0E48\u0E2D\u0E22\u0E17\u0E33\u0E15\u0E2D\u0E19\u0E19\u0E31\u0E49\u0E19 (Save \u0E01\u0E48\u0E2D\u0E19)"
+        ],
+        why: `bridge \u0E17\u0E35\u0E48\u0E15\u0E34\u0E14\u0E15\u0E31\u0E49\u0E07\u0E43\u0E19\u0E40\u0E04\u0E23\u0E37\u0E48\u0E2D\u0E07\u0E40\u0E1B\u0E47\u0E19\u0E23\u0E38\u0E48\u0E19 ${o2["installed"] ?? "?"} \u0E41\u0E15\u0E48 CatCut \u0E23\u0E38\u0E48\u0E19\u0E19\u0E35\u0E49\u0E43\u0E0A\u0E49\u0E23\u0E38\u0E48\u0E19 ${o2["wanted"] ?? "?"}`,
+        frequency: "after-update",
+        keepOpen: false,
+        closeAfter: "\u0E44\u0E21\u0E48\u0E15\u0E49\u0E2D\u0E07\u0E40\u0E1B\u0E34\u0E14\u0E2B\u0E23\u0E37\u0E2D\u0E1B\u0E34\u0E14 Premiere \u0E40\u0E1E\u0E37\u0E48\u0E2D\u0E01\u0E32\u0E23\u0E19\u0E35\u0E49",
+        needsProject: false
+      }),
+      bridgeOutdated: (o2 = {}) => ({
+        code: "bridge-outdated",
+        app: "premiere",
+        title: "\u0E1B\u0E34\u0E14\u2013\u0E40\u0E1B\u0E34\u0E14 Premiere \u0E2B\u0E19\u0E36\u0E48\u0E07\u0E04\u0E23\u0E31\u0E49\u0E07\u0E40\u0E1E\u0E37\u0E48\u0E2D\u0E42\u0E2B\u0E25\u0E14 bridge \u0E23\u0E38\u0E48\u0E19\u0E43\u0E2B\u0E21\u0E48",
+        steps: ["Save \u0E07\u0E32\u0E19\u0E43\u0E19 Premiere", "\u0E1B\u0E34\u0E14 Premiere", '\u0E1A\u0E2D\u0E01 AI \u0E27\u0E48\u0E32 "\u0E1B\u0E34\u0E14\u0E41\u0E25\u0E49\u0E27" \u2014 CatCut \u0E08\u0E30\u0E40\u0E1B\u0E34\u0E14 Premiere \u0E1E\u0E23\u0E49\u0E2D\u0E21\u0E42\u0E1B\u0E23\u0E40\u0E08\u0E01\u0E15\u0E4C\u0E43\u0E2B\u0E49\u0E40\u0E2D\u0E07'],
+        why: `Premiere \u0E42\u0E2B\u0E25\u0E14 bridge \u0E23\u0E38\u0E48\u0E19 ${o2["running"] ?? "?"} \u0E2D\u0E22\u0E39\u0E48 \u0E41\u0E15\u0E48 CatCut \u0E15\u0E49\u0E2D\u0E07\u0E01\u0E32\u0E23\u0E23\u0E38\u0E48\u0E19 ${o2["wanted"] ?? "?"} (\u0E2A\u0E48\u0E27\u0E19\u0E19\u0E35\u0E49\u0E42\u0E2B\u0E25\u0E14\u0E43\u0E2B\u0E21\u0E48\u0E23\u0E30\u0E2B\u0E27\u0E48\u0E32\u0E07\u0E40\u0E1B\u0E34\u0E14\u0E2D\u0E22\u0E39\u0E48\u0E44\u0E21\u0E48\u0E44\u0E14\u0E49)`,
+        frequency: "after-update",
+        keepOpen: false,
+        closeAfter: "\u0E1B\u0E34\u0E14\u0E44\u0E14\u0E49\u0E17\u0E31\u0E19\u0E17\u0E35\u0E2B\u0E25\u0E31\u0E07 Save",
+        needsProject: false
+      }),
+      bridgeNotStarted: () => ({
+        code: "bridge-not-started",
+        app: "premiere",
+        title: "\u0E40\u0E1B\u0E34\u0E14 panel CatCut Bridge \u0E43\u0E19 Premiere",
+        steps: ["\u0E43\u0E19 Premiere: Window > Extensions > CatCut Bridge", "\u0E23\u0E2D\u0E08\u0E19 panel \u0E02\u0E36\u0E49\u0E19 connected (\u0E1B\u0E34\u0E14 panel \u0E44\u0E14\u0E49 \u0E41\u0E15\u0E48\u0E2B\u0E49\u0E32\u0E21\u0E1B\u0E34\u0E14 Premiere \u0E23\u0E30\u0E2B\u0E27\u0E48\u0E32\u0E07 CatCut \u0E17\u0E33\u0E07\u0E32\u0E19)"],
+        why: "Premiere \u0E40\u0E1B\u0E34\u0E14\u0E2D\u0E22\u0E39\u0E48\u0E41\u0E15\u0E48 bridge \u0E44\u0E21\u0E48\u0E40\u0E23\u0E34\u0E48\u0E21\u0E17\u0E33\u0E07\u0E32\u0E19\u0E40\u0E2D\u0E07 (\u0E1A\u0E32\u0E07 Premiere \u0E44\u0E21\u0E48\u0E2A\u0E48\u0E07\u0E2A\u0E31\u0E0D\u0E0D\u0E32\u0E13\u0E40\u0E23\u0E34\u0E48\u0E21\u0E43\u0E2B\u0E49 extension \u0E17\u0E35\u0E48\u0E0B\u0E48\u0E2D\u0E19\u0E2D\u0E22\u0E39\u0E48)",
+        frequency: "each-time",
+        keepOpen: true,
+        closeAfter: "\u0E40\u0E21\u0E37\u0E48\u0E2D CatCut \u0E41\u0E08\u0E49\u0E07\u0E27\u0E48\u0E32 Save \u0E41\u0E25\u0E49\u0E27",
+        needsProject: false
+      }),
+      premiereDialog: (o2 = {}) => ({
+        code: "premiere-dialog",
+        app: "premiere",
+        title: "Premiere \u0E21\u0E35\u0E2B\u0E19\u0E49\u0E32\u0E15\u0E48\u0E32\u0E07\u0E23\u0E2D\u0E43\u0E2B\u0E49\u0E01\u0E14\u0E2D\u0E22\u0E39\u0E48",
+        steps: [
+          "\u0E2A\u0E25\u0E31\u0E1A\u0E44\u0E1B\u0E17\u0E35\u0E48 Premiere \u0E14\u0E39\u0E2B\u0E19\u0E49\u0E32\u0E15\u0E48\u0E32\u0E07\u0E17\u0E35\u0E48\u0E40\u0E14\u0E49\u0E07\u0E02\u0E36\u0E49\u0E19 (\u0E40\u0E0A\u0E48\u0E19 Import Files, Link Media, \u0E04\u0E33\u0E40\u0E15\u0E37\u0E2D\u0E19)",
+          "\u0E16\u0E49\u0E32\u0E40\u0E1B\u0E47\u0E19\u0E41\u0E16\u0E1A\u0E42\u0E2B\u0E25\u0E14\u0E17\u0E35\u0E48\u0E44\u0E21\u0E48\u0E02\u0E22\u0E31\u0E1A\u0E40\u0E01\u0E34\u0E19 1 \u0E19\u0E32\u0E17\u0E35 \u0E01\u0E14 Cancel; \u0E16\u0E49\u0E32\u0E40\u0E1B\u0E47\u0E19\u0E04\u0E33\u0E16\u0E32\u0E21 \u0E15\u0E2D\u0E1A\u0E15\u0E32\u0E21\u0E17\u0E35\u0E48\u0E15\u0E49\u0E2D\u0E07\u0E01\u0E32\u0E23",
+          "\u0E1A\u0E2D\u0E01 AI \u0E27\u0E48\u0E32\u0E01\u0E14\u0E2D\u0E30\u0E44\u0E23\u0E44\u0E1B \u2014 CatCut \u0E08\u0E30\u0E17\u0E33\u0E15\u0E48\u0E2D\u0E08\u0E32\u0E01\u0E08\u0E38\u0E14\u0E40\u0E14\u0E34\u0E21"
+        ],
+        why: `Premiere \u0E04\u0E49\u0E32\u0E07\u0E17\u0E35\u0E48\u0E04\u0E33\u0E2A\u0E31\u0E48\u0E07 ${o2["action"] ?? "?"} \u0E21\u0E32 ${o2["seconds"] ?? "?"} \u0E27\u0E34\u0E19\u0E32\u0E17\u0E35 \u0E23\u0E30\u0E2B\u0E27\u0E48\u0E32\u0E07\u0E21\u0E35\u0E2B\u0E19\u0E49\u0E32\u0E15\u0E48\u0E32\u0E07\u0E04\u0E49\u0E32\u0E07 Premiere \u0E23\u0E31\u0E1A\u0E04\u0E33\u0E2A\u0E31\u0E48\u0E07\u0E2D\u0E37\u0E48\u0E19\u0E44\u0E21\u0E48\u0E44\u0E14\u0E49`,
+        frequency: "each-time",
+        keepOpen: true,
+        closeAfter: "\u0E40\u0E21\u0E37\u0E48\u0E2D CatCut \u0E41\u0E08\u0E49\u0E07\u0E27\u0E48\u0E32 Save \u0E41\u0E25\u0E49\u0E27",
+        needsProject: false
+      }),
+      premiereNeedsProject: (o2 = {}) => ({
+        code: "premiere-needs-project",
+        app: "premiere",
+        title: "\u0E1A\u0E2D\u0E01 CatCut \u0E27\u0E48\u0E32\u0E08\u0E30\u0E43\u0E0A\u0E49\u0E42\u0E1B\u0E23\u0E40\u0E08\u0E01\u0E15\u0E4C Premiere \u0E44\u0E1F\u0E25\u0E4C\u0E44\u0E2B\u0E19",
+        steps: ["\u0E2A\u0E48\u0E07 path \u0E02\u0E2D\u0E07\u0E44\u0E1F\u0E25\u0E4C .prproj \u0E43\u0E2B\u0E49 AI (\u0E40\u0E0A\u0E48\u0E19 C:\\\u0E07\u0E32\u0E19\\PROJECT\\\u0E07\u0E32\u0E19.prproj) \u2014 CatCut \u0E08\u0E30\u0E40\u0E1B\u0E34\u0E14\u0E43\u0E2B\u0E49\u0E40\u0E2D\u0E07"],
+        why: `CatCut \u0E44\u0E21\u0E48\u0E40\u0E14\u0E32\u0E42\u0E1B\u0E23\u0E40\u0E08\u0E01\u0E15\u0E4C\u0E40\u0E2D\u0E07 \u0E01\u0E31\u0E19\u0E07\u0E32\u0E19\u0E25\u0E07\u0E1C\u0E34\u0E14\u0E42\u0E1B\u0E23\u0E40\u0E08\u0E01\u0E15\u0E4C${o2["open"] ? ` (\u0E15\u0E2D\u0E19\u0E19\u0E35\u0E49 Premiere \u0E40\u0E1B\u0E34\u0E14 ${o2["open"]} \u0E2D\u0E22\u0E39\u0E48)` : ""}`,
+        frequency: "each-time",
+        keepOpen: false,
+        closeAfter: "-",
+        needsProject: false
+      }),
+      premiereStartTimeout: (o2 = {}) => ({
+        code: "premiere-start-timeout",
+        app: "premiere",
+        title: "Premiere \u0E40\u0E1B\u0E34\u0E14\u0E0A\u0E49\u0E32\u0E2B\u0E23\u0E37\u0E2D\u0E21\u0E35\u0E2B\u0E19\u0E49\u0E32\u0E15\u0E48\u0E32\u0E07\u0E04\u0E49\u0E32\u0E07\u0E15\u0E2D\u0E19\u0E40\u0E1B\u0E34\u0E14",
+        steps: [
+          "\u0E2A\u0E25\u0E31\u0E1A\u0E44\u0E1B\u0E17\u0E35\u0E48 Premiere \u0E14\u0E39\u0E27\u0E48\u0E32\u0E21\u0E35\u0E2B\u0E19\u0E49\u0E32\u0E15\u0E48\u0E32\u0E07\u0E04\u0E49\u0E32\u0E07\u0E44\u0E2B\u0E21 (Sign in, \u0E2D\u0E31\u0E1B\u0E40\u0E14\u0E15, Recover, Locate Media)",
+          "\u0E1C\u0E48\u0E32\u0E19\u0E2B\u0E19\u0E49\u0E32\u0E15\u0E48\u0E32\u0E07\u0E19\u0E31\u0E49\u0E19\u0E43\u0E2B\u0E49\u0E16\u0E36\u0E07\u0E2B\u0E19\u0E49\u0E32\u0E42\u0E1B\u0E23\u0E40\u0E08\u0E01\u0E15\u0E4C",
+          "\u0E16\u0E49\u0E32 Premiere \u0E40\u0E1B\u0E34\u0E14\u0E41\u0E25\u0E49\u0E27\u0E41\u0E15\u0E48\u0E22\u0E31\u0E07\u0E44\u0E21\u0E48\u0E15\u0E48\u0E2D: Window > Extensions > CatCut Bridge",
+          "\u0E1A\u0E2D\u0E01 AI \u0E27\u0E48\u0E32\u0E40\u0E2A\u0E23\u0E47\u0E08\u0E41\u0E25\u0E49\u0E27"
+        ],
+        why: `CatCut \u0E2A\u0E31\u0E48\u0E07\u0E40\u0E1B\u0E34\u0E14 Premiere \u0E41\u0E25\u0E49\u0E27\u0E23\u0E2D ${o2["seconds"] ?? "?"} \u0E27\u0E34\u0E19\u0E32\u0E17\u0E35\u0E22\u0E31\u0E07\u0E44\u0E21\u0E48\u0E21\u0E35\u0E2A\u0E31\u0E0D\u0E0D\u0E32\u0E13\u0E08\u0E32\u0E01 bridge`,
+        frequency: "each-time",
+        keepOpen: true,
+        closeAfter: "\u0E40\u0E21\u0E37\u0E48\u0E2D CatCut \u0E41\u0E08\u0E49\u0E07\u0E27\u0E48\u0E32 Save \u0E41\u0E25\u0E49\u0E27",
+        needsProject: false
+      }),
+      diskLow: (o2 = {}) => ({
+        code: "disk-low",
+        app: "disk",
+        title: `\u0E1E\u0E37\u0E49\u0E19\u0E17\u0E35\u0E48\u0E44\u0E14\u0E23\u0E1F\u0E4C ${o2["drive"] ?? ""} \u0E40\u0E2B\u0E25\u0E37\u0E2D\u0E19\u0E49\u0E2D\u0E22`,
+        steps: ["\u0E43\u0E2B\u0E49 AI \u0E40\u0E23\u0E35\u0E22\u0E01 disk_report \u0E40\u0E1E\u0E37\u0E48\u0E2D\u0E14\u0E39\u0E27\u0E48\u0E32\u0E2D\u0E30\u0E44\u0E23\u0E01\u0E34\u0E19\u0E1E\u0E37\u0E49\u0E19\u0E17\u0E35\u0E48", "\u0E43\u0E2B\u0E49 AI \u0E17\u0E33 cache_gc_plan \u0E41\u0E25\u0E49\u0E27\u0E2D\u0E19\u0E38\u0E21\u0E31\u0E15\u0E34\u0E01\u0E32\u0E23\u0E25\u0E1A\u0E40\u0E09\u0E1E\u0E32\u0E30\u0E17\u0E35\u0E48\u0E15\u0E01\u0E25\u0E07", "\u0E2B\u0E23\u0E37\u0E2D\u0E22\u0E49\u0E32\u0E22\u0E44\u0E1F\u0E25\u0E4C\u0E17\u0E35\u0E48\u0E44\u0E21\u0E48\u0E43\u0E0A\u0E49\u0E2D\u0E2D\u0E01\u0E08\u0E32\u0E01\u0E44\u0E14\u0E23\u0E1F\u0E4C\u0E19\u0E35\u0E49\u0E40\u0E2D\u0E07"],
+        why: `\u0E40\u0E2B\u0E25\u0E37\u0E2D ${o2["freeGb"] ?? "?"} GB \u2014 render/build \u0E15\u0E49\u0E2D\u0E07\u0E43\u0E0A\u0E49\u0E1E\u0E37\u0E49\u0E19\u0E17\u0E35\u0E48 \u0E41\u0E25\u0E30 CatCut \u0E2B\u0E22\u0E38\u0E14\u0E40\u0E2D\u0E07\u0E40\u0E21\u0E37\u0E48\u0E2D\u0E40\u0E2B\u0E25\u0E37\u0E2D\u0E19\u0E49\u0E2D\u0E22\u0E01\u0E27\u0E48\u0E32 5 GB`,
+        frequency: "each-time",
+        keepOpen: false,
+        closeAfter: "-",
+        needsProject: false
+      })
+    };
+  }
+});
+
+// src/engine/housekeeping.ts
+import { randomBytes as randomBytes3 } from "node:crypto";
+import { existsSync as existsSync5, realpathSync as realpathSync2 } from "node:fs";
+import { lstat, mkdir as mkdir4, opendir, readdir, readFile as readFile3, rename as rename3, rmdir, statfs as fsStatfs, unlink, writeFile as writeFile3 } from "node:fs/promises";
+import path9 from "node:path";
+async function freeSpace(target, statfs3) {
+  let p = path9.resolve(target);
+  while (!existsSync5(p)) {
+    const up = path9.dirname(p);
+    if (up === p) break;
+    p = up;
+  }
+  const s = await statfs3(p);
+  const bsize = Number(s.bsize);
+  return { free: Number(s.bavail) * bsize, total: Number(s.blocks) * bsize };
+}
+function driveRoot(p) {
+  return path9.parse(path9.resolve(p)).root.toUpperCase();
+}
+function parseAePrefs(text2) {
+  const out2 = /* @__PURE__ */ new Map();
+  let section = "";
+  const lines = text2.split(/\r?\n/);
+  for (let i2 = 0; i2 < lines.length; i2++) {
+    let line = lines[i2];
+    while (/\\\s*$/.test(line) && i2 + 1 < lines.length) {
+      line = line.replace(/"?\\\s*$/, "") + lines[++i2].trim().replace(/^"/, "");
+    }
+    const sec2 = /^\s*\["(.*)"\]\s*$/.exec(line);
+    if (sec2) {
+      section = sec2[1];
+      continue;
+    }
+    const kv = /^\s*"(.+?)"\s*=\s*"(.*)"\s*$/.exec(line);
+    if (!kv) continue;
+    if (!out2.has(section)) out2.set(section, /* @__PURE__ */ new Map());
+    out2.get(section).set(kv[1], kv[2]);
+  }
+  return out2;
+}
+function versionKey(v) {
+  return v.split(".").map((x) => parseInt(x, 10) || 0);
+}
+async function aePrefsDirs(env) {
+  const appdata = env["APPDATA"];
+  if (!appdata) return [];
+  const root = path9.join(appdata, "Adobe", "After Effects");
+  const versions = (await readdir(root).catch(() => [])).filter((v) => /^\d+(\.\d+)*$/.test(v)).sort((a2, b) => {
+    const x = versionKey(a2);
+    const y = versionKey(b);
+    for (let i2 = 0; i2 < Math.max(x.length, y.length); i2++) {
+      const d = (y[i2] ?? 0) - (x[i2] ?? 0);
+      if (d) return d;
+    }
+    return 0;
+  });
+  const out2 = [];
+  for (const ver of versions) {
+    const dir = path9.join(root, ver);
+    out2.push({ ver, dir, files: (await readdir(dir).catch(() => [])).filter((f) => /^Adobe After Effects .*Prefs.*\.txt$/i.test(f)).sort() });
+  }
+  return out2;
+}
+async function aeScriptingPref(env = process.env) {
+  for (const { ver, dir, files } of await aePrefsDirs(env)) {
+    const main2 = files.find((f) => /^Adobe After Effects [\d.]+ Prefs\.txt$/i.test(f));
+    if (!main2) continue;
+    const file = path9.join(dir, main2);
+    const m = /"Pref_SCRIPTING_FILE_NETWORK_SECURITY"\s*=\s*"?([0-9A-Fa-f]+)"?/.exec(await readFile3(file, "utf8").catch(() => ""));
+    return m ? { allowed: parseInt(m[1], 16) === 1, prefsFile: file, aeVersion: ver } : { prefsFile: file, aeVersion: ver };
+  }
+  return {};
+}
+async function findAeDiskCache(env = process.env) {
+  for (const { ver, dir, files } of await aePrefsDirs(env)) {
+    for (const f of files) {
+      const file = path9.join(dir, f);
+      const prefs = parseAePrefs(await readFile3(file, "utf8").catch(() => ""));
+      let folder;
+      let maxSizeGb;
+      const dc = prefs.get("Disk Cache Controls");
+      if (dc) {
+        for (const [k, v] of dc) {
+          if (/^Folder( \d+)?$/i.test(k) && v) folder = v;
+          if (/^Max Size( \d+)?$/i.test(k) && Number.isFinite(Number(v))) maxSizeGb = Number(v);
+        }
+      }
+      if (!folder) {
+        for (const sec2 of prefs.values()) {
+          for (const [k, v] of sec2) if (/^(Disk Cache Folder|Conformed Media Cache)/i.test(k) && v) folder = v;
+        }
+      }
+      if (folder) return { folder, source: "prefs", prefsFile: file, aeVersion: ver, ...maxSizeGb !== void 0 ? { maxSizeGb } : {} };
+    }
+  }
+  const local = env["LOCALAPPDATA"];
+  if (local && existsSync5(path9.join(local, "Temp"))) return { folder: path9.join(local, "Temp"), source: "default" };
+  return { source: "unknown" };
+}
+async function aeCacheDirs(folder) {
+  const found = [];
+  const pick2 = async (dir) => {
+    for (const e of await readdir(dir, { withFileTypes: true }).catch(() => [])) {
+      if (e.isDirectory() && /^(Disk Cache|Ae Disk Cache)/i.test(e.name)) found.push(path9.join(dir, e.name));
+    }
+  };
+  await pick2(folder);
+  const aeRoot = path9.join(folder, "Adobe", "After Effects");
+  for (const v of await readdir(aeRoot).catch(() => [])) await pick2(path9.join(aeRoot, v));
+  return found;
+}
+async function dirSize(root, opts = {}) {
+  const maxEntries = opts.maxEntries ?? 5e5;
+  const deadline = Date.now() + (opts.budgetMs ?? 2e4);
+  let bytes = 0;
+  let files = 0;
+  let seen = 0;
+  const stack = [root];
+  while (stack.length) {
+    const dir = stack.pop();
+    const handle = await opendir(dir).catch(() => void 0);
+    if (!handle) continue;
+    for await (const e of handle) {
+      if (++seen > maxEntries || Date.now() > deadline) return { bytes, files, partial: true };
+      const full = path9.join(dir, e.name);
+      if (e.isDirectory()) stack.push(full);
+      else if (e.isFile()) {
+        const st = await lstat(full).catch(() => void 0);
+        if (st) {
+          bytes += st.size;
+          files++;
+        }
+      }
+    }
+  }
+  return { bytes, files, partial: false };
+}
+async function diskReport(p, opts = {}) {
+  const statfs3 = opts.statfs ?? fsStatfs;
+  const warnings = [];
+  const found = await findAeDiskCache(opts.env ?? process.env);
+  const aeCache = { ...found, dirs: [] };
+  if (found.folder) {
+    aeCache.dirs = await aeCacheDirs(found.folder);
+    if (aeCache.dirs.length) {
+      let bytes = 0;
+      for (const d of aeCache.dirs) {
+        const s = await dirSize(d);
+        bytes += s.bytes;
+        if (s.partial) aeCache.partial = true;
+      }
+      aeCache.bytes = bytes;
+    }
+  } else {
+    warnings.push("\u0E2B\u0E32\u0E42\u0E1F\u0E25\u0E40\u0E14\u0E2D\u0E23\u0E4C disk cache \u0E02\u0E2D\u0E07 AE \u0E44\u0E21\u0E48\u0E1E\u0E1A / AE disk cache folder unknown");
+  }
+  const roots = /* @__PURE__ */ new Map();
+  const add = (p0, label) => {
+    const r = driveRoot(p0);
+    roots.set(r, [...roots.get(r) ?? [], label]);
+  };
+  add(p.dir, "project");
+  if (found.folder) add(found.folder, "ae-disk-cache");
+  const drives = [];
+  for (const [root, labels] of roots) {
+    try {
+      const s = await freeSpace(labels.includes("project") ? p.dir : found.folder, statfs3);
+      drives.push({ root, for: labels, freeBytes: s.free, totalBytes: s.total });
+    } catch (e) {
+      drives.push({ root, for: labels, error: e instanceof Error ? e.message : String(e) });
+    }
+  }
+  const cacheDir = path9.join(p.dir, "cache");
+  const sizeOf = async (d) => (await dirSize(d)).bytes;
+  const known = ["segments", "renders", "audio", "tmp"];
+  const cache = { segments: 0, renders: 0, audio: 0, tmp: 0, other: 0, total: 0 };
+  for (const k of known) cache[k] = await sizeOf(path9.join(cacheDir, k));
+  cache.total = await sizeOf(cacheDir);
+  cache.other = Math.max(0, cache.total - known.reduce((s, k) => s + cache[k], 0));
+  const outDir = path9.join(p.dir, "out");
+  const versionIds = new Set(p.versions.map((v) => v.id));
+  const byVersion = {};
+  const orphans = {};
+  let outTotal = 0;
+  for (const e of await readdir(outDir, { withFileTypes: true }).catch(() => [])) {
+    const full = path9.join(outDir, e.name);
+    const size = e.isDirectory() ? await sizeOf(full) : (await lstat(full).catch(() => void 0))?.size ?? 0;
+    outTotal += size;
+    if (e.isDirectory() && versionIds.has(e.name)) byVersion[e.name] = size;
+    else orphans[e.name] = size;
+  }
+  const review = await sizeOf(path9.join(p.dir, "review"));
+  const other = {};
+  for (const e of await readdir(p.dir, { withFileTypes: true }).catch(() => [])) {
+    if (["cache", "out", "review"].includes(e.name)) continue;
+    const full = path9.join(p.dir, e.name);
+    other[e.name] = e.isDirectory() ? await sizeOf(full) : (await lstat(full).catch(() => void 0))?.size ?? 0;
+  }
+  const total = cache.total + outTotal + review + Object.values(other).reduce((a2, b) => a2 + b, 0);
+  const budget = (opts.budgetGb ?? DEFAULT_BUDGET_GB) * GB;
+  if (total > budget) {
+    const top = Object.entries({ cache: cache.total, out: outTotal, review, ...other }).sort((a2, b) => b[1] - a2[1]).slice(0, 3).map(([k, v]) => `${k} ${fmtGb(v)}`).join(", ");
+    warnings.push(`\u0E42\u0E1B\u0E23\u0E40\u0E08\u0E01\u0E15\u0E4C\u0E43\u0E0A\u0E49\u0E1E\u0E37\u0E49\u0E19\u0E17\u0E35\u0E48 ${fmtGb(total)} \u0E40\u0E01\u0E34\u0E19\u0E07\u0E1A ${fmtGb(budget)} (\u0E21\u0E32\u0E01\u0E2A\u0E38\u0E14: ${top}) \u2014 \u0E14\u0E39 cache_gc_plan / project uses ${fmtGb(total)}, over the ${fmtGb(budget)} budget`);
+  }
+  return {
+    drives,
+    aeCache,
+    project: { dir: p.dir, cache, out: { byVersion, orphans, total: outTotal }, review, other, total },
+    keptVersions: p.versions.filter((v) => v.keep).map((v) => v.id),
+    warnings
+  };
+}
+function fmtGb(b) {
+  return `${(b / GB).toFixed(1)} GB`;
+}
+async function preflight(p, estimatedBytes, opts = {}) {
+  const statfs3 = opts.statfs ?? fsStatfs;
+  const issues = [];
+  const targets = [{ path: p.dir, est: Math.max(0, estimatedBytes || 0), label: "project" }];
+  const seen = /* @__PURE__ */ new Set([driveRoot(p.dir)]);
+  for (const x of opts.extraPaths ?? []) {
+    const r = driveRoot(x);
+    if (seen.has(r)) continue;
+    seen.add(r);
+    targets.push({ path: x, est: 0, label: x });
+  }
+  for (const t of targets) {
+    let free;
+    try {
+      free = (await freeSpace(t.path, statfs3)).free;
+    } catch (e) {
+      issues.push({ kind: "disk", severity: "warn", message: `\u0E2D\u0E48\u0E32\u0E19\u0E1E\u0E37\u0E49\u0E19\u0E17\u0E35\u0E48\u0E27\u0E48\u0E32\u0E07\u0E02\u0E2D\u0E07 ${driveRoot(t.path)} \u0E44\u0E21\u0E48\u0E44\u0E14\u0E49 / cannot read free space: ${e instanceof Error ? e.message : String(e)}` });
+      continue;
+    }
+    const left = free - t.est;
+    const where = `${driveRoot(t.path)} (${t.label})`;
+    const need = t.est ? `, \u0E07\u0E32\u0E19\u0E19\u0E35\u0E49\u0E43\u0E0A\u0E49\u0E1B\u0E23\u0E30\u0E21\u0E32\u0E13 ${fmtGb(t.est)} / this build needs ~${fmtGb(t.est)}` : "";
+    if (left < DISK_ERROR_BYTES) {
+      issues.push({ kind: "disk", severity: "error", message: `\u0E1E\u0E37\u0E49\u0E19\u0E17\u0E35\u0E48\u0E27\u0E48\u0E32\u0E07 ${where} \u0E40\u0E2B\u0E25\u0E37\u0E2D ${fmtGb(free)}${need} \u2014 \u0E15\u0E48\u0E33\u0E01\u0E27\u0E48\u0E32 5 GB \u0E2B\u0E25\u0E31\u0E07\u0E40\u0E02\u0E35\u0E22\u0E19 \u0E25\u0E49\u0E32\u0E07 cache \u0E01\u0E48\u0E2D\u0E19 (disk_report / cache_gc_plan) / less than 5 GB would remain` });
+    } else if (left < DISK_WARN_BYTES) {
+      issues.push({ kind: "disk", severity: "warn", message: `\u0E1E\u0E37\u0E49\u0E19\u0E17\u0E35\u0E48\u0E27\u0E48\u0E32\u0E07 ${where} \u0E40\u0E2B\u0E25\u0E37\u0E2D ${fmtGb(free)}${need} \u2014 \u0E15\u0E48\u0E33\u0E01\u0E27\u0E48\u0E32 20 GB / less than 20 GB would remain` });
+    }
+  }
+  return issues;
+}
+function setVersionKeep(p, versionId, keep) {
+  const v = p.versions.find((x) => x.id === versionId);
+  if (!v) throw new Error(`no version ${versionId}`);
+  if (keep) v.keep = true;
+  else delete v.keep;
+  return v;
+}
+function versionNo2(id) {
+  const m = /^v(\d+)$/.exec(id);
+  return m ? parseInt(m[1], 10) : -1;
+}
+function samePath2(a2, b) {
+  return path9.resolve(a2).toLowerCase() === path9.resolve(b).toLowerCase();
+}
+async function filesUnder(dir) {
+  const out2 = [];
+  const stack = [dir];
+  while (stack.length) {
+    const d = stack.pop();
+    for (const e of await readdir(d, { withFileTypes: true }).catch(() => [])) {
+      const full = path9.join(d, e.name);
+      if (e.isDirectory()) stack.push(full);
+      else if (e.isFile()) {
+        const st = await lstat(full).catch(() => void 0);
+        if (st?.isFile()) out2.push({ path: full, bytes: st.size, mtimeMs: st.mtimeMs });
+      }
+    }
+  }
+  return out2;
+}
+function planDir(p) {
+  return path9.join(p.dir, "cache", "gc");
+}
+async function gcPlan(p, opts = {}) {
+  const now = (opts.now ?? (() => /* @__PURE__ */ new Date()))();
+  const keepLatest = Math.max(0, Math.floor(opts.keepLatest ?? 3));
+  const versions = [...p.versions].sort((a2, b) => versionNo2(a2.id) - versionNo2(b.id));
+  const latest = new Set(versions.slice(Math.max(0, versions.length - keepLatest)).map((v) => v.id));
+  const retained = versions.filter((v) => latest.has(v.id) || v.keep);
+  const retainedIds = new Set(retained.map((v) => v.id));
+  const items = [];
+  const old = (mtimeMs) => now.getTime() - mtimeMs > MIN_AGE_MS;
+  const push = (f, reason, version3) => items.push({ ...f, rel: path9.relative(p.dir, f.path), reason, ...version3 ? { version: version3 } : {} });
+  const outDir = path9.join(p.dir, "out");
+  const known = new Set(versions.map((v) => v.id));
+  for (const e of await readdir(outDir, { withFileTypes: true }).catch(() => [])) {
+    if (!e.isDirectory()) continue;
+    const dir = path9.join(outDir, e.name);
+    if (known.has(e.name)) {
+      if (retainedIds.has(e.name)) continue;
+      for (const f of await filesUnder(dir)) push(f, "old-version", e.name);
+    } else {
+      const files = await filesUnder(dir);
+      if (files.length && files.every((f) => old(f.mtimeMs))) for (const f of files) push(f, "orphan-version-folder");
+    }
+  }
+  const segDir = path9.join(p.dir, "cache", "segments");
+  let manifest = {};
+  try {
+    const m = JSON.parse(await readFile3(path9.join(segDir, "manifest.json"), "utf8"));
+    manifest = m.entries ?? {};
+  } catch {
+  }
+  const usedClips = new Set(p.timeline.video.map((c3) => c3.id));
+  for (const v of retained) {
+    for (const s of v.reviewPlan?.shots ?? []) usedClips.add(s.id);
+    for (const id of Object.keys(v.clipSnapshots ?? {})) usedClips.add(id);
+  }
+  const inManifest = /* @__PURE__ */ new Set();
+  let keptUnknown = 0;
+  const segFiles = new Map((await filesUnder(segDir)).filter((f) => path9.dirname(f.path) === segDir).map((f) => [path9.basename(f.path).toLowerCase(), f]));
+  for (const [key, e] of Object.entries(manifest)) {
+    const name = e.file ?? `${key}.mov`;
+    inManifest.add(name.toLowerCase());
+    const f = segFiles.get(name.toLowerCase());
+    if (!f) continue;
+    let unused;
+    if (opts.referencedSegmentKeys) unused = !opts.referencedSegmentKeys.has(key);
+    else if (e.kind === "segment" && e.clipId) unused = !usedClips.has(e.clipId);
+    else {
+      keptUnknown++;
+      unused = false;
+    }
+    if (unused) push(f, "unused-segment");
+  }
+  for (const [name, f] of segFiles) {
+    if (name === "manifest.json" || inManifest.has(name) || name.startsWith(".manifest.")) continue;
+    if (old(f.mtimeMs)) push(f, "orphan-segment");
+  }
+  const renderDir = path9.join(p.dir, "cache", "renders");
+  const liveRenders = [
+    ...Object.values(p.assets).flatMap((a2) => a2.kind === "aecomp" && a2.render ? [a2.render.path] : []),
+    // renders a retained version can still revert a shot to (shot_revert snapshots)
+    ...retained.flatMap((v) => Object.values(v.clipSnapshots ?? {}).flatMap((s) => s.render ? [s.render.path] : []))
+  ];
+  for (const f of await filesUnder(renderDir)) {
+    if (liveRenders.some((r) => samePath2(r, f.path))) continue;
+    if (old(f.mtimeMs)) push(f, "superseded-render");
+  }
+  for (const f of await filesUnder(path9.join(p.dir, "cache", "tmp"))) if (old(f.mtimeMs)) push(f, "stale-temp");
+  const stamp = now.toISOString().replace(/[-:]/g, "").replace(/\..*$/, "");
+  const planId = `${stamp}-${randomBytes3(3).toString("hex")}`;
+  const body2 = {
+    schema: 1,
+    planId,
+    projectDir: p.dir,
+    createdAt: now.toISOString(),
+    keepLatest,
+    retainedVersions: retained.map((v) => v.id),
+    items,
+    totalBytes: items.reduce((s, i2) => s + i2.bytes, 0),
+    keptUnknown
+  };
+  const plan = { ...body2, hash: hashJson(body2) };
+  await mkdir4(planDir(p), { recursive: true });
+  await writeFile3(path9.join(planDir(p), `plan-${planId}.json`), `${JSON.stringify(plan, null, 2)}
+`, { encoding: "utf8", flag: "wx" });
+  return plan;
+}
+function realOrNull(p) {
+  try {
+    return realpathSync2.native(p);
+  } catch {
+    return null;
+  }
+}
+function inside(child2, root) {
+  const rel = path9.relative(root.toLowerCase(), child2.toLowerCase());
+  return !!rel && !rel.startsWith("..") && !path9.isAbsolute(rel);
+}
+async function gcApply(p, planId, confirm, opts = {}) {
+  if (!CONFIRM_TOKENS.has(confirm)) throw new Error('\u0E15\u0E49\u0E2D\u0E07\u0E22\u0E37\u0E19\u0E22\u0E31\u0E19\u0E14\u0E49\u0E27\u0E22 confirm: "\u0E25\u0E1A" \u0E2B\u0E23\u0E37\u0E2D "delete" \u0E2B\u0E25\u0E31\u0E07\u0E1C\u0E39\u0E49\u0E43\u0E0A\u0E49\u0E2D\u0E19\u0E38\u0E21\u0E31\u0E15\u0E34 / pass confirm: "\u0E25\u0E1A" or "delete" after the user approved the plan');
+  if (!/^[A-Za-z0-9-]{1,64}$/.test(planId)) throw new Error(`bad planId: ${planId}`);
+  if (isProtected(p.dir)) throw new Error("protected project folder");
+  const now = (opts.now ?? (() => /* @__PURE__ */ new Date()))();
+  const file = path9.join(planDir(p), `plan-${planId}.json`);
+  let plan;
+  try {
+    plan = JSON.parse(await readFile3(file, "utf8"));
+  } catch {
+    throw new Error(`\u0E44\u0E21\u0E48\u0E1E\u0E1A\u0E41\u0E1C\u0E19 ${planId} (\u0E2B\u0E23\u0E37\u0E2D\u0E43\u0E0A\u0E49\u0E44\u0E1B\u0E41\u0E25\u0E49\u0E27) \u2014 \u0E40\u0E23\u0E35\u0E22\u0E01 cache_gc_plan \u0E43\u0E2B\u0E21\u0E48 / plan not found or already applied`);
+  }
+  const { hash, ...body2 } = plan;
+  if (hash !== hashJson(body2) || plan.planId !== planId) throw new Error("\u0E41\u0E1C\u0E19\u0E16\u0E39\u0E01\u0E41\u0E01\u0E49\u0E44\u0E02 \u2014 \u0E2A\u0E23\u0E49\u0E32\u0E07\u0E41\u0E1C\u0E19\u0E43\u0E2B\u0E21\u0E48 / plan file was modified: make a new plan");
+  if (!samePath2(plan.projectDir, p.dir)) throw new Error("\u0E41\u0E1C\u0E19\u0E19\u0E35\u0E49\u0E40\u0E1B\u0E47\u0E19\u0E02\u0E2D\u0E07\u0E42\u0E1B\u0E23\u0E40\u0E08\u0E01\u0E15\u0E4C\u0E2D\u0E37\u0E48\u0E19 / plan belongs to another project");
+  const age = now.getTime() - Date.parse(plan.createdAt);
+  if (!(age >= -6e4 && age <= PLAN_MAX_AGE_MS)) throw new Error("\u0E41\u0E1C\u0E19\u0E40\u0E01\u0E48\u0E32\u0E40\u0E01\u0E34\u0E19 10 \u0E19\u0E32\u0E17\u0E35 \u2014 \u0E2A\u0E23\u0E49\u0E32\u0E07\u0E41\u0E1C\u0E19\u0E43\u0E2B\u0E21\u0E48\u0E41\u0E25\u0E49\u0E27\u0E43\u0E2B\u0E49\u0E1C\u0E39\u0E49\u0E43\u0E0A\u0E49\u0E14\u0E39\u0E2D\u0E35\u0E01\u0E04\u0E23\u0E31\u0E49\u0E07 / plan is older than 10 minutes: make a new one and show it to the user");
+  const projReal = realOrNull(p.dir);
+  if (!projReal) throw new Error(`project folder missing: ${p.dir}`);
+  const roots = ["cache", "out"].map((d) => realOrNull(path9.join(p.dir, d))).filter((x) => !!x);
+  const gcReal = realOrNull(planDir(p));
+  const deleted = [];
+  const skipped = [];
+  const dirs = /* @__PURE__ */ new Set();
+  for (const it of plan.items) {
+    const abs = path9.resolve(p.dir, it.rel);
+    const parent = realOrNull(path9.dirname(abs));
+    const real = parent ? path9.join(parent, path9.basename(abs)) : null;
+    if (!samePath2(abs, it.path) || !real || !roots.some((r) => inside(real, r)) || gcReal && (inside(real, gcReal) || samePath2(real, gcReal))) {
+      skipped.push({ path: it.path, reason: "outside cache/ and out/" });
+      continue;
+    }
+    const st = await lstat(real).catch(() => void 0);
+    if (!st) {
+      skipped.push({ path: it.path, reason: "already gone" });
+      continue;
+    }
+    if (!st.isFile()) {
+      skipped.push({ path: it.path, reason: "not a plain file (link/folder)" });
+      continue;
+    }
+    if (st.size !== it.bytes || Math.abs(st.mtimeMs - it.mtimeMs) > 1) {
+      skipped.push({ path: it.path, reason: "changed since the plan" });
+      continue;
+    }
+    try {
+      await unlink(real);
+      deleted.push({ path: it.path, bytes: it.bytes });
+      dirs.add(path9.dirname(real));
+    } catch (e) {
+      skipped.push({ path: it.path, reason: e instanceof Error ? e.message : String(e) });
+    }
+  }
+  for (const d of [...dirs].sort((a2, b) => b.length - a2.length)) {
+    let cur = d;
+    while (roots.some((r) => inside(cur, r))) {
+      if ((await readdir(cur).catch(() => ["x"])).length) break;
+      await rmdir(cur).catch(() => void 0);
+      cur = path9.dirname(cur);
+    }
+  }
+  const purgedVersions = [];
+  for (const v of p.versions) {
+    if (deleted.some((d) => samePath2(d.path, v.master))) {
+      v.purgedAt = now.toISOString();
+      purgedVersions.push(v.id);
+    }
+  }
+  const histDir = path9.join(p.dir, "history");
+  await mkdir4(histDir, { recursive: true });
+  const stamp = now.toISOString().replace(/[-:]/g, "").replace(/\..*$/, "");
+  let log = path9.join(histDir, `gc-${stamp}.log`);
+  for (let i2 = 2; existsSync5(log); i2++) log = path9.join(histDir, `gc-${stamp}_${i2}.log`);
+  const lines = [
+    `# gc plan ${planId} applied ${now.toISOString()} (confirm: ${confirm})`,
+    ...deleted.map((d) => `DELETED	${d.bytes}	${d.path}`),
+    ...skipped.map((s) => `SKIPPED	${s.reason}	${s.path}`)
+  ];
+  await writeFile3(log, `${lines.join("\n")}
+`, { encoding: "utf8", flag: "wx" });
+  await rename3(file, path9.join(planDir(p), `plan-${planId}.applied.json`));
+  return { planId, deleted, skipped, freedBytes: deleted.reduce((s, d) => s + d.bytes, 0), purgedVersions, log };
+}
+var GB, DISK_ERROR_BYTES, DISK_WARN_BYTES, PLAN_MAX_AGE_MS, MIN_AGE_MS, CONFIRM_TOKENS, DEFAULT_BUDGET_GB;
+var init_housekeeping = __esm({
+  "src/engine/housekeeping.ts"() {
+    "use strict";
+    init_hash();
+    init_project();
+    GB = 1024 ** 3;
+    DISK_ERROR_BYTES = 5 * GB;
+    DISK_WARN_BYTES = 20 * GB;
+    PLAN_MAX_AGE_MS = 10 * 6e4;
+    MIN_AGE_MS = 60 * 6e4;
+    CONFIRM_TOKENS = /* @__PURE__ */ new Set(["\u0E25\u0E1A", "delete"]);
+    DEFAULT_BUDGET_GB = 50;
+  }
+});
+
 // src/engine/aerender.ts
-import { constants as constants5, existsSync as existsSync5, mkdirSync as mkdirSync2, readdirSync as readdirSync2, statSync as statSync2 } from "node:fs";
-import { copyFile as copyFile2, link as link2, statfs as fsStatfs, unlink } from "node:fs/promises";
+import { constants as constants5, existsSync as existsSync6, mkdirSync as mkdirSync2, readdirSync as readdirSync2, statSync as statSync2 } from "node:fs";
+import { copyFile as copyFile2, link as link2, statfs as fsStatfs2, unlink as unlink2 } from "node:fs/promises";
 import os3 from "node:os";
 import { basename as basename2, dirname as dirname2, extname as extname2, join as join3, parse as parse3, resolve } from "node:path";
-import { randomBytes as randomBytes3 } from "node:crypto";
+import { randomBytes as randomBytes4 } from "node:crypto";
 function isStartupCrashOutput(exitCode, errors, log, userStrings = []) {
   if (exitCode === void 0 || exitCode < 0 || exitCode >= 3221225472) return true;
   const clean = (l) => {
@@ -28096,14 +28780,14 @@ function isStartupCrashOutput(exitCode, errors, log, userStrings = []) {
   if (log.some((l) => !l.startsWith("$ ") && STARTUP_CRASH.test(clean(l)))) return true;
   return errors.length === 0;
 }
-async function freeDiskBytes(path12, statfs = (p) => fsStatfs(p)) {
+async function freeDiskBytes(path12, statfs3 = (p) => fsStatfs2(p)) {
   let cur = resolve(path12);
-  while (!existsSync5(cur)) {
+  while (!existsSync6(cur)) {
     const up = dirname2(cur);
     if (up === cur) break;
     cur = up;
   }
-  const s = await statfs(cur);
+  const s = await statfs3(cur);
   return Number(s.bavail) * Number(s.bsize);
 }
 function defaultAeCacheDir() {
@@ -28118,7 +28802,7 @@ function driveOf(p) {
 }
 async function checkRenderDiskSpace(req, frames3, opts) {
   const est = req.estimatedBytes ?? estimateOutputBytes(frames3, req.width, req.height, req.fallback);
-  const need = Math.max((opts.minFreeGb ?? 5) * GB, 2 * est);
+  const need = Math.max((opts.minFreeGb ?? 5) * GB2, 2 * est);
   const checks = [{ path: dirname2(resolve(req.outPath)), what: "output" }, { path: opts.cacheDir ?? defaultAeCacheDir(), what: "AE disk cache" }];
   const seen = /* @__PURE__ */ new Set();
   const notes = [];
@@ -28134,9 +28818,9 @@ async function checkRenderDiskSpace(req, frames3, opts) {
       continue;
     }
     if (free < need) {
-      const f = (free / GB).toFixed(1), n2 = (need / GB).toFixed(1);
+      const f = (free / GB2).toFixed(1), n2 = (need / GB2).toFixed(1);
       throw new DiskSpaceError(
-        `\u0E1E\u0E37\u0E49\u0E19\u0E17\u0E35\u0E48\u0E14\u0E34\u0E2A\u0E01\u0E4C\u0E44\u0E21\u0E48\u0E1E\u0E2D\u0E2A\u0E33\u0E2B\u0E23\u0E31\u0E1A render: \u0E44\u0E14\u0E23\u0E1F\u0E4C ${drive} (${c3.what}) \u0E40\u0E2B\u0E25\u0E37\u0E2D ${f} GB \u0E15\u0E49\u0E2D\u0E07\u0E21\u0E35\u0E2D\u0E22\u0E48\u0E32\u0E07\u0E19\u0E49\u0E2D\u0E22 ${n2} GB \u2014 \u0E25\u0E1A\u0E44\u0E1F\u0E25\u0E4C\u0E40\u0E01\u0E48\u0E32\u0E2B\u0E23\u0E37\u0E2D\u0E25\u0E49\u0E32\u0E07 cache \u0E02\u0E2D\u0E07 AE (ae_purge_cache) \u0E01\u0E48\u0E2D\u0E19 / not enough disk space to render: ${drive} (${c3.what}) has ${f} GB free, need ${n2} GB (max(${opts.minFreeGb ?? 5} GB, 2 \xD7 estimated output ${(est / GB).toFixed(2)} GB)); free space or purge the AE cache first`,
+        `\u0E1E\u0E37\u0E49\u0E19\u0E17\u0E35\u0E48\u0E14\u0E34\u0E2A\u0E01\u0E4C\u0E44\u0E21\u0E48\u0E1E\u0E2D\u0E2A\u0E33\u0E2B\u0E23\u0E31\u0E1A render: \u0E44\u0E14\u0E23\u0E1F\u0E4C ${drive} (${c3.what}) \u0E40\u0E2B\u0E25\u0E37\u0E2D ${f} GB \u0E15\u0E49\u0E2D\u0E07\u0E21\u0E35\u0E2D\u0E22\u0E48\u0E32\u0E07\u0E19\u0E49\u0E2D\u0E22 ${n2} GB \u2014 \u0E25\u0E1A\u0E44\u0E1F\u0E25\u0E4C\u0E40\u0E01\u0E48\u0E32\u0E2B\u0E23\u0E37\u0E2D\u0E25\u0E49\u0E32\u0E07 cache \u0E02\u0E2D\u0E07 AE (ae_purge_cache) \u0E01\u0E48\u0E2D\u0E19 / not enough disk space to render: ${drive} (${c3.what}) has ${f} GB free, need ${n2} GB (max(${opts.minFreeGb ?? 5} GB, 2 \xD7 estimated output ${(est / GB2).toFixed(2)} GB)); free space or purge the AE cache first`,
         c3.path,
         free,
         need
@@ -28152,7 +28836,7 @@ async function purgeIfLowCacheSpace(backend, policy = {}) {
   const below = policy.belowGb ?? 20;
   let before;
   try {
-    before = await freeDiskBytes(dir, policy.statfs) / GB;
+    before = await freeDiskBytes(dir, policy.statfs) / GB2;
   } catch {
   }
   if (before === void 0 ? below !== Infinity : before >= below) {
@@ -28165,7 +28849,7 @@ async function purgeIfLowCacheSpace(backend, policy = {}) {
   }
   let after;
   try {
-    after = await freeDiskBytes(dir, policy.statfs) / GB;
+    after = await freeDiskBytes(dir, policy.statfs) / GB2;
   } catch {
   }
   return { purged: true, reason: before === void 0 ? "forced" : `cache drive had ${before.toFixed(1)} GB free (< ${below} GB)`, ...before !== void 0 ? { freeGbBefore: before } : {}, ...after !== void 0 ? { freeGbAfter: after } : {} };
@@ -28189,13 +28873,13 @@ function isAscii(s) {
   return /^[\x00-\x7f]*$/.test(s);
 }
 function uniqueOutputPath(path12) {
-  if (!existsSync5(path12)) return path12;
+  if (!existsSync6(path12)) return path12;
   const dir = dirname2(path12);
   const ext = extname2(path12);
   const stem = basename2(path12, ext);
   for (let n2 = 2; n2 < 1e4; n2++) {
     const cand = join3(dir, `${stem}_${n2}${ext}`);
-    if (!existsSync5(cand)) return cand;
+    if (!existsSync6(cand)) return cand;
   }
   throw new Error(`cannot find a free output name for ${path12}`);
 }
@@ -28205,21 +28889,21 @@ function asciiTempPath(outPath) {
   if (!isAscii(dir)) throw new Error("After Effects requires an ASCII TEMP directory");
   mkdirSync2(dir, { recursive: true });
   const safeStem = basename2(outPath, extname2(outPath)).replace(/[^A-Za-z0-9_-]/g, "").slice(0, 24) || "render";
-  const prefix = `aer_${randomBytes3(4).toString("hex")}_${safeStem}`;
+  const prefix = `aer_${randomBytes4(4).toString("hex")}_${safeStem}`;
   const sequence = IMAGE_EXT.has(ext);
   const tmp = sequence ? join3(dir, `${prefix}_[#####]${ext}`) : join3(dir, `${prefix}${ext}`);
   return { tmp, sequence, prefix, dir };
 }
 async function moveFile(from, to) {
-  if (existsSync5(to)) throw new Error(`refusing to overwrite ${to}`);
+  if (existsSync6(to)) throw new Error(`refusing to overwrite ${to}`);
   mkdirSync2(dirname2(to), { recursive: true });
   try {
     await link2(from, to);
-    await unlink(from);
+    await unlink2(from);
   } catch (e) {
     if (!["EXDEV", "EPERM", "ENOTSUP"].includes(e.code ?? "")) throw e;
     await copyFile2(from, to, constants5.COPYFILE_EXCL);
-    await unlink(from);
+    await unlink2(from);
   }
 }
 async function killTree(pid, spawn2, child2) {
@@ -28289,7 +28973,7 @@ async function transcodeToProres(tools, src, dst, spawn2 = execa, signal) {
     "tv",
     dst
   ], { reject: false, windowsHide: true, timeout: 4 * 60 * 6e4, cancelSignal: signal });
-  if (r.exitCode !== 0 || !existsSync5(dst)) throw new Error(`ffmpeg ProRes transcode failed: ${r.stderr}`);
+  if (r.exitCode !== 0 || !existsSync6(dst)) throw new Error(`ffmpeg ProRes transcode failed: ${r.stderr}`);
 }
 function gate(max) {
   let g = gates.get(max);
@@ -28368,7 +29052,7 @@ function findSequenceFiles(dir, prefix) {
   }
 }
 function findRenderedFile(tmp, prefix, dir) {
-  if (existsSync5(tmp)) return tmp;
+  if (existsSync6(tmp)) return tmp;
   const cands = findSequenceFiles(dir, prefix);
   return cands[0];
 }
@@ -28382,7 +29066,7 @@ async function removeTempOutputs(dir, prefix) {
   for (const name of names) {
     for (let attempt = 0; attempt < 5; attempt++) {
       try {
-        await unlink(join3(dir, name));
+        await unlink2(join3(dir, name));
         break;
       } catch (e) {
         const code = e.code;
@@ -28395,7 +29079,7 @@ async function removeTempOutputs(dir, prefix) {
 async function aerender(tools, req, opts = {}) {
   const spawn2 = opts.spawn ?? execa;
   if (!tools.aerender) throw new Error("aerender.exe not found (ToolPaths.aerender). Install After Effects or set EDITMCP_AE_DIR.");
-  if (!existsSync5(req.aep)) throw new Error(`project not found: ${req.aep}`);
+  if (!existsSync6(req.aep)) throw new Error(`project not found: ${req.aep}`);
   const { startFrame, endFrame } = req;
   if (startFrame === void 0 || endFrame === void 0 || !Number.isInteger(startFrame) || !Number.isInteger(endFrame) || startFrame < 0) {
     throw new Error("aerender needs an explicit non-negative integer startFrame/endFrame (0-based comp frames)");
@@ -28527,7 +29211,7 @@ ${tail3(log)}`, "output", parser.errors);
         const prores = join3(dir, `${prefix}_prores.mov`);
         pushLog(`fallback: transcoding ${basename2(produced)} \u2192 ProRes 422 HQ (BT.709)`);
         await transcodeToProres(tools, produced, prores, spawn2, req.signal);
-        await unlink(produced).catch(() => void 0);
+        await unlink2(produced).catch(() => void 0);
         produced = prores;
       }
       frames3 = await probeFrameCount(tools, produced, spawn2, req.signal);
@@ -28553,7 +29237,7 @@ ${tail3(log)}`, "frames", parser.errors);
 function tail3(log, n2 = 15) {
   return log.slice(-n2).join("\n");
 }
-var AerenderError, STARTUP_CRASH, GB, DiskSpaceError, IMAGE_EXT, MAX_LOG_LINES, Semaphore, gates, RE_FRAME, RE_DURATION, RE_FPS;
+var AerenderError, STARTUP_CRASH, GB2, DiskSpaceError, IMAGE_EXT, MAX_LOG_LINES, Semaphore, gates, RE_FRAME, RE_DURATION, RE_FPS;
 var init_aerender = __esm({
   "src/engine/aerender.ts"() {
     "use strict";
@@ -28573,7 +29257,7 @@ var init_aerender = __esm({
       startupCrash;
     };
     STARTUP_CRASH = /crash|unexpected(?:ly)?\s+(?:quit|exit|terminat)|access violation|0xc0000005|unhandled exception|failed to (?:start|launch|initiali[sz]e)|unable to (?:start|launch|initiali[sz]e)|could not (?:start|launch|initiali[sz]e|connect)|after effects (?:has )?(?:stopped|quit|crashed)/i;
-    GB = 2 ** 30;
+    GB2 = 2 ** 30;
     DiskSpaceError = class extends Error {
       constructor(message, path12, freeBytes, needBytes) {
         super(message);
@@ -28625,8 +29309,8 @@ __export(ae_exports, {
   listAfterFxProcesses: () => listAfterFxProcesses,
   scanMockComp: () => scanMockComp
 });
-import { constants as constants6, existsSync as existsSync6 } from "node:fs";
-import { copyFile as copyFile3, mkdir as mkdir4, mkdtemp, readFile as readFile3, readdir, rename as rename3, rm as rm3, writeFile as writeFile3 } from "node:fs/promises";
+import { constants as constants6, existsSync as existsSync7 } from "node:fs";
+import { copyFile as copyFile3, mkdir as mkdir5, mkdtemp, readFile as readFile4, readdir as readdir2, rename as rename4, rm as rm3, writeFile as writeFile4 } from "node:fs/promises";
 import os4 from "node:os";
 import { basename as basename3, dirname as dirname3, extname as extname3, join as join4, resolve as resolve2 } from "node:path";
 import { fileURLToPath as fileURLToPath3 } from "node:url";
@@ -28672,8 +29356,15 @@ function createAeBackend(tools, opts = {}) {
     ...opts.minFreeDiskGb !== void 0 ? { minFreeGb: opts.minFreeDiskGb } : {},
     ...opts.retryDelayMs !== void 0 ? { retryDelayMs: opts.retryDelayMs } : {}
   };
+  const scriptingPref = opts.scriptingPref ?? (() => aeScriptingPref());
+  async function noResult(action, exitCode, stderr) {
+    const detail = `AfterFX ${action}: exit ${exitCode ?? "?"}, no result${stderr.trim() ? `: ${stderr.trim()}` : ""}`;
+    const pref = await scriptingPref();
+    if (pref.allowed === false) return new UserActionError(detail, ACTIONS.aeAllowScripts());
+    return new UserActionError(detail, ACTIONS.aeFirstRun({ detail: `exit ${exitCode ?? "?"}` }));
+  }
   async function run6(action, payload = {}) {
-    if (!tools.afterfx) throw new Error("AfterFX not found; install After Effects or set EDITMCP_AE_DIR");
+    if (!tools.afterfx) throw new UserActionError("AfterFX not found; install After Effects or set EDITMCP_AE_DIR", ACTIONS.aeNotFound());
     const minRam = opts.minFreeRamGb ?? 0.75;
     if (os4.freemem() / 2 ** 30 < minRam) throw new Error(`not enough free RAM for After Effects (need ${minRam} GB)`);
     const tempRoot = os4.tmpdir();
@@ -28682,9 +29373,9 @@ function createAeBackend(tools, opts = {}) {
     try {
       const jobPath = join4(dir, "job.json");
       const resultPath = join4(dir, "job.result.json");
-      await writeFile3(jobPath, JSON.stringify({ ...payload, action, result: resultPath }).replace(/\u2028/g, "\\u2028").replace(/\u2029/g, "\\u2029"), "utf8");
+      await writeFile4(jobPath, JSON.stringify({ ...payload, action, result: resultPath }).replace(/\u2028/g, "\\u2028").replace(/\u2029/g, "\\u2029"), "utf8");
       const launcher = join4(dir, "launch.jsx");
-      await writeFile3(launcher, `var EDITMCP_JOB = ${JSON.stringify(jobPath)};
+      await writeFile4(launcher, `var EDITMCP_JOB = ${JSON.stringify(jobPath)};
 $.evalFile(new File(${JSON.stringify(runner)}));
 `, "utf8");
       const timeoutMs = action === "list" || action === "version" ? shortTimeout : longTimeout;
@@ -28701,12 +29392,16 @@ $.evalFile(new File(${JSON.stringify(runner)}));
         clearTimeout(timer);
       }
       if (timedOut) throw new Error(`AfterFX ${action} timed out after ${timeoutMs} ms (process tree killed)`);
-      if (output.exitCode !== 0) {
-        const report2 = await readFile3(resultPath, "utf8").catch(() => "");
-        throw new Error(`AfterFX failed (${output.exitCode}): ${report2 || String(output.stderr).slice(-2e3)}`);
+      const report2 = await readFile4(resultPath, "utf8").catch(() => void 0);
+      if (report2 === void 0) throw await noResult(action, output.exitCode, String(output.stderr ?? "").slice(-500));
+      if (output.exitCode !== 0) throw new Error(`AfterFX failed (${output.exitCode}): ${report2}`);
+      const result = JSON.parse(report2.replace(/^\uFEFF/, ""));
+      if (result.ok !== true) {
+        if (/cannot write /.test(result.error ?? "") && (await scriptingPref()).allowed === false) {
+          throw new UserActionError(`AfterFX: ${result.error}`, ACTIONS.aeAllowScripts());
+        }
+        throw new Error(`AfterFX: ${result.error ?? "job failed"}`);
       }
-      const result = JSON.parse((await readFile3(resultPath, "utf8")).replace(/^\uFEFF/, ""));
-      if (result.ok !== true) throw new Error(`AfterFX: ${result.error ?? "job failed"}`);
       return result;
     } finally {
       await rm3(dir, { recursive: true, force: true });
@@ -28769,7 +29464,7 @@ $.evalFile(new File(${JSON.stringify(runner)}));
     for (const file of sequences) {
       const stem = basename3(file, extname3(file));
       const prefix = stem.replace(/\d+$/, "");
-      for (const entry of await readdir(dirname3(file), { withFileTypes: true })) {
+      for (const entry of await readdir2(dirname3(file), { withFileTypes: true })) {
         if (entry.isFile() && entry.name.startsWith(prefix) && extname3(entry.name).toLowerCase() === extname3(file).toLowerCase()) files.add(join4(dirname3(file), entry.name));
       }
     }
@@ -28789,7 +29484,7 @@ $.evalFile(new File(${JSON.stringify(runner)}));
     const source = resolve2(req.aep);
     const savedTo = req.saveAs ? resolve2(req.saveAs) : source;
     if (req.saveAs && savedTo.toLowerCase() === source.toLowerCase()) throw new Error("saveAs must differ from the source; omit it for an in-place edit with backup");
-    if (req.saveAs && existsSync6(savedTo)) throw new Error(`refusing to overwrite ${savedTo}`);
+    if (req.saveAs && existsSync7(savedTo)) throw new Error(`refusing to overwrite ${savedTo}`);
     const before = await hashFile(source);
     const working = join4(dirname3(source), `.editmcp-${randomUUID()}${extname3(source) || ".aep"}`);
     await copyFile3(source, working, constants6.COPYFILE_EXCL);
@@ -28819,7 +29514,7 @@ $.evalFile(new File(${JSON.stringify(runner)}));
           await rm3(backup, { force: true });
           throw new Error(changed);
         }
-        await rename3(working, source);
+        await rename4(working, source);
         timings.delete(source.toLowerCase());
       }
       return { ok: true, savedTo, fingerprint, log, aeGuiRunning, ...warning ? { warning } : {} };
@@ -28830,11 +29525,11 @@ $.evalFile(new File(${JSON.stringify(runner)}));
   async function create(req) {
     const savedTo = resolve2(req.saveAs);
     if (extname3(savedTo).toLowerCase() !== ".aep") throw new Error("saveAs must be a .aep path");
-    if (existsSync6(savedTo)) throw new Error(`refusing to overwrite ${savedTo}`);
+    if (existsSync7(savedTo)) throw new Error(`refusing to overwrite ${savedTo}`);
     const working = join4(dirname3(savedTo), `.editmcp-${randomUUID()}.aep`);
     try {
       const result = await run6("create", { jsx: req.jsx, saveAs: working, ...req.scriptDir ? { scriptDir: resolve2(req.scriptDir) } : {} });
-      if (!existsSync6(working)) throw new Error("After Effects did not save the new project");
+      if (!existsSync7(working)) throw new Error("After Effects did not save the new project");
       await copyFile3(working, savedTo, constants6.COPYFILE_EXCL);
       return { savedTo, comps: result.data ?? [], log: result.log ?? [] };
     } finally {
@@ -29017,6 +29712,8 @@ var init_ae = __esm({
     "use strict";
     init_execa();
     init_hash();
+    init_user_action();
+    init_housekeeping();
     init_aerender();
     queue = Promise.resolve();
     THAI_RE = new RegExp("\\p{Script=Thai}", "u");
@@ -29077,8 +29774,8 @@ var init_ae = __esm({
         this.calls.push(`render:${req.comp}`);
         const c3 = this.comp(req.comp);
         const out2 = uniqueOutputPath(resolve2(req.outPath));
-        await mkdir4(dirname3(out2), { recursive: true });
-        await writeFile3(out2, "mock render", { flag: "wx" });
+        await mkdir5(dirname3(out2), { recursive: true });
+        await writeFile4(out2, "mock render", { flag: "wx" });
         const frames3 = (req.endFrame ?? c3.durationFrames - 1) - (req.startFrame ?? 0) + 1;
         return { path: out2, frames: frames3, elapsedMs: 0, usedFallback: false, log: "mock" };
       }
@@ -29087,8 +29784,8 @@ var init_ae = __esm({
         const c3 = this.comp(comp);
         if (!Number.isInteger(frame2) || frame2 < 0 || frame2 >= c3.durationFrames) throw new Error(`frame ${frame2} is past the end of ${comp} (${c3.durationFrames} frames)`);
         const out2 = uniqueOutputPath(resolve2(outPng));
-        await mkdir4(dirname3(out2), { recursive: true });
-        await writeFile3(out2, Buffer.from(PNG_1X1, "base64"), { flag: "wx" });
+        await mkdir5(dirname3(out2), { recursive: true });
+        await writeFile4(out2, Buffer.from(PNG_1X1, "base64"), { flag: "wx" });
         return out2;
       }
       async version() {
@@ -29200,7 +29897,7 @@ var init_jobs = __esm({
         const e = this.entries.get(id);
         if (!e) return Promise.reject(new Error(`unknown job: ${id}`));
         if (FINAL.has(e.info.status)) return Promise.resolve(snapshot(e.info));
-        return new Promise((resolve11) => e.waiters.push(resolve11));
+        return new Promise((resolve13) => e.waiters.push(resolve13));
       }
       pump() {
         while (this.running < this.maxConcurrent && this.queue.length > 0) {
@@ -29266,8 +29963,8 @@ __export(effectcraft_exports, {
   createMotionBackend: () => createMotionBackend,
   isEcProject: () => isEcProject
 });
-import { constants as constants7, existsSync as existsSync7 } from "node:fs";
-import { copyFile as copyFile4, mkdir as mkdir5, mkdtemp as mkdtemp2, readFile as readFile4, rename as rename4, rm as rm4, writeFile as writeFile4 } from "node:fs/promises";
+import { constants as constants7, existsSync as existsSync8 } from "node:fs";
+import { copyFile as copyFile4, mkdir as mkdir6, mkdtemp as mkdtemp2, readFile as readFile5, rename as rename5, rm as rm4, writeFile as writeFile5 } from "node:fs/promises";
 import os5 from "node:os";
 import { basename as basename4, dirname as dirname4, extname as extname4, join as join5, resolve as resolve3 } from "node:path";
 import { fileURLToPath as fileURLToPath4 } from "node:url";
@@ -29275,7 +29972,7 @@ import { randomUUID as randomUUID2 } from "node:crypto";
 async function readProject(ecproj) {
   let raw;
   try {
-    raw = await readFile4(ecproj, "utf8");
+    raw = await readFile5(ecproj, "utf8");
   } catch {
     throw new Error(`project not found: ${ecproj}`);
   }
@@ -29376,8 +30073,8 @@ function createEffectCraftBackend(tools, opts = {}) {
     try {
       const launch = join5(dir, "launch.jsx");
       const literal2 = JSON.stringify(job).split(String.fromCharCode(8232)).join("\\u2028").split(String.fromCharCode(8233)).join("\\u2029");
-      await writeFile4(launch, `var CATCUT_JOB = ${literal2};
-${await readFile4(runnerPath, "utf8")}`, "utf8");
+      await writeFile5(launch, `var CATCUT_JOB = ${literal2};
+${await readFile5(runnerPath, "utf8")}`, "utf8");
       const args = ["script", launch];
       if (project2.open) args.push(project2.open);
       else args.push("--empty");
@@ -29399,7 +30096,7 @@ ${await readFile4(runnerPath, "utf8")}`, "utf8");
     const savedTo = req.saveAs ? resolve3(req.saveAs) : source;
     if (req.saveAs && !isEcProject(savedTo)) throw new Error("saveAs must be a .ecproj path");
     if (req.saveAs && savedTo.toLowerCase() === source.toLowerCase()) throw new Error("saveAs must differ from the source; omit it for an in-place edit with backup");
-    if (req.saveAs && existsSync7(savedTo)) throw new Error(`refusing to overwrite ${savedTo}`);
+    if (req.saveAs && existsSync8(savedTo)) throw new Error(`refusing to overwrite ${savedTo}`);
     const before = await hashFile(source);
     const working = join5(dirname4(source), `.catcut-${randomUUID2()}.ecproj`);
     await copyFile4(source, working, constants7.COPYFILE_EXCL);
@@ -29421,7 +30118,7 @@ ${await readFile4(runnerPath, "utf8")}`, "utf8");
           await rm4(backup, { force: true });
           throw new Error(changed);
         }
-        await rename4(working, source);
+        await rename5(working, source);
       }
       return { ok: true, savedTo, fingerprint, log };
     } finally {
@@ -29431,12 +30128,12 @@ ${await readFile4(runnerPath, "utf8")}`, "utf8");
   async function create(req) {
     const savedTo = resolve3(req.saveAs);
     if (!isEcProject(savedTo)) throw new Error("saveAs must be a .ecproj path");
-    if (existsSync7(savedTo)) throw new Error(`refusing to overwrite ${savedTo}`);
-    await mkdir5(dirname4(savedTo), { recursive: true });
+    if (existsSync8(savedTo)) throw new Error(`refusing to overwrite ${savedTo}`);
+    await mkdir6(dirname4(savedTo), { recursive: true });
     const working = join5(dirname4(savedTo), `.catcut-${randomUUID2()}.ecproj`);
     try {
       const res = await runner({ action: "create", jsx: req.jsx, ...req.scriptDir ? { scriptDir: resolve3(req.scriptDir) } : {} }, { saveAs: working });
-      if (!existsSync7(working)) throw new Error("EffectCraft did not save the new project");
+      if (!existsSync8(working)) throw new Error("EffectCraft did not save the new project");
       await copyFile4(working, savedTo, constants7.COPYFILE_EXCL);
       return { savedTo, comps: compsOf(await readProject(savedTo)).map(compInfo), log: res.log ?? [] };
     } finally {
@@ -29484,7 +30181,7 @@ ${await readFile4(runnerPath, "utf8")}`, "utf8");
         "render",
         req.signal
       );
-      if (!existsSync7(tmp)) throw new Error(`EffectCraft render wrote no file: ${log.trim().slice(-500)}`);
+      if (!existsSync8(tmp)) throw new Error(`EffectCraft render wrote no file: ${log.trim().slice(-500)}`);
       const out2 = uniqueOutputPath(resolve3(req.outPath));
       await moveFile(tmp, out2);
       req.onProgress?.({ stage: "effectcraft", done: frames3, total: frames3, message: req.comp });
@@ -29504,7 +30201,7 @@ ${log.trim()}` };
     try {
       const tmp = join5(dir, "frame.png");
       await cli(["render-frame", "--project", ecproj, "--comp", String(c3.id), "--frame", String(frame2), "--out", tmp], shortTimeout, "preview");
-      if (!existsSync7(tmp)) throw new Error("EffectCraft preview wrote no file");
+      if (!existsSync8(tmp)) throw new Error("EffectCraft preview wrote no file");
       const out2 = uniqueOutputPath(resolve3(outPng));
       await moveFile(tmp, out2);
       return out2;
@@ -29652,7 +30349,7 @@ var init_state = __esm({
 
 // src/review/session.ts
 import { randomUUID as randomUUID3 } from "node:crypto";
-import { mkdir as mkdir6, open as open2, readFile as readFile5, rename as rename5, rm as rm5, stat as stat4, writeFile as writeFile5 } from "node:fs/promises";
+import { mkdir as mkdir7, open as open2, readFile as readFile6, rename as rename6, rm as rm5, stat as stat4, writeFile as writeFile6 } from "node:fs/promises";
 import { hostname as hostname2 } from "node:os";
 import { setTimeout as delay } from "node:timers/promises";
 import { join as join6 } from "node:path";
@@ -29678,7 +30375,7 @@ function sessionDir(p, v) {
 async function readReviewSession(p, v) {
   const file = join6(sessionDir(p, v), "session.json");
   try {
-    const s = sessionSchema.parse(JSON.parse(await readFile5(file, "utf8")));
+    const s = sessionSchema.parse(JSON.parse(await readFile6(file, "utf8")));
     if (s.version !== v.id || s.planHash !== v.planHash) throw new ReviewError("Review belongs to a different build", 409);
     return s;
   } catch (error2) {
@@ -29697,11 +30394,11 @@ function serialize2(key, fn) {
   return result;
 }
 async function persist(dir, name, value) {
-  await mkdir6(dir, { recursive: true });
+  await mkdir7(dir, { recursive: true });
   const tmp = join6(dir, `${name}-${randomUUID3()}.tmp`);
   try {
-    await writeFile5(tmp, JSON.stringify(value, null, 2) + "\n", { encoding: "utf8", flag: "wx" });
-    await rename5(tmp, join6(dir, `${name}.json`));
+    await writeFile6(tmp, JSON.stringify(value, null, 2) + "\n", { encoding: "utf8", flag: "wx" });
+    await rename6(tmp, join6(dir, `${name}.json`));
   } finally {
     await rm5(tmp, { force: true });
   }
@@ -29717,11 +30414,11 @@ function pidAlive2(pid) {
 async function staleLock(lockPath) {
   let content, mtime;
   try {
-    [content, mtime] = await Promise.all([readFile5(lockPath, "utf8"), stat4(lockPath).then((s) => s.mtimeMs)]);
+    [content, mtime] = await Promise.all([readFile6(lockPath, "utf8"), stat4(lockPath).then((s) => s.mtimeMs)]);
   } catch {
     return void 0;
   }
-  let pid, at = mtime, host;
+  let pid, at = mtime, host2;
   try {
     const owner = JSON.parse(content);
     if (typeof owner === "number") pid = owner;
@@ -29729,22 +30426,22 @@ async function staleLock(lockPath) {
       const o2 = owner;
       if (typeof o2.pid === "number") pid = o2.pid;
       if (typeof o2.at === "number") at = o2.at;
-      if (typeof o2.host === "string") host = o2.host;
+      if (typeof o2.host === "string") host2 = o2.host;
     }
   } catch {
   }
   if (Date.now() - at > LOCK_STALE_MS2) return content;
-  if (pid !== void 0 && Number.isSafeInteger(pid) && pid > 0 && (host === void 0 || host === hostname2()) && !pidAlive2(pid)) return content;
+  if (pid !== void 0 && Number.isSafeInteger(pid) && pid > 0 && (host2 === void 0 || host2 === hostname2()) && !pidAlive2(pid)) return content;
   return void 0;
 }
 async function reclaim(lockPath, staleContent) {
   const aside = `${lockPath}.stale-${randomUUID3()}`;
   try {
-    await rename5(lockPath, aside);
+    await rename6(lockPath, aside);
   } catch {
     return;
   }
-  const moved = await readFile5(aside, "utf8").catch(() => staleContent);
+  const moved = await readFile6(aside, "utf8").catch(() => staleContent);
   if (moved !== staleContent) {
     try {
       await open2(lockPath, "wx").then((h2) => h2.writeFile(moved).finally(() => h2.close()));
@@ -29754,7 +30451,7 @@ async function reclaim(lockPath, staleContent) {
   await rm5(aside, { force: true });
 }
 async function locked(dir, fn) {
-  await mkdir6(dir, { recursive: true });
+  await mkdir7(dir, { recursive: true });
   const lockPath = join6(dir, "session.lock");
   const deadline = Date.now() + 2e3;
   const token = JSON.stringify({ pid: process.pid, host: hostname2(), at: Date.now(), id: randomUUID3() });
@@ -29779,7 +30476,7 @@ async function locked(dir, fn) {
     return await fn();
   } finally {
     await lock.close();
-    if (await readFile5(lockPath, "utf8").catch(() => void 0) === token) await rm5(lockPath, { force: true });
+    if (await readFile6(lockPath, "utf8").catch(() => void 0) === token) await rm5(lockPath, { force: true });
   }
 }
 function saveReviewSession(p, v, input) {
@@ -29840,17 +30537,17 @@ function submitReview(p, v, revision) {
     if (parsed.data.revision !== previous.revision) throw new ReviewError("Notes changed in another window. Reload before submitting.", 409);
     if (!previous.notes.length) throw new ReviewError("Add a note before submitting");
     const s = { ...previous, revision: previous.revision + 1, updatedAt: (/* @__PURE__ */ new Date()).toISOString(), status: "submitted" };
-    await mkdir6(dir, { recursive: true });
+    await mkdir7(dir, { recursive: true });
     const file = join6(dir, `submitted-${randomUUID3()}.json`);
     const agent = agentReview(s);
-    await writeFile5(file, JSON.stringify({ ...s, ...agent }, null, 2) + "\n", { encoding: "utf8", flag: "wx" });
+    await writeFile6(file, JSON.stringify({ ...s, ...agent }, null, 2) + "\n", { encoding: "utf8", flag: "wx" });
     await persist(dir, "session", s);
     return { session: s, path: file, ...agent };
   }));
 }
 async function readReviewDraft(p, v) {
   try {
-    const d = storedDraft.parse(JSON.parse(await readFile5(join6(sessionDir(p, v), "draft.json"), "utf8")));
+    const d = storedDraft.parse(JSON.parse(await readFile6(join6(sessionDir(p, v), "draft.json"), "utf8")));
     return d.version === v.id && d.planHash === v.planHash ? d : null;
   } catch {
     return null;
@@ -29951,8 +30648,8 @@ var init_session = __esm({
 });
 
 // src/review/compare.ts
-import { existsSync as existsSync8 } from "node:fs";
-import { mkdir as mkdir7, mkdtemp as mkdtemp3, readdir as readdir2, realpath, rm as rm6, writeFile as writeFile6 } from "node:fs/promises";
+import { existsSync as existsSync9 } from "node:fs";
+import { mkdir as mkdir8, mkdtemp as mkdtemp3, readdir as readdir3, realpath, rm as rm6, writeFile as writeFile7 } from "node:fs/promises";
 import os7 from "node:os";
 import { basename as basename5, dirname as dirname5, extname as extname5, isAbsolute, join as join7, relative } from "node:path";
 function mapFrames(from, to, labels = { from: "A", to: "B" }) {
@@ -29976,7 +30673,7 @@ function mapFrame(map, f) {
   if (!seg) return 0;
   return clamp(seg.toStart + f - seg.start, seg.toMin, seg.toMax);
 }
-async function inside(dir, file) {
+async function inside2(dir, file) {
   try {
     const rel = relative(await realpath(dir), await realpath(file));
     return !!rel && !rel.startsWith("..") && !isAbsolute(rel);
@@ -29995,7 +30692,7 @@ async function comparableVersions(p, current) {
     } catch {
       continue;
     }
-    if (plan.fps !== fps || !await inside(p.dir, v.reviewProxy)) continue;
+    if (plan.fps !== fps || !await inside2(p.dir, v.reviewProxy)) continue;
     out2.push({ id: v.id, createdAt: v.createdAt, frames: plan.frames, proxy: v.reviewProxy, plan: structuredClone(plan) });
   }
   return out2;
@@ -30036,7 +30733,7 @@ async function run3(file, args, timeoutMs, signal) {
 }
 function freePath(p) {
   const ext = extname5(p), stem = join7(dirname5(p), basename5(p, ext));
-  const free = (c3) => !existsSync8(c3) && !existsSync8(c3.slice(0, -ext.length) + ".json");
+  const free = (c3) => !existsSync9(c3) && !existsSync9(c3.slice(0, -ext.length) + ".json");
   if (free(p)) return p;
   for (let i2 = 2; i2 < 1e4; i2++) if (free(`${stem}_${i2}${ext}`)) return `${stem}_${i2}${ext}`;
   throw new Error(`cannot find a free name next to ${p}`);
@@ -30045,7 +30742,7 @@ async function grab(tools, side, frames3, dir, height, timeoutMs, signal) {
   const select = frames3.map((f) => `eq(n\\,${f})`).join("+");
   const vf = `select='${select}',scale=${THUMB_W}:${height}:force_original_aspect_ratio=decrease,pad=${THUMB_W}:${height}:(ow-iw)/2:(oh-ih)/2:color=0x101010,setsar=1`;
   const r = await run3(tools.ffmpeg, ["-hide_banner", "-nostats", "-nostdin", "-n", "-i", side.media, "-map", "0:v:0", "-vf", vf, "-fps_mode", "passthrough", "-frames:v", String(frames3.length), join7(dir, "f%04d.png")], timeoutMs, signal);
-  const files = (await readdir2(dir)).filter((f) => /^f\d{4}\.png$/.test(f)).sort().map((f) => join7(dir, f));
+  const files = (await readdir3(dir)).filter((f) => /^f\d{4}\.png$/.test(f)).sort().map((f) => join7(dir, f));
   if (r.exitCode !== 0 || files.length !== frames3.length) throw new Error(`could not read frames from ${side.id}: ${r.stderr.trim().split(/\r?\n/).slice(-3).join(" ")}`);
   return files;
 }
@@ -30061,17 +30758,17 @@ async function renderCompareSheet(opts) {
     for (const [key, side, list] of [["a", a2, pairs.map((x) => x.a)], ["b", b, pairs.map((x) => x.b)]]) {
       const unique = [...new Set(list)].sort((x, y) => x - y);
       const dir = join7(tmp, key);
-      await mkdir7(dir);
+      await mkdir8(dir);
       const grabbed = await grab(tools, side, unique, dir, height, timeoutMs, opts.signal);
       unique.forEach((f, i2) => files.set(`${key}${f}`, grabbed[i2]));
     }
     const target = freePath(opts.outPath);
-    await mkdir7(dirname5(target), { recursive: true });
+    await mkdir8(dirname5(target), { recursive: true });
     const inputs = pairs.flatMap((x) => ["-i", files.get(`a${x.a}`), "-i", files.get(`b${x.b}`)]);
     const tc = (f) => framesToTc(f, a2.plan.fps).replace(/:/g, "\\:");
     const label = (font, text2) => `,drawtext=${font}:fontsize=18:fontcolor=white:box=1:boxcolor=black@0.6:boxborderw=4:x=8:y=8:text='${text2}'`;
     const fonts = [];
-    if (existsSync8(WINDOWS_FONT2)) fonts.push(`fontfile='${WINDOWS_FONT2.replace(":", "\\:")}'`);
+    if (existsSync9(WINDOWS_FONT2)) fonts.push(`fontfile='${WINDOWS_FONT2.replace(":", "\\:")}'`);
     fonts.push("font=Sans", void 0);
     let lastErr = "";
     for (const font of fonts) {
@@ -30084,7 +30781,7 @@ async function renderCompareSheet(opts) {
       const rows = pairs.map((_, i2) => `[r${i2}]`).join("");
       graph.push(pairs.length > 1 ? `${rows}vstack=inputs=${pairs.length}[out]` : `${rows}null[out]`);
       const r = await run3(tools.ffmpeg, ["-hide_banner", "-nostats", "-nostdin", "-n", ...inputs, "-filter_complex", graph.join(";"), "-map", "[out]", "-frames:v", "1", "-update", "1", target], timeoutMs, opts.signal);
-      if (r.exitCode === 0 && existsSync8(target)) {
+      if (r.exitCode === 0 && existsSync9(target)) {
         const result = {
           path: target,
           sidecar: target.slice(0, -extname5(target).length) + ".json",
@@ -30093,7 +30790,7 @@ async function renderCompareSheet(opts) {
           ...opts.map.warning ? { warning: opts.map.warning } : {},
           pairs: pairs.map((x) => ({ ...x.clipId ? { clipId: x.clipId } : {}, a: { version: a2.id, frame: x.a, tc: framesToTc(x.a, a2.plan.fps) }, b: { version: b.id, frame: x.b, tc: framesToTc(x.b, b.plan.fps) } }))
         };
-        await writeFile6(result.sidecar, JSON.stringify({ versionA: a2.id, versionB: b.id, ...result }, null, 2) + "\n", { encoding: "utf8", flag: "wx" });
+        await writeFile7(result.sidecar, JSON.stringify({ versionA: a2.id, versionB: b.id, ...result }, null, 2) + "\n", { encoding: "utf8", flag: "wx" });
         return result;
       }
       lastErr = r.stderr.trim().split(/\r?\n/).slice(-3).join(" ");
@@ -30104,8 +30801,8 @@ async function renderCompareSheet(opts) {
   }
 }
 function sheetMedia(v) {
-  if (v.master && existsSync8(v.master)) return v.master;
-  if (v.reviewProxy && existsSync8(v.reviewProxy)) return v.reviewProxy;
+  if (v.master && existsSync9(v.master)) return v.master;
+  if (v.reviewProxy && existsSync9(v.reviewProxy)) return v.reviewProxy;
   throw new ReviewError(`${v.id} has no master or review proxy on disk`);
 }
 var clamp, THUMB_W, WINDOWS_FONT2, safeLabel;
@@ -30123,10 +30820,10 @@ var init_compare = __esm({
 });
 
 // src/review/server.ts
-import { randomBytes as randomBytes4 } from "node:crypto";
+import { randomBytes as randomBytes5 } from "node:crypto";
 import { createReadStream as createReadStream2 } from "node:fs";
-import { existsSync as existsSync9 } from "node:fs";
-import { readFile as readFile6, stat as stat5 } from "node:fs/promises";
+import { existsSync as existsSync10 } from "node:fs";
+import { readFile as readFile7, stat as stat5 } from "node:fs/promises";
 import { createServer } from "node:http";
 async function body(req) {
   if (req.headers["content-type"]?.split(";")[0] !== "application/json") throw new ReviewError("Expected JSON");
@@ -30194,16 +30891,16 @@ async function openReview(p, v) {
   if (!proxy) throw new ReviewError("Create a review proxy first");
   await stat5(proxy);
   const frozenVersion = { ...v, reviewPlan: plan };
-  const prefix = `/review/${randomBytes4(24).toString("hex")}/`;
+  const prefix = `/review/${randomBytes5(24).toString("hex")}/`;
   const assets = /* @__PURE__ */ new Map();
   for (const [route, file, type] of [
     ["", "index.html", "text/html"],
     ["app.js", "app.js", "text/javascript"],
     ["style.css", "style.css", "text/css"],
     ["fonts/NotoSansThai.ttf", "fonts/NotoSansThai.ttf", "font/ttf"]
-  ]) assets.set(route, { body: await readFile6(new URL(`../../web/review/${file}`, import.meta.url)), type });
+  ]) assets.set(route, { body: await readFile7(new URL(`../../web/review/${file}`, import.meta.url)), type });
   const logo = new URL("../../web/review/logo.svg", import.meta.url);
-  if (existsSync9(logo)) assets.set("logo.svg", { body: await readFile6(logo), type: "image/svg+xml" });
+  if (existsSync10(logo)) assets.set("logo.svg", { body: await readFile7(logo), type: "image/svg+xml" });
   let origin = "";
   const server = createServer((req, res) => {
     res.setHeader("Cache-Control", "no-store");
@@ -30254,7 +30951,7 @@ async function openReview(p, v) {
       }
       if (route === "contact" && v.qc?.contactSheet) {
         res.writeHead(200, { "Content-Type": "image/png" });
-        return res.end(await readFile6(v.qc.contactSheet));
+        return res.end(await readFile7(v.qc.contactSheet));
       }
       const asset = assets.get(route);
       if (!asset) throw new ReviewError("Not found", 404);
@@ -30270,19 +30967,19 @@ async function openReview(p, v) {
   });
   server.requestTimeout = 1e4;
   server.headersTimeout = 1e4;
-  await new Promise((resolve11, reject) => {
+  await new Promise((resolve13, reject) => {
     server.once("error", reject);
-    server.listen(0, "127.0.0.1", resolve11);
+    server.listen(0, "127.0.0.1", resolve13);
   });
   const address = server.address();
   if (!address || typeof address === "string") throw new Error("No review port");
   origin = `http://127.0.0.1:${address.port}`;
-  return { url: origin + prefix, close: () => new Promise((resolve11, reject) => {
+  return { url: origin + prefix, close: () => new Promise((resolve13, reject) => {
     if (!server.listening) {
-      resolve11();
+      resolve13();
       return;
     }
-    server.close((error2) => error2 ? reject(error2) : resolve11());
+    server.close((error2) => error2 ? reject(error2) : resolve13());
     server.closeAllConnections();
   }) };
 }
@@ -30294,452 +30991,10 @@ var init_server = __esm({
   }
 });
 
-// src/engine/housekeeping.ts
-import { randomBytes as randomBytes5 } from "node:crypto";
-import { existsSync as existsSync10, realpathSync as realpathSync2 } from "node:fs";
-import { lstat, mkdir as mkdir8, opendir, readdir as readdir3, readFile as readFile7, rename as rename6, rmdir, statfs as fsStatfs2, unlink as unlink2, writeFile as writeFile7 } from "node:fs/promises";
-import path9 from "node:path";
-async function freeSpace(target, statfs) {
-  let p = path9.resolve(target);
-  while (!existsSync10(p)) {
-    const up = path9.dirname(p);
-    if (up === p) break;
-    p = up;
-  }
-  const s = await statfs(p);
-  const bsize = Number(s.bsize);
-  return { free: Number(s.bavail) * bsize, total: Number(s.blocks) * bsize };
-}
-function driveRoot(p) {
-  return path9.parse(path9.resolve(p)).root.toUpperCase();
-}
-function parseAePrefs(text2) {
-  const out2 = /* @__PURE__ */ new Map();
-  let section = "";
-  const lines = text2.split(/\r?\n/);
-  for (let i2 = 0; i2 < lines.length; i2++) {
-    let line = lines[i2];
-    while (/\\\s*$/.test(line) && i2 + 1 < lines.length) {
-      line = line.replace(/"?\\\s*$/, "") + lines[++i2].trim().replace(/^"/, "");
-    }
-    const sec2 = /^\s*\["(.*)"\]\s*$/.exec(line);
-    if (sec2) {
-      section = sec2[1];
-      continue;
-    }
-    const kv = /^\s*"(.+?)"\s*=\s*"(.*)"\s*$/.exec(line);
-    if (!kv) continue;
-    if (!out2.has(section)) out2.set(section, /* @__PURE__ */ new Map());
-    out2.get(section).set(kv[1], kv[2]);
-  }
-  return out2;
-}
-function versionKey(v) {
-  return v.split(".").map((x) => parseInt(x, 10) || 0);
-}
-async function findAeDiskCache(env = process.env) {
-  const appdata = env["APPDATA"];
-  if (appdata) {
-    const root = path9.join(appdata, "Adobe", "After Effects");
-    const versions = (await readdir3(root).catch(() => [])).filter((v) => /^\d+(\.\d+)*$/.test(v)).sort((a2, b) => {
-      const x = versionKey(a2);
-      const y = versionKey(b);
-      for (let i2 = 0; i2 < Math.max(x.length, y.length); i2++) {
-        const d = (y[i2] ?? 0) - (x[i2] ?? 0);
-        if (d) return d;
-      }
-      return 0;
-    });
-    for (const ver of versions) {
-      const dir = path9.join(root, ver);
-      const files = (await readdir3(dir).catch(() => [])).filter((f) => /^Adobe After Effects .*Prefs.*\.txt$/i.test(f)).sort();
-      for (const f of files) {
-        const file = path9.join(dir, f);
-        const prefs = parseAePrefs(await readFile7(file, "utf8").catch(() => ""));
-        let folder;
-        let maxSizeGb;
-        const dc = prefs.get("Disk Cache Controls");
-        if (dc) {
-          for (const [k, v] of dc) {
-            if (/^Folder( \d+)?$/i.test(k) && v) folder = v;
-            if (/^Max Size( \d+)?$/i.test(k) && Number.isFinite(Number(v))) maxSizeGb = Number(v);
-          }
-        }
-        if (!folder) {
-          for (const sec2 of prefs.values()) {
-            for (const [k, v] of sec2) if (/^(Disk Cache Folder|Conformed Media Cache)/i.test(k) && v) folder = v;
-          }
-        }
-        if (folder) return { folder, source: "prefs", prefsFile: file, aeVersion: ver, ...maxSizeGb !== void 0 ? { maxSizeGb } : {} };
-      }
-    }
-  }
-  const local = env["LOCALAPPDATA"];
-  if (local && existsSync10(path9.join(local, "Temp"))) return { folder: path9.join(local, "Temp"), source: "default" };
-  return { source: "unknown" };
-}
-async function aeCacheDirs(folder) {
-  const found = [];
-  const pick2 = async (dir) => {
-    for (const e of await readdir3(dir, { withFileTypes: true }).catch(() => [])) {
-      if (e.isDirectory() && /^(Disk Cache|Ae Disk Cache)/i.test(e.name)) found.push(path9.join(dir, e.name));
-    }
-  };
-  await pick2(folder);
-  const aeRoot = path9.join(folder, "Adobe", "After Effects");
-  for (const v of await readdir3(aeRoot).catch(() => [])) await pick2(path9.join(aeRoot, v));
-  return found;
-}
-async function dirSize(root, opts = {}) {
-  const maxEntries = opts.maxEntries ?? 5e5;
-  const deadline = Date.now() + (opts.budgetMs ?? 2e4);
-  let bytes = 0;
-  let files = 0;
-  let seen = 0;
-  const stack = [root];
-  while (stack.length) {
-    const dir = stack.pop();
-    const handle = await opendir(dir).catch(() => void 0);
-    if (!handle) continue;
-    for await (const e of handle) {
-      if (++seen > maxEntries || Date.now() > deadline) return { bytes, files, partial: true };
-      const full = path9.join(dir, e.name);
-      if (e.isDirectory()) stack.push(full);
-      else if (e.isFile()) {
-        const st = await lstat(full).catch(() => void 0);
-        if (st) {
-          bytes += st.size;
-          files++;
-        }
-      }
-    }
-  }
-  return { bytes, files, partial: false };
-}
-async function diskReport(p, opts = {}) {
-  const statfs = opts.statfs ?? fsStatfs2;
-  const warnings = [];
-  const found = await findAeDiskCache(opts.env ?? process.env);
-  const aeCache = { ...found, dirs: [] };
-  if (found.folder) {
-    aeCache.dirs = await aeCacheDirs(found.folder);
-    if (aeCache.dirs.length) {
-      let bytes = 0;
-      for (const d of aeCache.dirs) {
-        const s = await dirSize(d);
-        bytes += s.bytes;
-        if (s.partial) aeCache.partial = true;
-      }
-      aeCache.bytes = bytes;
-    }
-  } else {
-    warnings.push("\u0E2B\u0E32\u0E42\u0E1F\u0E25\u0E40\u0E14\u0E2D\u0E23\u0E4C disk cache \u0E02\u0E2D\u0E07 AE \u0E44\u0E21\u0E48\u0E1E\u0E1A / AE disk cache folder unknown");
-  }
-  const roots = /* @__PURE__ */ new Map();
-  const add = (p0, label) => {
-    const r = driveRoot(p0);
-    roots.set(r, [...roots.get(r) ?? [], label]);
-  };
-  add(p.dir, "project");
-  if (found.folder) add(found.folder, "ae-disk-cache");
-  const drives = [];
-  for (const [root, labels] of roots) {
-    try {
-      const s = await freeSpace(labels.includes("project") ? p.dir : found.folder, statfs);
-      drives.push({ root, for: labels, freeBytes: s.free, totalBytes: s.total });
-    } catch (e) {
-      drives.push({ root, for: labels, error: e instanceof Error ? e.message : String(e) });
-    }
-  }
-  const cacheDir = path9.join(p.dir, "cache");
-  const sizeOf = async (d) => (await dirSize(d)).bytes;
-  const known = ["segments", "renders", "audio", "tmp"];
-  const cache = { segments: 0, renders: 0, audio: 0, tmp: 0, other: 0, total: 0 };
-  for (const k of known) cache[k] = await sizeOf(path9.join(cacheDir, k));
-  cache.total = await sizeOf(cacheDir);
-  cache.other = Math.max(0, cache.total - known.reduce((s, k) => s + cache[k], 0));
-  const outDir = path9.join(p.dir, "out");
-  const versionIds = new Set(p.versions.map((v) => v.id));
-  const byVersion = {};
-  const orphans = {};
-  let outTotal = 0;
-  for (const e of await readdir3(outDir, { withFileTypes: true }).catch(() => [])) {
-    const full = path9.join(outDir, e.name);
-    const size = e.isDirectory() ? await sizeOf(full) : (await lstat(full).catch(() => void 0))?.size ?? 0;
-    outTotal += size;
-    if (e.isDirectory() && versionIds.has(e.name)) byVersion[e.name] = size;
-    else orphans[e.name] = size;
-  }
-  return {
-    drives,
-    aeCache,
-    project: { dir: p.dir, cache, out: { byVersion, orphans, total: outTotal }, review: await sizeOf(path9.join(p.dir, "review")) },
-    keptVersions: p.versions.filter((v) => v.keep).map((v) => v.id),
-    warnings
-  };
-}
-function fmtGb(b) {
-  return `${(b / GB2).toFixed(1)} GB`;
-}
-async function preflight(p, estimatedBytes, opts = {}) {
-  const statfs = opts.statfs ?? fsStatfs2;
-  const issues = [];
-  const targets = [{ path: p.dir, est: Math.max(0, estimatedBytes || 0), label: "project" }];
-  const seen = /* @__PURE__ */ new Set([driveRoot(p.dir)]);
-  for (const x of opts.extraPaths ?? []) {
-    const r = driveRoot(x);
-    if (seen.has(r)) continue;
-    seen.add(r);
-    targets.push({ path: x, est: 0, label: x });
-  }
-  for (const t of targets) {
-    let free;
-    try {
-      free = (await freeSpace(t.path, statfs)).free;
-    } catch (e) {
-      issues.push({ kind: "disk", severity: "warn", message: `\u0E2D\u0E48\u0E32\u0E19\u0E1E\u0E37\u0E49\u0E19\u0E17\u0E35\u0E48\u0E27\u0E48\u0E32\u0E07\u0E02\u0E2D\u0E07 ${driveRoot(t.path)} \u0E44\u0E21\u0E48\u0E44\u0E14\u0E49 / cannot read free space: ${e instanceof Error ? e.message : String(e)}` });
-      continue;
-    }
-    const left = free - t.est;
-    const where = `${driveRoot(t.path)} (${t.label})`;
-    const need = t.est ? `, \u0E07\u0E32\u0E19\u0E19\u0E35\u0E49\u0E43\u0E0A\u0E49\u0E1B\u0E23\u0E30\u0E21\u0E32\u0E13 ${fmtGb(t.est)} / this build needs ~${fmtGb(t.est)}` : "";
-    if (left < DISK_ERROR_BYTES) {
-      issues.push({ kind: "disk", severity: "error", message: `\u0E1E\u0E37\u0E49\u0E19\u0E17\u0E35\u0E48\u0E27\u0E48\u0E32\u0E07 ${where} \u0E40\u0E2B\u0E25\u0E37\u0E2D ${fmtGb(free)}${need} \u2014 \u0E15\u0E48\u0E33\u0E01\u0E27\u0E48\u0E32 5 GB \u0E2B\u0E25\u0E31\u0E07\u0E40\u0E02\u0E35\u0E22\u0E19 \u0E25\u0E49\u0E32\u0E07 cache \u0E01\u0E48\u0E2D\u0E19 (disk_report / cache_gc_plan) / less than 5 GB would remain` });
-    } else if (left < DISK_WARN_BYTES) {
-      issues.push({ kind: "disk", severity: "warn", message: `\u0E1E\u0E37\u0E49\u0E19\u0E17\u0E35\u0E48\u0E27\u0E48\u0E32\u0E07 ${where} \u0E40\u0E2B\u0E25\u0E37\u0E2D ${fmtGb(free)}${need} \u2014 \u0E15\u0E48\u0E33\u0E01\u0E27\u0E48\u0E32 20 GB / less than 20 GB would remain` });
-    }
-  }
-  return issues;
-}
-function setVersionKeep(p, versionId, keep) {
-  const v = p.versions.find((x) => x.id === versionId);
-  if (!v) throw new Error(`no version ${versionId}`);
-  if (keep) v.keep = true;
-  else delete v.keep;
-  return v;
-}
-function versionNo2(id) {
-  const m = /^v(\d+)$/.exec(id);
-  return m ? parseInt(m[1], 10) : -1;
-}
-function samePath2(a2, b) {
-  return path9.resolve(a2).toLowerCase() === path9.resolve(b).toLowerCase();
-}
-async function filesUnder(dir) {
-  const out2 = [];
-  const stack = [dir];
-  while (stack.length) {
-    const d = stack.pop();
-    for (const e of await readdir3(d, { withFileTypes: true }).catch(() => [])) {
-      const full = path9.join(d, e.name);
-      if (e.isDirectory()) stack.push(full);
-      else if (e.isFile()) {
-        const st = await lstat(full).catch(() => void 0);
-        if (st?.isFile()) out2.push({ path: full, bytes: st.size, mtimeMs: st.mtimeMs });
-      }
-    }
-  }
-  return out2;
-}
-function planDir(p) {
-  return path9.join(p.dir, "cache", "gc");
-}
-async function gcPlan(p, opts = {}) {
-  const now = (opts.now ?? (() => /* @__PURE__ */ new Date()))();
-  const keepLatest = Math.max(0, Math.floor(opts.keepLatest ?? 3));
-  const versions = [...p.versions].sort((a2, b) => versionNo2(a2.id) - versionNo2(b.id));
-  const latest = new Set(versions.slice(Math.max(0, versions.length - keepLatest)).map((v) => v.id));
-  const retained = versions.filter((v) => latest.has(v.id) || v.keep);
-  const retainedIds = new Set(retained.map((v) => v.id));
-  const items = [];
-  const old = (mtimeMs) => now.getTime() - mtimeMs > MIN_AGE_MS;
-  const push = (f, reason, version3) => items.push({ ...f, rel: path9.relative(p.dir, f.path), reason, ...version3 ? { version: version3 } : {} });
-  const outDir = path9.join(p.dir, "out");
-  const known = new Set(versions.map((v) => v.id));
-  for (const e of await readdir3(outDir, { withFileTypes: true }).catch(() => [])) {
-    if (!e.isDirectory()) continue;
-    const dir = path9.join(outDir, e.name);
-    if (known.has(e.name)) {
-      if (retainedIds.has(e.name)) continue;
-      for (const f of await filesUnder(dir)) push(f, "old-version", e.name);
-    } else {
-      const files = await filesUnder(dir);
-      if (files.length && files.every((f) => old(f.mtimeMs))) for (const f of files) push(f, "orphan-version-folder");
-    }
-  }
-  const segDir = path9.join(p.dir, "cache", "segments");
-  let manifest = {};
-  try {
-    const m = JSON.parse(await readFile7(path9.join(segDir, "manifest.json"), "utf8"));
-    manifest = m.entries ?? {};
-  } catch {
-  }
-  const usedClips = new Set(p.timeline.video.map((c3) => c3.id));
-  for (const v of retained) {
-    for (const s of v.reviewPlan?.shots ?? []) usedClips.add(s.id);
-    for (const id of Object.keys(v.clipSnapshots ?? {})) usedClips.add(id);
-  }
-  const inManifest = /* @__PURE__ */ new Set();
-  let keptUnknown = 0;
-  const segFiles = new Map((await filesUnder(segDir)).filter((f) => path9.dirname(f.path) === segDir).map((f) => [path9.basename(f.path).toLowerCase(), f]));
-  for (const [key, e] of Object.entries(manifest)) {
-    const name = e.file ?? `${key}.mov`;
-    inManifest.add(name.toLowerCase());
-    const f = segFiles.get(name.toLowerCase());
-    if (!f) continue;
-    let unused;
-    if (opts.referencedSegmentKeys) unused = !opts.referencedSegmentKeys.has(key);
-    else if (e.kind === "segment" && e.clipId) unused = !usedClips.has(e.clipId);
-    else {
-      keptUnknown++;
-      unused = false;
-    }
-    if (unused) push(f, "unused-segment");
-  }
-  for (const [name, f] of segFiles) {
-    if (name === "manifest.json" || inManifest.has(name) || name.startsWith(".manifest.")) continue;
-    if (old(f.mtimeMs)) push(f, "orphan-segment");
-  }
-  const renderDir = path9.join(p.dir, "cache", "renders");
-  const liveRenders = [
-    ...Object.values(p.assets).flatMap((a2) => a2.kind === "aecomp" && a2.render ? [a2.render.path] : []),
-    // renders a retained version can still revert a shot to (shot_revert snapshots)
-    ...retained.flatMap((v) => Object.values(v.clipSnapshots ?? {}).flatMap((s) => s.render ? [s.render.path] : []))
-  ];
-  for (const f of await filesUnder(renderDir)) {
-    if (liveRenders.some((r) => samePath2(r, f.path))) continue;
-    if (old(f.mtimeMs)) push(f, "superseded-render");
-  }
-  for (const f of await filesUnder(path9.join(p.dir, "cache", "tmp"))) if (old(f.mtimeMs)) push(f, "stale-temp");
-  const stamp = now.toISOString().replace(/[-:]/g, "").replace(/\..*$/, "");
-  const planId = `${stamp}-${randomBytes5(3).toString("hex")}`;
-  const body2 = {
-    schema: 1,
-    planId,
-    projectDir: p.dir,
-    createdAt: now.toISOString(),
-    keepLatest,
-    retainedVersions: retained.map((v) => v.id),
-    items,
-    totalBytes: items.reduce((s, i2) => s + i2.bytes, 0),
-    keptUnknown
-  };
-  const plan = { ...body2, hash: hashJson(body2) };
-  await mkdir8(planDir(p), { recursive: true });
-  await writeFile7(path9.join(planDir(p), `plan-${planId}.json`), `${JSON.stringify(plan, null, 2)}
-`, { encoding: "utf8", flag: "wx" });
-  return plan;
-}
-function realOrNull(p) {
-  try {
-    return realpathSync2.native(p);
-  } catch {
-    return null;
-  }
-}
-function inside2(child2, root) {
-  const rel = path9.relative(root.toLowerCase(), child2.toLowerCase());
-  return !!rel && !rel.startsWith("..") && !path9.isAbsolute(rel);
-}
-async function gcApply(p, planId, confirm, opts = {}) {
-  if (!CONFIRM_TOKENS.has(confirm)) throw new Error('\u0E15\u0E49\u0E2D\u0E07\u0E22\u0E37\u0E19\u0E22\u0E31\u0E19\u0E14\u0E49\u0E27\u0E22 confirm: "\u0E25\u0E1A" \u0E2B\u0E23\u0E37\u0E2D "delete" \u0E2B\u0E25\u0E31\u0E07\u0E1C\u0E39\u0E49\u0E43\u0E0A\u0E49\u0E2D\u0E19\u0E38\u0E21\u0E31\u0E15\u0E34 / pass confirm: "\u0E25\u0E1A" or "delete" after the user approved the plan');
-  if (!/^[A-Za-z0-9-]{1,64}$/.test(planId)) throw new Error(`bad planId: ${planId}`);
-  if (isProtected(p.dir)) throw new Error("protected project folder");
-  const now = (opts.now ?? (() => /* @__PURE__ */ new Date()))();
-  const file = path9.join(planDir(p), `plan-${planId}.json`);
-  let plan;
-  try {
-    plan = JSON.parse(await readFile7(file, "utf8"));
-  } catch {
-    throw new Error(`\u0E44\u0E21\u0E48\u0E1E\u0E1A\u0E41\u0E1C\u0E19 ${planId} (\u0E2B\u0E23\u0E37\u0E2D\u0E43\u0E0A\u0E49\u0E44\u0E1B\u0E41\u0E25\u0E49\u0E27) \u2014 \u0E40\u0E23\u0E35\u0E22\u0E01 cache_gc_plan \u0E43\u0E2B\u0E21\u0E48 / plan not found or already applied`);
-  }
-  const { hash, ...body2 } = plan;
-  if (hash !== hashJson(body2) || plan.planId !== planId) throw new Error("\u0E41\u0E1C\u0E19\u0E16\u0E39\u0E01\u0E41\u0E01\u0E49\u0E44\u0E02 \u2014 \u0E2A\u0E23\u0E49\u0E32\u0E07\u0E41\u0E1C\u0E19\u0E43\u0E2B\u0E21\u0E48 / plan file was modified: make a new plan");
-  if (!samePath2(plan.projectDir, p.dir)) throw new Error("\u0E41\u0E1C\u0E19\u0E19\u0E35\u0E49\u0E40\u0E1B\u0E47\u0E19\u0E02\u0E2D\u0E07\u0E42\u0E1B\u0E23\u0E40\u0E08\u0E01\u0E15\u0E4C\u0E2D\u0E37\u0E48\u0E19 / plan belongs to another project");
-  const age = now.getTime() - Date.parse(plan.createdAt);
-  if (!(age >= -6e4 && age <= PLAN_MAX_AGE_MS)) throw new Error("\u0E41\u0E1C\u0E19\u0E40\u0E01\u0E48\u0E32\u0E40\u0E01\u0E34\u0E19 10 \u0E19\u0E32\u0E17\u0E35 \u2014 \u0E2A\u0E23\u0E49\u0E32\u0E07\u0E41\u0E1C\u0E19\u0E43\u0E2B\u0E21\u0E48\u0E41\u0E25\u0E49\u0E27\u0E43\u0E2B\u0E49\u0E1C\u0E39\u0E49\u0E43\u0E0A\u0E49\u0E14\u0E39\u0E2D\u0E35\u0E01\u0E04\u0E23\u0E31\u0E49\u0E07 / plan is older than 10 minutes: make a new one and show it to the user");
-  const projReal = realOrNull(p.dir);
-  if (!projReal) throw new Error(`project folder missing: ${p.dir}`);
-  const roots = ["cache", "out"].map((d) => realOrNull(path9.join(p.dir, d))).filter((x) => !!x);
-  const gcReal = realOrNull(planDir(p));
-  const deleted = [];
-  const skipped = [];
-  const dirs = /* @__PURE__ */ new Set();
-  for (const it of plan.items) {
-    const abs = path9.resolve(p.dir, it.rel);
-    const parent = realOrNull(path9.dirname(abs));
-    const real = parent ? path9.join(parent, path9.basename(abs)) : null;
-    if (!samePath2(abs, it.path) || !real || !roots.some((r) => inside2(real, r)) || gcReal && (inside2(real, gcReal) || samePath2(real, gcReal))) {
-      skipped.push({ path: it.path, reason: "outside cache/ and out/" });
-      continue;
-    }
-    const st = await lstat(real).catch(() => void 0);
-    if (!st) {
-      skipped.push({ path: it.path, reason: "already gone" });
-      continue;
-    }
-    if (!st.isFile()) {
-      skipped.push({ path: it.path, reason: "not a plain file (link/folder)" });
-      continue;
-    }
-    if (st.size !== it.bytes || Math.abs(st.mtimeMs - it.mtimeMs) > 1) {
-      skipped.push({ path: it.path, reason: "changed since the plan" });
-      continue;
-    }
-    try {
-      await unlink2(real);
-      deleted.push({ path: it.path, bytes: it.bytes });
-      dirs.add(path9.dirname(real));
-    } catch (e) {
-      skipped.push({ path: it.path, reason: e instanceof Error ? e.message : String(e) });
-    }
-  }
-  for (const d of [...dirs].sort((a2, b) => b.length - a2.length)) {
-    let cur = d;
-    while (roots.some((r) => inside2(cur, r))) {
-      if ((await readdir3(cur).catch(() => ["x"])).length) break;
-      await rmdir(cur).catch(() => void 0);
-      cur = path9.dirname(cur);
-    }
-  }
-  const purgedVersions = [];
-  for (const v of p.versions) {
-    if (deleted.some((d) => samePath2(d.path, v.master))) {
-      v.purgedAt = now.toISOString();
-      purgedVersions.push(v.id);
-    }
-  }
-  const histDir = path9.join(p.dir, "history");
-  await mkdir8(histDir, { recursive: true });
-  const stamp = now.toISOString().replace(/[-:]/g, "").replace(/\..*$/, "");
-  let log = path9.join(histDir, `gc-${stamp}.log`);
-  for (let i2 = 2; existsSync10(log); i2++) log = path9.join(histDir, `gc-${stamp}_${i2}.log`);
-  const lines = [
-    `# gc plan ${planId} applied ${now.toISOString()} (confirm: ${confirm})`,
-    ...deleted.map((d) => `DELETED	${d.bytes}	${d.path}`),
-    ...skipped.map((s) => `SKIPPED	${s.reason}	${s.path}`)
-  ];
-  await writeFile7(log, `${lines.join("\n")}
-`, { encoding: "utf8", flag: "wx" });
-  await rename6(file, path9.join(planDir(p), `plan-${planId}.applied.json`));
-  return { planId, deleted, skipped, freedBytes: deleted.reduce((s, d) => s + d.bytes, 0), purgedVersions, log };
-}
-var GB2, DISK_ERROR_BYTES, DISK_WARN_BYTES, PLAN_MAX_AGE_MS, MIN_AGE_MS, CONFIRM_TOKENS;
-var init_housekeeping = __esm({
-  "src/engine/housekeeping.ts"() {
-    "use strict";
-    init_hash();
-    init_project();
-    GB2 = 1024 ** 3;
-    DISK_ERROR_BYTES = 5 * GB2;
-    DISK_WARN_BYTES = 20 * GB2;
-    PLAN_MAX_AGE_MS = 10 * 6e4;
-    MIN_AGE_MS = 60 * 6e4;
-    CONFIRM_TOKENS = /* @__PURE__ */ new Set(["\u0E25\u0E1A", "delete"]);
-  }
-});
-
 // src/mcp/tooldef.ts
+function needsUser(message, action, data = {}) {
+  return new ToolError(message, { ...data, userAction: card(action), relay: RELAY });
+}
 function tool(def) {
   return def;
 }
@@ -30750,13 +31005,15 @@ function ok(data) {
   return { content: [{ type: "text", text: json2(data) }] };
 }
 function fail(err2) {
-  const body2 = err2 instanceof ToolError ? { ok: false, error: err2.message, ...err2.data } : { ok: false, error: err2 instanceof Error ? err2.message : String(err2) };
+  const body2 = err2 instanceof ToolError ? { ok: false, error: err2.message, ...err2.data } : err2 instanceof UserActionError ? { ok: false, error: err2.message, userAction: card(err2.userAction), relay: RELAY } : { ok: false, error: err2 instanceof Error ? err2.message : String(err2) };
   return { isError: true, content: [{ type: "text", text: json2(body2) }] };
 }
-var ToolError;
+var RELAY, ToolError;
 var init_tooldef = __esm({
   "src/mcp/tooldef.ts"() {
     "use strict";
+    init_user_action();
+    RELAY = "Show userAction.say to the user exactly as written (Thai), then stop and wait for their reply. Do not invent other steps.";
     ToolError = class extends Error {
       constructor(message, data = {}) {
         super(message);
@@ -31334,7 +31591,7 @@ function checkBoard(board, fps) {
 }
 async function scanDir(root, maxDepth, maxEntries = 5e3) {
   const out2 = [];
-  const walk2 = async (dir, depth, parentRel) => {
+  const walk3 = async (dir, depth, parentRel) => {
     if (out2.length >= maxEntries) return;
     let entries;
     try {
@@ -31350,10 +31607,10 @@ async function scanDir(root, maxDepth, maxEntries = 5e3) {
       const entry = { rel, name: e.name, dir: e.isDirectory(), depth };
       if (parentRel) entry.parent = parentRel;
       out2.push(entry);
-      if (e.isDirectory() && depth < maxDepth) await walk2(path10.join(dir, e.name), depth + 1, rel);
+      if (e.isDirectory() && depth < maxDepth) await walk3(path10.join(dir, e.name), depth + 1, rel);
     }
   };
-  await walk2(root, 1);
+  await walk3(root, 1);
   return out2;
 }
 function leadingId(name) {
@@ -31441,6 +31698,16 @@ function lisIndices(seq) {
   }
   return keep;
 }
+function boardFileIds(hint) {
+  if (!hint) return [];
+  return [...new Set(hint.split(/[\s,/|+;]+|หรือ|\bor\b/i).map((t) => t.trim().replace(/\.(mp4|mov|mxf|mts|m2ts|avi|r3d|braw|png|jpe?g|tiff?|psd|wav|mp3)$/i, "")).filter((t) => /^[A-Za-z]{1,8}_?\d{2,}[\w-]*$/.test(t)))];
+}
+function fileMatches(file, id) {
+  const norm = (x) => x.toLowerCase().replace(/^([a-z_]*?)0*(\d)/, "$1$2");
+  const stem = norm(path10.basename(file, path10.extname(file)));
+  const want = norm(id);
+  return stem === want || stem.startsWith(want) && !/\d/.test(stem.charAt(want.length));
+}
 function compareBoardToCut(board, shots, totalFrames, fps, toleranceFrames) {
   const tc = (f) => framesToTc(f, fps);
   const known = new Map(board.slots.map((s) => [s.id, s]));
@@ -31492,6 +31759,9 @@ function compareBoardToCut(board, shots, totalFrames, fps, toleranceFrames) {
       row.startDriftTc = signedTc(row.startDrift, fps);
     }
     if (row.boardDur !== void 0) row.durDiff = row.cutDur - row.boardDur;
+    const wanted = boardFileIds(s.sourceHint);
+    const used = [...new Set(clips.map((c3) => c3.file).filter((f) => !!f))];
+    if (wanted.length && used.length && !used.some((f) => wanted.some((w) => fileMatches(f, w)))) row.fileMismatch = { wanted, used };
     if (moved.includes(s.id)) row.status = "moved";
     else if (!contiguous) row.status = "split";
     else if (Math.abs(row.startDrift ?? 0) > toleranceFrames || Math.abs(row.durDiff ?? 0) > toleranceFrames) row.status = "drift";
@@ -31506,6 +31776,7 @@ function compareBoardToCut(board, shots, totalFrames, fps, toleranceFrames) {
       issues.push({ kind: "board", severity: r.boardStatus === "missing" ? "warn" : "error", ...r.boardStart !== void 0 ? { startFrame: r.boardStart } : {}, message: `slot ${r.slot} \u0E44\u0E21\u0E48\u0E2D\u0E22\u0E39\u0E48\u0E43\u0E19\u0E04\u0E31\u0E17${r.boardStatus ? ` (\u0E1A\u0E2D\u0E23\u0E4C\u0E14: ${r.boardStatus})` : ""} / board slot missing from the cut` });
       continue;
     }
+    if (r.fileMismatch) issues.push({ ...base, severity: "error", message: `slot ${r.slot} \u0E1A\u0E2D\u0E23\u0E4C\u0E14\u0E23\u0E30\u0E1A\u0E38\u0E44\u0E1F\u0E25\u0E4C ${r.fileMismatch.wanted.join(" / ")} \u0E41\u0E15\u0E48\u0E04\u0E31\u0E17\u0E43\u0E0A\u0E49 ${r.fileMismatch.used.join(", ")} \u2014 \u0E0A\u0E37\u0E48\u0E2D\u0E44\u0E1F\u0E25\u0E4C\u0E17\u0E35\u0E48\u0E1A\u0E2D\u0E23\u0E4C\u0E14\u0E40\u0E02\u0E35\u0E22\u0E19\u0E0A\u0E19\u0E30\u0E01\u0E32\u0E23\u0E40\u0E17\u0E35\u0E22\u0E1A\u0E20\u0E32\u0E1E / the board names other files for this slot` });
     if (r.status === "moved") issues.push({ ...base, severity: "warn", message: `slot ${r.slot} \u0E2D\u0E22\u0E39\u0E48\u0E1C\u0E34\u0E14\u0E25\u0E33\u0E14\u0E31\u0E1A\u0E40\u0E21\u0E37\u0E48\u0E2D\u0E40\u0E17\u0E35\u0E22\u0E1A\u0E01\u0E31\u0E1A\u0E1A\u0E2D\u0E23\u0E4C\u0E14 / slot out of board order` });
     if (r.status === "split") issues.push({ ...base, severity: "warn", message: `slot ${r.slot} \u0E16\u0E39\u0E01\u0E41\u0E22\u0E01\u0E40\u0E1B\u0E47\u0E19\u0E2B\u0E25\u0E32\u0E22\u0E0A\u0E48\u0E27\u0E07\u0E17\u0E35\u0E48\u0E44\u0E21\u0E48\u0E15\u0E34\u0E14\u0E01\u0E31\u0E19 (${r.clips.join(", ")}) / slot split across the cut` });
     if (r.startDrift !== void 0 && Math.abs(r.startDrift) > toleranceFrames) issues.push({ ...base, severity: "warn", message: `slot ${r.slot} \u0E40\u0E23\u0E34\u0E48\u0E21 ${r.cutStartTc} \u0E1A\u0E2D\u0E23\u0E4C\u0E14 ${r.boardStartTc} (\u0E40\u0E25\u0E37\u0E48\u0E2D\u0E19 ${r.startDriftTc}, ${r.startDrift} \u0E40\u0E1F\u0E23\u0E21) / start drift` });
@@ -31563,6 +31834,7 @@ function compareBoardToCut(board, shots, totalFrames, fps, toleranceFrames) {
   const worstChapter = chapters.filter((c3) => c3.startDrift !== void 0).sort((a2, b) => Math.abs(b.startDrift) - Math.abs(a2.startDrift))[0];
   const summary = [
     `\u0E1A\u0E2D\u0E23\u0E4C\u0E14 ${board.slots.length} slot \xB7 \u0E43\u0E19\u0E04\u0E31\u0E17 ${rows.length - missing.length} \xB7 \u0E2B\u0E32\u0E22 ${missing.length}${missing.length ? ` (${missing.join(", ")})` : ""}`,
+    ...rows.some((r) => r.fileMismatch) ? [`\u0E43\u0E0A\u0E49\u0E44\u0E1F\u0E25\u0E4C\u0E44\u0E21\u0E48\u0E15\u0E23\u0E07\u0E17\u0E35\u0E48\u0E1A\u0E2D\u0E23\u0E4C\u0E14\u0E23\u0E30\u0E1A\u0E38 ${rows.filter((r) => r.fileMismatch).length} slot (${rows.filter((r) => r.fileMismatch).map((r) => r.slot).join(", ")})`] : [],
     `\u0E04\u0E25\u0E34\u0E1B\u0E19\u0E2D\u0E01\u0E1A\u0E2D\u0E23\u0E4C\u0E14 ${extra.length}${extra.length ? ` (${extra.map((e) => e.clipId).join(", ")})` : ""} \xB7 \u0E1C\u0E34\u0E14\u0E25\u0E33\u0E14\u0E31\u0E1A ${moved.length}${moved.length ? ` (${moved.join(", ")})` : ""} \xB7 \u0E40\u0E27\u0E25\u0E32\u0E40\u0E25\u0E37\u0E48\u0E2D\u0E19\u0E40\u0E01\u0E34\u0E19 ${toleranceFrames} \u0E40\u0E1F\u0E23\u0E21 ${drifted} slot`,
     total.target !== void 0 ? `\u0E04\u0E27\u0E32\u0E21\u0E22\u0E32\u0E27\u0E23\u0E27\u0E21 ${total.cutTc} / \u0E40\u0E1B\u0E49\u0E32 ${total.targetTc} (${total.diffTc})` : `\u0E04\u0E27\u0E32\u0E21\u0E22\u0E32\u0E27\u0E23\u0E27\u0E21 ${total.cutTc} (\u0E1A\u0E2D\u0E23\u0E4C\u0E14\u0E44\u0E21\u0E48\u0E23\u0E30\u0E1A\u0E38\u0E40\u0E1B\u0E49\u0E32\u0E2B\u0E21\u0E32\u0E22)`,
     ...worstChapter?.startDrift ? [`chapter \u0E17\u0E35\u0E48\u0E40\u0E25\u0E37\u0E48\u0E2D\u0E19\u0E21\u0E32\u0E01\u0E2A\u0E38\u0E14: "${worstChapter.name}" ${worstChapter.startDriftTc}`] : []
@@ -31946,6 +32218,8 @@ function resolveShots(p, board, shots) {
   const live = new Map(p.timeline.video.map((c3) => [c3.id, c3]));
   const out2 = shots.map((s) => {
     const sh = { id: s.id, src: s.src, start: s.start, dur: s.dur };
+    const asset = p.assets[s.src];
+    if (asset && asset.kind !== "aecomp") sh.file = basename6(asset.path);
     if (s.marker) sh.marker = s.marker;
     if (s.slot) {
       sh.slot = s.slot;
@@ -32535,18 +32809,18 @@ async function detectActiveArea(tools, path12, p, signal) {
 }
 async function listFiles(dir, recursive) {
   const out2 = [];
-  const walk2 = async (d) => {
+  const walk3 = async (d) => {
     const entries = await readdir5(d, { withFileTypes: true });
     for (const e of entries) {
       const full = join9(d, e.name);
       if (e.isDirectory()) {
-        if (recursive && !e.name.startsWith(".")) await walk2(full);
+        if (recursive && !e.name.startsWith(".")) await walk3(full);
         continue;
       }
       if (e.isFile()) out2.push(full);
     }
   };
-  await walk2(dir);
+  await walk3(dir);
   return out2.sort();
 }
 function kindOf(path12) {
@@ -32999,6 +33273,10 @@ function lintTimeline(p, shots, rules = {}) {
         message: `\u0E04\u0E25\u0E34\u0E1B ${clip.id} \u0E22\u0E32\u0E27\u0E41\u0E04\u0E48 ${clip.dur} \u0E40\u0E1F\u0E23\u0E21 (< ${flashN}) \u0E17\u0E35\u0E48 ${tc(r.start)} \u2014 \u0E2D\u0E32\u0E08\u0E40\u0E2B\u0E47\u0E19\u0E40\u0E1B\u0E47\u0E19\u0E40\u0E1F\u0E23\u0E21\u0E41\u0E27\u0E1A / clip shorter than ${flashN} frames`
       });
     }
+    if (on6("slowmo")) {
+      const s = slowmoIssue(p, clip, r.start, fps);
+      if (s) issues.push(s);
+    }
     if (sd?.motion && on6("lowmotion") && !clip.pushIn) {
       const run6 = longestStaticRun(sd.motion, r.srcIn, r.srcOut, sd.cuts, staticMotion);
       if (run6) {
@@ -33047,6 +33325,24 @@ function lintTimeline(p, shots, rules = {}) {
   }
   issues.sort((x, y) => (x.startFrame ?? 0) - (y.startFrame ?? 0));
   return issues;
+}
+function slowmoIssue(p, clip, start, fps) {
+  const a2 = p.assets[clip.src];
+  const srcFps = a2 && a2.kind !== "aecomp" ? a2.probe?.fps : void 0;
+  if (!clip.speed || !srcFps || clip.speed.interpolation === "motion") return void 0;
+  const slowest = Math.min(clip.speed.rate, clip.speed.rampFrom ?? clip.speed.rate);
+  if (slowest * srcFps >= fps - 0.01) return void 0;
+  const pct2 = Math.round(slowest * 100);
+  return {
+    kind: "slowmo",
+    severity: "warn",
+    clipId: clip.id,
+    startFrame: start,
+    endFrame: start + clip.dur,
+    tc: framesToTc(start, fps),
+    suggestion: "speed.interpolation 'motion' (Optical Flow); in Premiere premiere_set_speed interpolation optical-flow",
+    message: `\u0E04\u0E25\u0E34\u0E1B ${clip.id} \u0E2A\u0E42\u0E25\u0E27\u0E4C ${pct2}% \u0E41\u0E15\u0E48\u0E15\u0E49\u0E19\u0E17\u0E32\u0E07\u0E21\u0E35\u0E41\u0E04\u0E48 ${srcFps} fps (\u0E44\u0E14\u0E49 ${Math.round(slowest * srcFps * 10) / 10} \u0E40\u0E1F\u0E23\u0E21/\u0E27\u0E34 < ${fps}) \u2014 \u0E20\u0E32\u0E1E\u0E08\u0E30\u0E01\u0E23\u0E30\u0E15\u0E38\u0E01 \u0E43\u0E0A\u0E49 Optical Flow (interpolation 'motion') \u0E2B\u0E49\u0E32\u0E21\u0E41\u0E17\u0E19\u0E14\u0E49\u0E27\u0E22\u0E20\u0E32\u0E1E\u0E19\u0E34\u0E48\u0E07 / slow-mo repeats frames: use optical flow`
+  };
 }
 function cutIssues(r, sd, flashN, fps, on6) {
   const tc = (f) => framesToTc(f, fps);
@@ -33187,10 +33483,160 @@ var init_timeline_lint = __esm({
   }
 });
 
-// src/mcp/tools-media.ts
+// src/engine/proxy.ts
+var proxy_exports = {};
+__export(proxy_exports, {
+  makeProxies: () => makeProxies,
+  planProxies: () => planProxies
+});
 import { existsSync as existsSync14 } from "node:fs";
-import { mkdir as mkdir12, writeFile as writeFile11 } from "node:fs/promises";
-import { join as join11, resolve as resolve5 } from "node:path";
+import { mkdir as mkdir12, readdir as readdir6, rename as rename10, rm as rm8, stat as stat8, statfs } from "node:fs/promises";
+import { basename as basename9, dirname as dirname7, extname as extname8, join as join11, parse as parse4, relative as relative3, resolve as resolve5 } from "node:path";
+async function planProxies(sources, proxyDir) {
+  const out2 = [];
+  const seen = /* @__PURE__ */ new Set();
+  const add = (file, root) => {
+    const rel = relative3(root, dirname7(file));
+    const target = join11(resolve5(proxyDir), basename9(root), rel, `${basename9(file, extname8(file))}_Proxy.mp4`);
+    const key = target.toLowerCase();
+    if (seen.has(key)) throw new Error(`two originals would get the same proxy name: ${target}`);
+    seen.add(key);
+    out2.push({ source: file, proxy: target });
+  };
+  const walk3 = async (dir, root) => {
+    for (const e of (await readdir6(dir, { withFileTypes: true })).sort((a2, b) => a2.name.localeCompare(b.name))) {
+      const full = join11(dir, e.name);
+      if (e.isDirectory()) {
+        if (resolve5(full).toLowerCase() !== resolve5(proxyDir).toLowerCase()) await walk3(full, root);
+      } else if (e.isFile() && VIDEO.has(extname8(e.name).toLowerCase()) && !/_proxy$/i.test(basename9(e.name, extname8(e.name)))) add(full, root);
+    }
+  };
+  for (const s of sources.map((x) => resolve5(x))) {
+    const st = await stat8(s).catch(() => void 0);
+    if (!st) throw new Error(`not found: ${s}`);
+    if (st.isDirectory()) await walk3(s, s);
+    else add(s, dirname7(s));
+  }
+  return out2;
+}
+async function probeSource(tools, path12, spawn2) {
+  const r = await spawn2(tools.ffprobe, ["-v", "error", "-show_entries", "stream=codec_type,r_frame_rate,width,height:stream_tags=timecode:format=duration:format_tags=timecode", "-of", "json", path12], { reject: false, windowsHide: true, timeout: 6e4 });
+  if (r.exitCode !== 0) throw new Error(`ffprobe failed on ${path12}: ${String(r.stderr).slice(-300)}`);
+  const j = JSON.parse(String(r.stdout));
+  const v = j.streams?.find((s) => s.codec_type === "video");
+  if (!v?.r_frame_rate || !v.width || !v.height) throw new Error(`no video stream in ${path12}`);
+  const timecode = j.format?.tags?.timecode ?? j.streams?.map((s) => s.tags?.timecode).find((t) => !!t);
+  return {
+    fps: v.r_frame_rate,
+    durationSec: Number(j.format?.duration ?? 0),
+    width: v.width,
+    height: v.height,
+    audioStreams: j.streams?.filter((s) => s.codec_type === "audio").length ?? 0,
+    ...timecode ? { timecode } : {}
+  };
+}
+function estimateProxyBytes(durationSec, height = 540) {
+  return Math.ceil(durationSec * (3e6 * (height / 540) ** 2 + 256e3) / 8);
+}
+async function makeProxies(tools, encoders, jobs, opts = {}) {
+  const spawn2 = opts.spawn ?? execa;
+  const height = opts.height ?? 540;
+  const todo = jobs.filter((j) => !existsSync14(j.proxy));
+  if (todo.length) {
+    let need = 0;
+    for (const j of todo) need += estimateProxyBytes((await probeSource(tools, j.source, spawn2)).durationSec, height);
+    const root = parse4(resolve5(todo[0].proxy)).root;
+    const free = await statfs(root).then((s) => Number(s.bavail) * Number(s.bsize), () => void 0);
+    if (free !== void 0 && free < need * 1.2 + 5 * 2 ** 30) {
+      throw new Error(`not enough space on ${root} for the proxies: need about ${(need / 2 ** 30).toFixed(1)} GB + 5 GB spare, ${(free / 2 ** 30).toFixed(1)} GB free / \u0E1E\u0E37\u0E49\u0E19\u0E17\u0E35\u0E48\u0E44\u0E21\u0E48\u0E1E\u0E2D\u0E2A\u0E33\u0E2B\u0E23\u0E31\u0E1A proxy`);
+    }
+  }
+  const rows = [];
+  let bytes = 0;
+  for (let i2 = 0; i2 < jobs.length; i2++) {
+    const j = jobs[i2];
+    opts.onProgress?.(i2, jobs.length, j.source);
+    if (opts.signal?.aborted) throw new Error("cancelled");
+    if (existsSync14(j.proxy)) {
+      rows.push({ ...j, status: "exists" });
+      continue;
+    }
+    try {
+      const info = await probeSource(tools, j.source, spawn2);
+      await mkdir12(dirname7(j.proxy), { recursive: true });
+      const tmp = join11(dirname7(j.proxy), `.${basename9(j.proxy, ".mp4")}.part.mp4`);
+      await rm8(tmp, { force: true });
+      const audio = info.audioStreams > 0 ? ["-map", "0:a", "-c:a", "aac", "-b:a", "192k"] : [];
+      const tc = info.timecode ? ["-timecode", info.timecode, "-write_tmcd", "1"] : [];
+      const run6 = async (gpu) => spawn2(tools.ffmpeg, [
+        "-hide_banner",
+        "-nostdin",
+        "-n",
+        "-i",
+        j.source,
+        "-map",
+        "0:v:0",
+        ...audio,
+        "-vf",
+        `scale=-2:${height}:flags=bicubic,format=yuv420p`,
+        "-fps_mode",
+        "passthrough",
+        ...gpu ? ["-c:v", "h264_nvenc", "-preset", "p4", "-rc", "vbr", "-cq", "26", "-b:v", "0"] : ["-c:v", "libx264", "-preset", "veryfast", "-crf", "23"],
+        "-g",
+        String(Math.max(1, Math.round(evalRate(info.fps)))),
+        ...tc,
+        "-map_metadata",
+        "0",
+        "-movflags",
+        "+faststart",
+        tmp
+      ], { reject: false, windowsHide: true, timeout: Math.max(6e5, info.durationSec * 2e4), ...opts.signal ? { cancelSignal: opts.signal } : {} });
+      let r = await run6(encoders.h264_nvenc);
+      if (r.exitCode !== 0 && encoders.h264_nvenc) {
+        await rm8(tmp, { force: true });
+        r = await run6(false);
+      }
+      if (r.exitCode !== 0) throw new Error(String(r.stderr).slice(-500));
+      const [a2, b] = await Promise.all([probeFrameCount(tools, j.source, spawn2, opts.signal), probeFrameCount(tools, tmp, spawn2, opts.signal)]);
+      if (a2 !== b) {
+        await rm8(tmp, { force: true });
+        throw new Error(`frame count differs: original ${a2}, proxy ${b}`);
+      }
+      if (existsSync14(j.proxy)) {
+        await rm8(tmp, { force: true });
+        rows.push({ ...j, status: "exists" });
+        continue;
+      }
+      await rename10(tmp, j.proxy);
+      const size = (await stat8(j.proxy)).size;
+      bytes += size;
+      rows.push({ ...j, status: "made", frames: b, bytes: size });
+    } catch (e) {
+      if (opts.signal?.aborted) throw e;
+      rows.push({ ...j, status: "failed", error: e instanceof Error ? e.message : String(e) });
+    }
+  }
+  opts.onProgress?.(jobs.length, jobs.length, "");
+  return { rows, bytes };
+}
+function evalRate(r) {
+  const [n2, d] = r.split("/").map(Number);
+  return d ? (n2 ?? 0) / d : n2 ?? 0;
+}
+var VIDEO;
+var init_proxy = __esm({
+  "src/engine/proxy.ts"() {
+    "use strict";
+    init_execa();
+    init_aerender();
+    VIDEO = /* @__PURE__ */ new Set([".mp4", ".mov", ".mxf", ".mts", ".m2ts", ".avi", ".mkv"]);
+  }
+});
+
+// src/mcp/tools-media.ts
+import { existsSync as existsSync15 } from "node:fs";
+import { mkdir as mkdir13, writeFile as writeFile11 } from "node:fs/promises";
+import { join as join12, resolve as resolve6 } from "node:path";
 async function runJob2(state, name, wait, fn) {
   const job = state.jobs.start(name, fn);
   const pending2 = () => ({ ok: true, jobId: job.id, status: state.jobs.get(job.id)?.status ?? job.status, pending: true, hint: "\u0E22\u0E31\u0E07\u0E17\u0E33\u0E07\u0E32\u0E19\u0E2D\u0E22\u0E39\u0E48 \u2014 \u0E23\u0E2D\u0E1C\u0E25\u0E14\u0E49\u0E27\u0E22 job_wait {id} / still running: call job_wait {id}" });
@@ -33208,12 +33654,12 @@ async function runJob2(state, name, wait, fn) {
   throw new ToolError(info.error ?? `${name} ${info.status}`, { jobId: job.id, status: info.status });
 }
 function mediaPath(a2) {
-  if (a2.kind === "aecomp") return a2.render?.path && existsSync14(a2.render.path) ? a2.render.path : void 0;
+  if (a2.kind === "aecomp") return a2.render?.path && existsSync15(a2.render.path) ? a2.render.path : void 0;
   if (a2.kind === "still" || a2.kind === "audio") return void 0;
   return a2.path;
 }
 function shotsDir(p) {
-  return join11(p.dir, "cache", "shots");
+  return join12(p.dir, "cache", "shots");
 }
 function defaultAssetIds(p) {
   const used = [...new Set(p.timeline.video.map((c3) => c3.src))].filter((id) => p.assets[id] && mediaPath(p.assets[id]));
@@ -33232,7 +33678,7 @@ async function cachedShots(state, p, ids, threshold) {
   for (const id of ids) {
     const a2 = p.assets[id];
     const path12 = a2 && mediaPath(a2);
-    if (!a2 || !path12 || !existsSync14(path12)) continue;
+    if (!a2 || !path12 || !existsSync15(path12)) continue;
     const idx = await loadCachedShots(shotsDir(p), await contentHash(a2, path12), { fps: p.meta.fps, threshold, ffmpegVersion: ver });
     if (idx) map.set(id, idx);
     else missing.push(id);
@@ -33248,14 +33694,14 @@ function countBy(issues) {
   return out2;
 }
 async function backupTimeline2(p, reason) {
-  const dir = join11(p.dir, "history");
-  await mkdir12(dir, { recursive: true });
+  const dir = join12(p.dir, "history");
+  await mkdir13(dir, { recursive: true });
   const now = (/* @__PURE__ */ new Date()).toISOString();
   const stamp = now.replace(/[:.]/g, "-");
   const body2 = `${JSON.stringify({ savedAt: now, reason, timeline: p.timeline }, null, 2)}
 `;
   for (let n2 = 1; ; n2++) {
-    const file = join11(dir, `timeline-${stamp}-${n2}.json`);
+    const file = join12(dir, `timeline-${stamp}-${n2}.json`);
     try {
       await writeFile11(file, body2, { encoding: "utf8", flag: "wx" });
       return file;
@@ -33308,7 +33754,7 @@ var init_tools_media = __esm({
               ctx.progress({ stage: "shots", done, total: ids.length, message: id });
               const asset = p.assets[id];
               const path12 = mediaPath(asset);
-              if (!path12 || !existsSync14(path12)) {
+              if (!path12 || !existsSync15(path12)) {
                 skipped.push({ assetId: id, reason: asset.kind === "aecomp" ? "\u0E22\u0E31\u0E07\u0E44\u0E21\u0E48\u0E21\u0E35 render / no render yet" : asset.kind === "still" || asset.kind === "audio" ? "\u0E44\u0E21\u0E48\u0E43\u0E0A\u0E48\u0E27\u0E34\u0E14\u0E35\u0E42\u0E2D / not video" : "\u0E44\u0E21\u0E48\u0E1E\u0E1A\u0E44\u0E1F\u0E25\u0E4C / file missing" });
                 done++;
                 continue;
@@ -33339,13 +33785,13 @@ var init_tools_media = __esm({
       }),
       tool({
         name: "timeline_lint",
-        description: "\u0E15\u0E23\u0E27\u0E08\u0E44\u0E17\u0E21\u0E4C\u0E44\u0E25\u0E19\u0E4C\u0E01\u0E31\u0E1A shot index: \u0E02\u0E49\u0E32\u0E21\u0E23\u0E2D\u0E22\u0E15\u0E31\u0E14\u0E15\u0E49\u0E19\u0E17\u0E32\u0E07 (cutcross), \u0E40\u0E1F\u0E23\u0E21\u0E41\u0E27\u0E1A (flash), \u0E43\u0E0A\u0E49\u0E15\u0E49\u0E19\u0E17\u0E32\u0E07\u0E0B\u0E49\u0E33 (repeat), \u0E20\u0E32\u0E1E\u0E19\u0E34\u0E48\u0E07\u0E19\u0E32\u0E19 (lowmotion, \u0E04\u0E33\u0E41\u0E19\u0E30\u0E19\u0E33) \xB7 Lint the timeline against cached source shot indexes",
+        description: "\u0E15\u0E23\u0E27\u0E08\u0E44\u0E17\u0E21\u0E4C\u0E44\u0E25\u0E19\u0E4C\u0E01\u0E31\u0E1A shot index: \u0E02\u0E49\u0E32\u0E21\u0E23\u0E2D\u0E22\u0E15\u0E31\u0E14\u0E15\u0E49\u0E19\u0E17\u0E32\u0E07 (cutcross), \u0E40\u0E1F\u0E23\u0E21\u0E41\u0E27\u0E1A (flash), \u0E43\u0E0A\u0E49\u0E15\u0E49\u0E19\u0E17\u0E32\u0E07\u0E0B\u0E49\u0E33 (repeat), \u0E20\u0E32\u0E1E\u0E19\u0E34\u0E48\u0E07\u0E19\u0E32\u0E19 (lowmotion, \u0E04\u0E33\u0E41\u0E19\u0E30\u0E19\u0E33), \u0E2A\u0E42\u0E25\u0E27\u0E4C\u0E1F\u0E38\u0E15 fps \u0E15\u0E48\u0E33\u0E42\u0E14\u0E22\u0E44\u0E21\u0E48\u0E21\u0E35 Optical Flow (slowmo) \xB7 Lint the timeline against cached source shot indexes",
         input: {
           flashFrames: external_exports.number().int().min(1).optional().describe("visible shot piece shorter than this = flash (default 6)"),
           nearClips: external_exports.number().int().min(1).optional().describe("repeat check window in clips (default 3)"),
           maxStaticSec: external_exports.number().positive().optional().describe("default styleRules.maxStaticSec or 4"),
           staticMotion: external_exports.number().min(0).optional().describe("motion (mafd) below this counts as static (default 0.5)"),
-          checks: external_exports.array(external_exports.enum(["cutcross", "flash", "repeat", "lowmotion"])).optional(),
+          checks: external_exports.array(external_exports.enum(["cutcross", "flash", "repeat", "lowmotion", "slowmo"])).optional(),
           threshold: thresholdArg
         },
         handler: async (a2, state) => {
@@ -33422,6 +33868,42 @@ var init_tools_media = __esm({
         }
       }),
       tool({
+        name: "proxy_make",
+        description: "\u0E17\u0E33 proxy MP4 H.264 \u0E40\u0E25\u0E47\u0E01 \u0E46 \u0E43\u0E2B\u0E49 Premiere \u0E41\u0E19\u0E1A\u0E01\u0E31\u0E1A\u0E44\u0E1F\u0E25\u0E4C\u0E15\u0E49\u0E19\u0E09\u0E1A\u0E31\u0E1A: \u0E0A\u0E37\u0E48\u0E2D `<\u0E0A\u0E37\u0E48\u0E2D\u0E40\u0E14\u0E34\u0E21>_Proxy.mp4` \u0E40\u0E23\u0E35\u0E22\u0E07\u0E42\u0E1F\u0E25\u0E40\u0E14\u0E2D\u0E23\u0E4C\u0E40\u0E2B\u0E21\u0E37\u0E2D\u0E19\u0E15\u0E49\u0E19\u0E09\u0E1A\u0E31\u0E1A, \u0E40\u0E1F\u0E23\u0E21/fps/timecode/\u0E0A\u0E48\u0E2D\u0E07\u0E40\u0E2A\u0E35\u0E22\u0E07\u0E40\u0E17\u0E48\u0E32\u0E15\u0E49\u0E19\u0E09\u0E1A\u0E31\u0E1A, \u0E40\u0E0A\u0E47\u0E01\u0E1E\u0E37\u0E49\u0E19\u0E17\u0E35\u0E48\u0E01\u0E48\u0E2D\u0E19, \u0E44\u0E21\u0E48\u0E40\u0E02\u0E35\u0E22\u0E19\u0E17\u0E31\u0E1A (\u0E17\u0E33\u0E15\u0E48\u0E2D\u0E08\u0E32\u0E01\u0E40\u0E14\u0E34\u0E21\u0E44\u0E14\u0E49) \xB7 Edit proxies for Premiere; then premiere_import_media attaches them",
+        input: {
+          sources: external_exports.array(external_exports.string()).min(1).describe("original files or folders (e.g. the CARD folders)"),
+          proxyDir: external_exports.string().describe("where the proxies go (a fast drive with space; not inside a card folder)"),
+          height: external_exports.union([external_exports.literal(540), external_exports.literal(720), external_exports.literal(1080)]).optional().describe("proxy height (default 540)"),
+          wait: external_exports.boolean().optional().describe("wait up to ~20 s for the result (default true; long runs return a job id: job_wait)")
+        },
+        handler: async (a2, state) => {
+          requireFfmpeg(state);
+          const { makeProxies: makeProxies2, planProxies: planProxies2 } = await Promise.resolve().then(() => (init_proxy(), proxy_exports));
+          const plan = await planProxies2(a2.sources, a2.proxyDir);
+          if (!plan.length) throw new ToolError("\u0E44\u0E21\u0E48\u0E1E\u0E1A\u0E44\u0E1F\u0E25\u0E4C\u0E27\u0E34\u0E14\u0E35\u0E42\u0E2D\u0E43\u0E19\u0E17\u0E35\u0E48\u0E23\u0E30\u0E1A\u0E38 / no video files found");
+          return runJob2(state, "proxy_make", a2.wait, async (ctx) => {
+            const r = await makeProxies2(state.env.tools, state.env.encoders, plan, {
+              ...a2.height ? { height: a2.height } : {},
+              signal: ctx.signal,
+              onProgress: (done, total, file) => {
+                ctx.progress({ stage: "proxy", done, total, ...file ? { message: file } : {} });
+              }
+            });
+            const failed = r.rows.filter((x) => x.status === "failed");
+            return {
+              ok: failed.length === 0,
+              proxyDir: resolve6(a2.proxyDir),
+              files: r.rows.length,
+              made: r.rows.filter((x) => x.status === "made").length,
+              existed: r.rows.filter((x) => x.status === "exists").length,
+              failed,
+              addedGb: Math.round(r.bytes / 2 ** 30 * 100) / 100,
+              next: "premiere_import_media {project, sources (the same originals), proxyDir} imports the originals and attaches these proxies"
+            };
+          });
+        }
+      }),
+      tool({
         name: "scan_footage",
         description: "\u0E2A\u0E33\u0E23\u0E27\u0E08\u0E42\u0E1F\u0E25\u0E40\u0E14\u0E2D\u0E23\u0E4C\u0E1F\u0E38\u0E15\u0E40\u0E17\u0E08 (\u0E44\u0E21\u0E48\u0E41\u0E01\u0E49\u0E44\u0E1F\u0E25\u0E4C\u0E1C\u0E39\u0E49\u0E43\u0E0A\u0E49): \u0E04\u0E27\u0E32\u0E21\u0E22\u0E32\u0E27/fps/VFR/codec/\u0E0A\u0E48\u0E2D\u0E07\u0E40\u0E2A\u0E35\u0E22\u0E07, pillarbox/letterbox, \u0E0A\u0E37\u0E48\u0E2D\u0E44\u0E1F\u0E25\u0E4C\u0E44\u0E17\u0E22\u0E40\u0E1E\u0E35\u0E49\u0E22\u0E19 (mojibake) + \u0E0A\u0E37\u0E48\u0E2D\u0E17\u0E35\u0E48\u0E16\u0E39\u0E01, \u0E08\u0E31\u0E14\u0E01\u0E25\u0E38\u0E48\u0E21\u0E15\u0E32\u0E21\u0E40\u0E25\u0E02 slot; apply: true \u0E2A\u0E23\u0E49\u0E32\u0E07 hardlink \u0E0A\u0E37\u0E48\u0E2D\u0E16\u0E39\u0E01\u0E43\u0E19 <project>/media-aliases/ \xB7 Inventory a footage folder",
         input: {
@@ -33434,10 +33916,10 @@ var init_tools_media = __esm({
         writesProject: true,
         handler: async (a2, state) => {
           requireFfmpeg(state);
-          const dir = resolve5(a2.dir);
-          if (!existsSync14(dir)) throw new ToolError(`\u0E44\u0E21\u0E48\u0E1E\u0E1A\u0E42\u0E1F\u0E25\u0E40\u0E14\u0E2D\u0E23\u0E4C / folder not found: ${dir}`);
+          const dir = resolve6(a2.dir);
+          if (!existsSync15(dir)) throw new ToolError(`\u0E44\u0E21\u0E48\u0E1E\u0E1A\u0E42\u0E1F\u0E25\u0E40\u0E14\u0E2D\u0E23\u0E4C / folder not found: ${dir}`);
           const p = a2.apply ? requireProject(state) : state.project;
-          const aliasDir = p ? join11(p.dir, "media-aliases") : void 0;
+          const aliasDir = p ? join12(p.dir, "media-aliases") : void 0;
           if (a2.apply && aliasDir && isProtected(aliasDir)) throw new ToolError("\u0E2B\u0E49\u0E32\u0E21\u0E40\u0E02\u0E35\u0E22\u0E19\u0E43\u0E19\u0E42\u0E1F\u0E25\u0E40\u0E14\u0E2D\u0E23\u0E4C\u0E17\u0E35\u0E48\u0E1B\u0E49\u0E2D\u0E07\u0E01\u0E31\u0E19\u0E44\u0E27\u0E49 / protected path", { path: aliasDir });
           return runJob2(state, "scan_footage", a2.wait, async (ctx) => {
             const report2 = await scanFootage(state.env.tools, dir, {
@@ -33464,10 +33946,10 @@ var init_tools_media = __esm({
 });
 
 // src/engine/comp-lint.ts
-import { readdir as readdir6 } from "node:fs/promises";
-import { basename as basename9, extname as extname8, join as join12, resolve as resolve6 } from "node:path";
+import { readdir as readdir7 } from "node:fs/promises";
+import { basename as basename10, extname as extname9, join as join13, resolve as resolve7 } from "node:path";
 function samePath4(a2, b) {
-  const x = resolve6(a2), y = resolve6(b);
+  const x = resolve7(a2), y = resolve7(b);
   return process.platform === "win32" ? x.toLowerCase() === y.toLowerCase() : x === y;
 }
 function compTargets(p, assetIds) {
@@ -33572,7 +34054,7 @@ async function defaultRegQuery(key) {
 }
 async function defaultReadDir(dir) {
   try {
-    return await readdir6(dir);
+    return await readdir7(dir);
   } catch {
     return [];
   }
@@ -33588,18 +34070,18 @@ async function listInstalledFonts(src = {}) {
     if (rows.length) sources.push(`${key} (${rows.length})`);
     for (const r of rows) {
       names.push(r.name);
-      if (r.file) names.push(basename9(r.file, extname8(r.file)));
+      if (r.file) names.push(basename10(r.file, extname9(r.file)));
     }
   }
   const dirs = [
-    join12(env["WINDIR"] ?? env["SystemRoot"] ?? "C:\\Windows", "Fonts"),
-    ...env["LOCALAPPDATA"] ? [join12(env["LOCALAPPDATA"], "Microsoft", "Windows", "Fonts")] : [],
-    join12(env["CommonProgramFiles"] ?? "C:\\Program Files\\Common Files", "Adobe", "Fonts")
+    join13(env["WINDIR"] ?? env["SystemRoot"] ?? "C:\\Windows", "Fonts"),
+    ...env["LOCALAPPDATA"] ? [join13(env["LOCALAPPDATA"], "Microsoft", "Windows", "Fonts")] : [],
+    join13(env["CommonProgramFiles"] ?? "C:\\Program Files\\Common Files", "Adobe", "Fonts")
   ];
   for (const dir of dirs) {
-    const files = (await readDir(dir)).filter((f) => FONT_EXT.has(extname8(f).toLowerCase()));
+    const files = (await readDir(dir)).filter((f) => FONT_EXT.has(extname9(f).toLowerCase()));
     if (files.length) sources.push(`${dir} (${files.length})`);
-    for (const f of files) names.push(basename9(f, extname8(f)));
+    for (const f of files) names.push(basename10(f, extname9(f)));
   }
   return { names, sources };
 }
@@ -33667,9 +34149,9 @@ var init_comp_lint = __esm({
 });
 
 // src/mcp/tools-ae.ts
-import { existsSync as existsSync15 } from "node:fs";
-import { mkdir as mkdir13 } from "node:fs/promises";
-import { basename as basename10, extname as extname9, join as join13, resolve as resolve7 } from "node:path";
+import { existsSync as existsSync16 } from "node:fs";
+import { mkdir as mkdir14 } from "node:fs/promises";
+import { basename as basename11, extname as extname10, join as join14, resolve as resolve8 } from "node:path";
 async function runAeJob(state, name, fn) {
   const job = state.jobs.start(name, fn);
   let timer;
@@ -33705,8 +34187,8 @@ function stripFrames(duration3, n2) {
   return [...out2];
 }
 function requireAep(path12) {
-  const aep = resolve7(path12);
-  if (!existsSync15(aep)) throw new ToolError(`\u0E44\u0E21\u0E48\u0E1E\u0E1A\u0E44\u0E1F\u0E25\u0E4C .aep / project not found: ${aep}`);
+  const aep = resolve8(path12);
+  if (!existsSync16(aep)) throw new ToolError(`\u0E44\u0E21\u0E48\u0E1E\u0E1A\u0E44\u0E1F\u0E25\u0E4C .aep / project not found: ${aep}`);
   return aep;
 }
 var AE_WAIT_MS, ADVISORY, AE_TOOLS;
@@ -33739,7 +34221,7 @@ var init_tools_ae = __esm({
           if (!ae.scanTemplate) throw new ToolError("backend \u0E19\u0E35\u0E49\u0E2A\u0E41\u0E01\u0E19 template \u0E44\u0E21\u0E48\u0E44\u0E14\u0E49 / this AE backend cannot scan templates");
           let outDir;
           if (a2.renderStrips) {
-            outDir = join13(requireProject(state).dir, "review", "templates", slug(basename10(aep, extname9(aep))));
+            outDir = join14(requireProject(state).dir, "review", "templates", slug(basename11(aep, extname10(aep))));
             if (isProtected(outDir)) throw new ToolError("\u0E2B\u0E49\u0E32\u0E21\u0E40\u0E02\u0E35\u0E22\u0E19\u0E43\u0E19\u0E42\u0E1F\u0E25\u0E40\u0E14\u0E2D\u0E23\u0E4C\u0E17\u0E35\u0E48\u0E1B\u0E49\u0E2D\u0E07\u0E01\u0E31\u0E19\u0E44\u0E27\u0E49 / refusing to write inside a protected path", { path: outDir });
           }
           return runAeJob(state, "template_scan", async (ctx) => {
@@ -33755,7 +34237,7 @@ var init_tools_ae = __esm({
             const max = a2.maxComps ?? 6;
             const skipped = chosen.slice(max).map((c3) => c3.name);
             const strips = [];
-            await mkdir13(outDir, { recursive: true });
+            await mkdir14(outDir, { recursive: true });
             const todo = chosen.slice(0, max);
             for (const [i2, c3] of todo.entries()) {
               ctx.signal.throwIfAborted();
@@ -33764,7 +34246,7 @@ var init_tools_ae = __esm({
               const paths = [];
               try {
                 for (const f of frames3) {
-                  const target = uniqueOutputPath(join13(outDir, `${slug(c3.name)}_f${String(f).padStart(5, "0")}.png`));
+                  const target = uniqueOutputPath(join14(outDir, `${slug(c3.name)}_f${String(f).padStart(5, "0")}.png`));
                   paths.push(await ae.previewFrame(aep, c3.name, f, target));
                 }
                 strips.push({ comp: c3.name, frames: frames3, paths });
@@ -33833,7 +34315,7 @@ var init_tools_ae = __esm({
         },
         handler: async (a2, state) => {
           if (!state.ae.purgeCaches) throw new ToolError("backend \u0E19\u0E35\u0E49\u0E25\u0E49\u0E32\u0E07 cache \u0E44\u0E21\u0E48\u0E44\u0E14\u0E49 / this AE backend cannot purge caches");
-          const cacheDir = a2.cacheDir ? resolve7(a2.cacheDir) : defaultAeCacheDir();
+          const cacheDir = a2.cacheDir ? resolve8(a2.cacheDir) : defaultAeCacheDir();
           return runAeJob(state, "ae_purge_cache", async () => {
             const outcome = await purgeIfLowCacheSpace(state.ae, { cacheDir, belowGb: a2.ifBelowGb ?? Infinity });
             let freeGb;
@@ -33851,8 +34333,8 @@ var init_tools_ae = __esm({
 
 // src/core/rules.ts
 import { randomBytes as randomBytes7 } from "node:crypto";
-import { existsSync as existsSync16 } from "node:fs";
-import { mkdir as mkdir14 } from "node:fs/promises";
+import { existsSync as existsSync17 } from "node:fs";
+import { mkdir as mkdir15 } from "node:fs/promises";
 import path11 from "node:path";
 function listConstraints(p) {
   return p.constraints ?? [];
@@ -34279,9 +34761,9 @@ function matcher(p, t, shots, warnings) {
 }
 async function extractEvidence(tools, p, plan, opts = {}) {
   if (!plan.instances.length) throw new Error("no instances to extract");
-  if (!existsSync16(plan.master)) throw new Error(`master not found: ${plan.master}`);
+  if (!existsSync17(plan.master)) throw new Error(`master not found: ${plan.master}`);
   const dir = path11.join(p.dir, "review", "evidence", safeName(plan.versionId));
-  await mkdir14(dir, { recursive: true });
+  await mkdir15(dir, { recursive: true });
   const stamp = `${(/* @__PURE__ */ new Date()).toISOString().replace(/[-:]/g, "").replace(/\..*$/, "")}_${randomBytes7(2).toString("hex")}`;
   const frames3 = [];
   const warnings = [...plan.warnings];
@@ -34289,7 +34771,7 @@ async function extractEvidence(tools, p, plan, opts = {}) {
     const out2 = freePath2(path11.join(dir, `${stamp}_${String(inst.instance).padStart(2, "0")}_${safeName(inst.clipId)}_f${inst.frame}.png`));
     const ss = (Math.max(0, inst.frame - 0.25) / plan.fps).toFixed(6);
     const r = await ff(tools.ffmpeg, ["-ss", ss, "-i", plan.master, "-map", "0:v:0", "-frames:v", "1", "-update", "1", out2], opts.signal);
-    if (r.exitCode !== 0 || !existsSync16(out2)) {
+    if (r.exitCode !== 0 || !existsSync17(out2)) {
       warnings.push(`\u0E14\u0E36\u0E07\u0E40\u0E1F\u0E23\u0E21 ${inst.frame} (${inst.clipId}) \u0E44\u0E21\u0E48\u0E2A\u0E33\u0E40\u0E23\u0E47\u0E08: ${r.tail}`);
       continue;
     }
@@ -34306,7 +34788,7 @@ async function extractEvidence(tools, p, plan, opts = {}) {
 async function tileFrames(ffmpeg, frames3, out2, signal) {
   const cols = Math.min(SHEET_COLUMNS2, frames3.length);
   const rows = Math.ceil(frames3.length / cols);
-  const fontOpts = existsSync16(WINDOWS_FONT3) ? [`fontfile='${WINDOWS_FONT3.replace(":", "\\:")}'`, void 0] : [void 0];
+  const fontOpts = existsSync17(WINDOWS_FONT3) ? [`fontfile='${WINDOWS_FONT3.replace(":", "\\:")}'`, void 0] : [void 0];
   for (const font of fontOpts) {
     const chains = frames3.map((f, i2) => {
       const label = `#${f.instance} ${safeName(f.clipId)} ${f.tc}`.replace(/:/g, "\\:");
@@ -34316,7 +34798,7 @@ async function tileFrames(ffmpeg, frames3, out2, signal) {
     const graph = `${chains.join(";")};${frames3.map((_, i2) => `[v${i2}]`).join("")}concat=n=${frames3.length}:v=1:a=0,tile=layout=${cols}x${rows}:padding=4:margin=4:color=0x202020`;
     const args = [...frames3.flatMap((f) => ["-i", f.path]), "-filter_complex", graph, "-frames:v", "1", "-update", "1", out2];
     const r = await ff(ffmpeg, args, signal);
-    if (r.exitCode === 0 && existsSync16(out2)) return out2;
+    if (r.exitCode === 0 && existsSync17(out2)) return out2;
   }
   return void 0;
 }
@@ -34337,12 +34819,12 @@ function safeName(s) {
   return s.replace(/[^A-Za-z0-9_-]+/g, "_").replace(/^_+|_+$/g, "") || "x";
 }
 function freePath2(p) {
-  if (!existsSync16(p)) return p;
+  if (!existsSync17(p)) return p;
   const ext = path11.extname(p);
   const base = p.slice(0, p.length - ext.length);
   for (let i2 = 2; ; i2++) {
     const c3 = `${base}_${i2}${ext}`;
-    if (!existsSync16(c3)) return c3;
+    if (!existsSync17(c3)) return c3;
   }
 }
 var RuleConflictError, QUOTE_MAX, MACHINE_CHECKS, VISUAL_CHECKS, SourceSchema, ConstraintInputSchema, HEX, pct, StylePatchSchema, LOGO_RE, WINDOWS_FONT3, SHEET_COLUMNS2, SHEET_THUMB_WIDTH2, FRAME_TIMEOUT_MS;
@@ -34549,9 +35031,9 @@ var init_tools_rules = __esm({
       }),
       tool({
         name: "disk_report",
-        description: "\u0E1E\u0E37\u0E49\u0E19\u0E17\u0E35\u0E48\u0E27\u0E48\u0E32\u0E07\u0E15\u0E48\u0E2D\u0E44\u0E14\u0E23\u0E1F\u0E4C, \u0E02\u0E19\u0E32\u0E14 AE disk cache, \u0E02\u0E19\u0E32\u0E14 cache/ \u0E41\u0E25\u0E30 out/ \u0E02\u0E2D\u0E07\u0E42\u0E1B\u0E23\u0E40\u0E08\u0E01\u0E15\u0E4C\u0E15\u0E48\u0E2D\u0E40\u0E27\u0E2D\u0E23\u0E4C\u0E0A\u0E31\u0E19 \xB7 Free space, AE disk cache size, project cache/out by version",
-        input: {},
-        handler: async (_a, state) => diskReport(requireProject(state))
+        description: "\u0E1E\u0E37\u0E49\u0E19\u0E17\u0E35\u0E48\u0E27\u0E48\u0E32\u0E07\u0E15\u0E48\u0E2D\u0E44\u0E14\u0E23\u0E1F\u0E4C, \u0E02\u0E19\u0E32\u0E14 AE disk cache, \u0E02\u0E19\u0E32\u0E14 cache/ \u0E41\u0E25\u0E30 out/ \u0E15\u0E48\u0E2D\u0E40\u0E27\u0E2D\u0E23\u0E4C\u0E0A\u0E31\u0E19, \u0E41\u0E25\u0E30\u0E42\u0E1F\u0E25\u0E40\u0E14\u0E2D\u0E23\u0E4C\u0E2D\u0E37\u0E48\u0E19\u0E43\u0E19\u0E42\u0E1B\u0E23\u0E40\u0E08\u0E01\u0E15\u0E4C (\u0E44\u0E1F\u0E25\u0E4C\u0E17\u0E35\u0E48\u0E44\u0E21\u0E48\u0E43\u0E0A\u0E48\u0E02\u0E2D\u0E07 CatCut) \u0E1E\u0E23\u0E49\u0E2D\u0E21\u0E40\u0E15\u0E37\u0E2D\u0E19\u0E40\u0E21\u0E37\u0E48\u0E2D\u0E40\u0E01\u0E34\u0E19\u0E07\u0E1A \xB7 Free space, AE cache, project cache/out by version, other project folders, budget warning",
+        input: { budgetGb: external_exports.number().positive().optional().describe("warn when the project folder is larger (default 50)") },
+        handler: async (a2, state) => diskReport(requireProject(state), a2.budgetGb ? { budgetGb: a2.budgetGb } : {})
       }),
       tool({
         name: "cache_gc_plan",
@@ -34754,9 +35236,9 @@ var init_joins = __esm({
 });
 
 // src/mcp/tools-edit.ts
-import { existsSync as existsSync17 } from "node:fs";
-import { mkdir as mkdir15, writeFile as writeFile12 } from "node:fs/promises";
-import { join as join14 } from "node:path";
+import { existsSync as existsSync18 } from "node:fs";
+import { mkdir as mkdir16, writeFile as writeFile12 } from "node:fs/promises";
+import { join as join15 } from "node:path";
 function activeJob(state) {
   return state.jobs.list().find((j) => (j.status === "running" || j.status === "queued") && PROJECT_JOBS.includes(j.name));
 }
@@ -34777,14 +35259,14 @@ async function runJob3(state, name, wait, fn) {
   throw new ToolError(info.error ?? `${name} ${info.status}`, { jobId: job.id, status: info.status });
 }
 async function backupTimeline3(p, reason) {
-  const dir = join14(p.dir, "history");
-  await mkdir15(dir, { recursive: true });
+  const dir = join15(p.dir, "history");
+  await mkdir16(dir, { recursive: true });
   const now = (/* @__PURE__ */ new Date()).toISOString();
   const stamp = now.replace(/[:.]/g, "-");
   const body2 = `${JSON.stringify({ savedAt: now, reason, timeline: p.timeline }, null, 2)}
 `;
   for (let n2 = 1; ; n2++) {
-    const file = join14(dir, `timeline-${stamp}-${n2}.json`);
+    const file = join15(dir, `timeline-${stamp}-${n2}.json`);
     try {
       await writeFile12(file, body2, { encoding: "utf8", flag: "wx" });
       return file;
@@ -34942,7 +35424,7 @@ var init_tools_edit = __esm({
             const old = snap?.render;
             if (!old) render2 = { action: "none", reason: "no render recorded for this shot" };
             else if (asset.render?.path === old.path && asset.render.renderedAt === old.renderedAt) render2 = { action: "unchanged", path: old.path };
-            else if (!existsSync17(old.path)) {
+            else if (!existsSync18(old.path)) {
               render2 = { action: "missing", path: old.path };
               warnings.push(`\u0E44\u0E1F\u0E25\u0E4C render \u0E02\u0E2D\u0E07 ${v.id} \u0E44\u0E21\u0E48\u0E2D\u0E22\u0E39\u0E48\u0E41\u0E25\u0E49\u0E27 (${old.path}) \u2014 build \u0E08\u0E30 render comp \u0E2A\u0E16\u0E32\u0E19\u0E30\u0E1B\u0E31\u0E08\u0E08\u0E38\u0E1A\u0E31\u0E19 / the old render is gone: the build renders the comp as it is now`);
             } else {
@@ -35014,7 +35496,7 @@ var init_tools_edit = __esm({
           if (!(a2.to > a2.from)) throw new ToolError(`\u0E0A\u0E48\u0E27\u0E07\u0E44\u0E21\u0E48\u0E16\u0E39\u0E01\u0E15\u0E49\u0E2D\u0E07 / bad range: to (${a2.to}) must be > from (${a2.from})`);
           if (a2.version) {
             const v = findVersion(p, a2.version);
-            if (!existsSync17(v.master)) throw new ToolError(`\u0E44\u0E21\u0E48\u0E1E\u0E1A master \u0E02\u0E2D\u0E07 ${v.id} / master missing: ${v.master}`);
+            if (!existsSync18(v.master)) throw new ToolError(`\u0E44\u0E21\u0E48\u0E1E\u0E1A master \u0E02\u0E2D\u0E07 ${v.id} / master missing: ${v.master}`);
           } else {
             const errors = state.api.project.validateTimeline(p);
             if (errors.length) throw new ToolError("timeline \u0E44\u0E21\u0E48\u0E1C\u0E48\u0E32\u0E19\u0E01\u0E32\u0E23\u0E15\u0E23\u0E27\u0E08\u0E2A\u0E2D\u0E1A / timeline invalid", { errors });
@@ -35045,7 +35527,7 @@ var init_tools_edit = __esm({
 });
 
 // src/mcp/tools-review2.ts
-import { join as join15 } from "node:path";
+import { join as join16 } from "node:path";
 function version2(p, id) {
   const v = p.versions.find((x) => x.id === id);
   if (!v) throw new ToolError(`\u0E44\u0E21\u0E48\u0E1E\u0E1A\u0E40\u0E27\u0E2D\u0E23\u0E4C\u0E0A\u0E31\u0E19 / unknown version: ${id}`);
@@ -35084,7 +35566,7 @@ var init_tools_review2 = __esm({
             const planA = versionPlan(p, va), planB = versionPlan(p, vb);
             if (planA.fps !== planB.fps) throw new ToolError(`fps \u0E15\u0E48\u0E32\u0E07\u0E01\u0E31\u0E19 / fps differ (${planA.fps} vs ${planB.fps})`);
             const { pairs, map } = comparePairs(planA, planB, { ...a2.clipIds ? { clipIds: a2.clipIds } : {}, ...a2.frames ? { frames: a2.frames } : {} });
-            const outPath = join15(state.api.project.projectPaths(p).review, "compare", `${va.id}_vs_${vb.id}.png`);
+            const outPath = join16(state.api.project.projectPaths(p).review, "compare", `${va.id}_vs_${vb.id}.png`);
             return await renderCompareSheet({
               tools: state.env.tools,
               map,
@@ -35111,33 +35593,37 @@ __export(premiere_exports, {
   cepExtensionsDir: () => cepExtensionsDir,
   createPremiereClient: () => createPremiereClient,
   defaultQueueDir: () => defaultQueueDir,
+  diagnosePremiere: () => diagnosePremiere,
   installBridge: () => installBridge,
+  openPremiere: () => openPremiere,
+  premiereHost: () => premiereHost,
   stagePath: () => stagePath,
   uninstallBridge: () => uninstallBridge
 });
-import { existsSync as existsSync18 } from "node:fs";
-import { cp, mkdir as mkdir16, readFile as readFile12, rename as rename10, rm as rm8, unlink as unlink3, writeFile as writeFile13 } from "node:fs/promises";
+import { spawn as nodeSpawn } from "node:child_process";
+import { existsSync as existsSync19 } from "node:fs";
+import { cp, mkdir as mkdir17, readFile as readFile12, rename as rename11, rm as rm9, unlink as unlink3, writeFile as writeFile13 } from "node:fs/promises";
 import os8 from "node:os";
-import { join as join16 } from "node:path";
+import { join as join17, resolve as resolve9 } from "node:path";
 import { randomUUID as randomUUID4 } from "node:crypto";
 import { fileURLToPath as fileURLToPath5 } from "node:url";
 function defaultQueueDir() {
-  return process.env["CATCUT_PREMIERE_BRIDGE_DIR"] ?? join16(os8.tmpdir(), "catcut-premiere-bridge");
+  return process.env["CATCUT_PREMIERE_BRIDGE_DIR"] ?? join17(os8.tmpdir(), "catcut-premiere-bridge");
 }
 function cepExtensionsDir() {
-  return join16(process.env["APPDATA"] ?? join16(os8.homedir(), "AppData", "Roaming"), "Adobe", "CEP", "extensions");
+  return join17(process.env["APPDATA"] ?? join17(os8.homedir(), "AppData", "Roaming"), "Adobe", "CEP", "extensions");
 }
 function createPremiereClient(opts = {}) {
   const queueDir = opts.queueDir ?? defaultQueueDir();
   const staleMs = opts.staleMs ?? 1e4;
   const pollMs = opts.pollMs ?? 100;
-  const installDir = opts.installDir ?? join16(cepExtensionsDir(), BRIDGE_ID);
+  const installDir = opts.installDir ?? join17(cepExtensionsDir(), BRIDGE_ID);
   let chain = Promise.resolve();
   async function status() {
-    const base = { installed: existsSync18(join16(installDir, "CSXS", "manifest.xml")), installDir, connected: false, queueDir };
+    const base = { installed: existsSync19(join17(installDir, "CSXS", "manifest.xml")), installDir, connected: false, queueDir };
     let hb;
     try {
-      hb = JSON.parse((await readFile12(join16(queueDir, "bridge.json"), "utf8")).replace(/^﻿/, ""));
+      hb = JSON.parse((await readFile12(join17(queueDir, "bridge.json"), "utf8")).replace(/^﻿/, ""));
     } catch {
       return base;
     }
@@ -35149,19 +35635,24 @@ function createPremiereClient(opts = {}) {
       heartbeatAgeMs: Math.max(0, age),
       ...hb.premiere ? { premiere: hb.premiere } : {},
       ...hb.bridge ? { bridge: hb.bridge } : {},
-      project: hb.project ?? null
+      project: hb.project ?? null,
+      busy: hb.busy && typeof hb.busy.since === "number" ? { action: String(hb.busy.action ?? "?"), seconds: Math.max(0, Math.round((Date.now() - hb.busy.since) / 1e3)) } : null
     };
   }
   async function callOnce(action, args, timeoutMs) {
     const st = await status();
     if (!st.connected) {
-      throw new Error(st.installed ? "Premiere bridge is not running: open Premiere Pro (it starts by itself), or Window > Extensions > CatCut Bridge / \u0E22\u0E31\u0E07\u0E44\u0E21\u0E48\u0E44\u0E14\u0E49\u0E40\u0E1B\u0E34\u0E14 Premiere \u0E2B\u0E23\u0E37\u0E2D bridge \u0E22\u0E31\u0E07\u0E44\u0E21\u0E48\u0E17\u0E33\u0E07\u0E32\u0E19" : "Premiere bridge is not installed: run `catcut premiere-bridge install`, then restart Premiere / \u0E22\u0E31\u0E07\u0E44\u0E21\u0E48\u0E44\u0E14\u0E49\u0E15\u0E34\u0E14\u0E15\u0E31\u0E49\u0E07 bridge");
+      if (!st.installed) throw new UserActionError("Premiere bridge is not installed", ACTIONS.bridgeNotInstalled());
+      throw new Error("Premiere is not connected: call premiere_open {project} (CatCut opens Premiere itself), or ready_check to see why / Premiere \u0E22\u0E31\u0E07\u0E44\u0E21\u0E48\u0E40\u0E0A\u0E37\u0E48\u0E2D\u0E21");
+    }
+    if (st.busy && st.busy.seconds * 1e3 >= DIALOG_AFTER_MS) {
+      throw new UserActionError(`Premiere is still busy with '${st.busy.action}' (${st.busy.seconds} s)`, ACTIONS.premiereDialog({ action: st.busy.action, seconds: st.busy.seconds }));
     }
     const id = `${Date.now().toString(36).padStart(9, "0")}-${randomUUID4().slice(0, 8)}`;
-    const req = join16(queueDir, `${id}.req.json`);
-    const res = join16(queueDir, `${id}.res.json`);
+    const req = join17(queueDir, `${id}.req.json`);
+    const res = join17(queueDir, `${id}.res.json`);
     await writeFile13(`${req}.tmp`, JSON.stringify({ id, action, args, deadline: Date.now() + timeoutMs }), "utf8");
-    await rename10(`${req}.tmp`, req);
+    await rename11(`${req}.tmp`, req);
     const until = Date.now() + timeoutMs;
     for (; ; ) {
       let raw;
@@ -35177,13 +35668,18 @@ function createPremiereClient(opts = {}) {
       }
       if (Date.now() > until) {
         const withdrawn = await unlink3(req).then(() => true, () => false);
-        throw new Error(withdrawn ? `Premiere did not pick up '${action}' within ${Math.round(timeoutMs / 1e3)} s (busy with a dialog?)` : `Premiere is still working on '${action}' after ${Math.round(timeoutMs / 1e3)} s; check Premiere before retrying`);
+        const now = await status();
+        if (now.busy && now.busy.seconds * 1e3 >= DIALOG_AFTER_MS) {
+          throw new UserActionError(`Premiere has been busy with '${now.busy.action}' for ${now.busy.seconds} s`, ACTIONS.premiereDialog({ action: now.busy.action, seconds: now.busy.seconds }));
+        }
+        throw new Error(withdrawn ? `Premiere did not pick up '${action}' within ${Math.round(timeoutMs / 1e3)} s` : `Premiere is still working on '${action}' after ${Math.round(timeoutMs / 1e3)} s; check Premiere before retrying`);
       }
       await new Promise((r) => setTimeout(r, pollMs));
     }
   }
   return {
     queueDir,
+    installDir,
     status,
     // one request at a time from this process
     call: (action, args = {}, o2 = {}) => {
@@ -35195,9 +35691,104 @@ function createPremiereClient(opts = {}) {
 }
 async function stagePath(client2, ext) {
   if (!isAscii(client2.queueDir)) throw new Error(`Premiere bridge folder must be an ASCII path: ${client2.queueDir} (set TEMP/TMP to an ASCII folder)`);
-  const dir = join16(client2.queueDir, "files");
-  await mkdir16(dir, { recursive: true });
-  return join16(dir, `${Date.now().toString(36)}-${randomUUID4().slice(0, 8)}${ext}`);
+  const dir = join17(client2.queueDir, "files");
+  await mkdir17(dir, { recursive: true });
+  return join17(dir, `${Date.now().toString(36)}-${randomUUID4().slice(0, 8)}${ext}`);
+}
+function premiereHost(spawn2 = execa) {
+  return {
+    async running() {
+      if (process.platform !== "win32") return [];
+      const r = await spawn2("tasklist", ["/FO", "CSV", "/NH", "/FI", "IMAGENAME eq Adobe Premiere Pro.exe"], { reject: false, windowsHide: true, timeout: 15e3 });
+      return String(r.stdout ?? "").split(/\r?\n/).map((l) => /^"Adobe Premiere Pro\.exe","(\d+)"/i.exec(l)?.[1]).filter((x) => !!x).map(Number);
+    },
+    async debugModeMissing() {
+      if (process.platform !== "win32") return [];
+      const missing = [];
+      for (const v of CSXS_VERSIONS) {
+        const key = `HKCU\\Software\\Adobe\\CSXS.${v}`;
+        const r = await spawn2("reg", ["query", key, "/v", "PlayerDebugMode"], { reject: false, windowsHide: true, timeout: 15e3 });
+        if (r.exitCode !== 0 || !/PlayerDebugMode\s+REG_SZ\s+1\b/.test(String(r.stdout ?? ""))) missing.push(key);
+      }
+      return missing;
+    },
+    launch(exe, project2) {
+      const child2 = nodeSpawn(exe, [project2], { detached: true, stdio: "ignore", windowsHide: false });
+      child2.on("error", () => void 0);
+      child2.unref();
+      return { pid: child2.pid };
+    }
+  };
+}
+async function packageVersion(dir) {
+  try {
+    return JSON.parse(await readFile12(join17(dir, "package.json"), "utf8")).version;
+  } catch {
+    return void 0;
+  }
+}
+async function diagnosePremiere(client2, host2, opts = {}) {
+  const status = await client2.status();
+  const versions = { catcut: await packageVersion(opts.sourceDir ?? bridgeSourceDir()), installed: await packageVersion(client2.installDir), ...status.bridge ? { loaded: status.bridge } : {} };
+  const running = status.connected || (await host2.running()).length > 0;
+  const out2 = (o2) => ({ ready: false, status, running, versions, ...o2 });
+  if (!opts.premiereExe && !running) return out2({ userAction: ACTIONS.premiereNotFound(), note: "Premiere Pro not found" });
+  if (!status.installed) return out2({ userAction: ACTIONS.bridgeNotInstalled(), note: "bridge not installed" });
+  if (versions.catcut && versions.installed !== versions.catcut) {
+    return out2({ userAction: ACTIONS.bridgeUpdate({ installed: versions.installed ?? "\u0E40\u0E01\u0E48\u0E32", wanted: versions.catcut }), note: `installed bridge ${versions.installed ?? "?"} is older than CatCut's ${versions.catcut}` });
+  }
+  const missing = await host2.debugModeMissing();
+  if (missing.length) return out2({ userAction: ACTIONS.bridgeNotInstalled(), note: `PlayerDebugMode not set: ${missing.join(", ")}` });
+  if (status.connected) {
+    if (versions.installed && status.bridge !== versions.installed) {
+      return out2({ userAction: ACTIONS.bridgeOutdated({ running: status.bridge ?? "\u0E40\u0E01\u0E48\u0E32", wanted: versions.installed }), note: `Premiere runs bridge ${status.bridge ?? "?"}, installed ${versions.installed}` });
+    }
+    if (status.busy && status.busy.seconds * 1e3 >= DIALOG_AFTER_MS) {
+      return out2({ userAction: ACTIONS.premiereDialog({ action: status.busy.action, seconds: status.busy.seconds }), note: `Premiere busy with ${status.busy.action} for ${status.busy.seconds} s` });
+    }
+    return out2({ ready: true, note: `connected: Premiere ${status.premiere ?? "?"}, project ${status.project?.name ?? "none"}` });
+  }
+  if (running) return out2({ userAction: ACTIONS.bridgeNotStarted(), note: "Premiere runs but the bridge does not answer" });
+  return out2({ note: "Premiere is closed (fine: premiere_open starts it with the project)" });
+}
+async function openPremiere(client2, host2, opts) {
+  const project2 = resolve9(opts.project);
+  if (!/\.prproj$/i.test(project2)) throw new Error(`not a Premiere project (.prproj): ${project2}`);
+  if (!existsSync19(project2)) throw new Error(`Premiere project not found: ${project2}`);
+  const waitMs = opts.waitMs ?? 24e4;
+  const pollMs = opts.pollMs ?? 1e3;
+  let d = await diagnosePremiere(client2, host2, { ...opts.premiereExe ? { premiereExe: opts.premiereExe } : {}, ...opts.sourceDir ? { sourceDir: opts.sourceDir } : {} });
+  let launched = false;
+  let pid;
+  if (!d.ready && d.userAction && d.userAction.code !== "bridge-not-started") throw new UserActionError(d.note, d.userAction);
+  if (!d.status.connected) {
+    if (!d.running) {
+      if (!opts.premiereExe) throw new UserActionError("Premiere Pro not found", ACTIONS.premiereNotFound());
+      pid = host2.launch(opts.premiereExe, project2).pid;
+      launched = true;
+    }
+    const until2 = Date.now() + (launched ? waitMs : Math.min(waitMs, 3e4));
+    for (; ; ) {
+      const st = await client2.status();
+      if (st.connected) break;
+      if (Date.now() > until2) {
+        if (launched) throw new UserActionError(`Premiere started but the bridge did not connect within ${Math.round(waitMs / 1e3)} s`, ACTIONS.premiereStartTimeout({ seconds: Math.round(waitMs / 1e3) }));
+        throw new UserActionError("Premiere runs but the bridge does not answer", ACTIONS.bridgeNotStarted());
+      }
+      await new Promise((r2) => setTimeout(r2, pollMs));
+    }
+    d = await diagnosePremiere(client2, host2, { ...opts.premiereExe ? { premiereExe: opts.premiereExe } : {}, ...opts.sourceDir ? { sourceDir: opts.sourceDir } : {} });
+    if (!d.ready && d.userAction) throw new UserActionError(d.note, d.userAction);
+  }
+  const until = Date.now() + (launched ? Math.min(waitMs, 6e4) : 0);
+  for (; ; ) {
+    const st = await client2.status();
+    if (st.project && samePath5(st.project.path, project2)) return { project: st.project, launched, openedProject: false, ...pid !== void 0 ? { pid } : {} };
+    if (Date.now() >= until) break;
+    await new Promise((r2) => setTimeout(r2, pollMs));
+  }
+  const r = await client2.call("openProject", { path: project2 }, { timeoutMs: 18e4 });
+  return { project: r.project, launched, openedProject: r.opened, ...pid !== void 0 ? { pid } : {} };
 }
 function bridgeSourceDir() {
   return fileURLToPath5(new URL("../../premiere/catcut-bridge", import.meta.url));
@@ -35205,10 +35796,10 @@ function bridgeSourceDir() {
 async function installBridge(opts = {}) {
   const spawn2 = opts.spawn ?? execa;
   const source = opts.source ?? bridgeSourceDir();
-  if (!existsSync18(join16(source, "CSXS", "manifest.xml"))) throw new Error(`bridge sources not found: ${source}`);
-  const dest = join16(opts.extensionsDir ?? cepExtensionsDir(), BRIDGE_ID);
-  await rm8(dest, { recursive: true, force: true });
-  await mkdir16(dest, { recursive: true });
+  if (!existsSync19(join17(source, "CSXS", "manifest.xml"))) throw new Error(`bridge sources not found: ${source}`);
+  const dest = join17(opts.extensionsDir ?? cepExtensionsDir(), BRIDGE_ID);
+  await rm9(dest, { recursive: true, force: true });
+  await mkdir17(dest, { recursive: true });
   await cp(source, dest, { recursive: true });
   const keys = [];
   for (const v of CSXS_VERSIONS) {
@@ -35220,36 +35811,65 @@ async function installBridge(opts = {}) {
   return { installedTo: dest, debugModeKeys: keys };
 }
 async function uninstallBridge(opts = {}) {
-  const dest = join16(opts.extensionsDir ?? cepExtensionsDir(), BRIDGE_ID);
-  await rm8(dest, { recursive: true, force: true });
+  const dest = join17(opts.extensionsDir ?? cepExtensionsDir(), BRIDGE_ID);
+  await rm9(dest, { recursive: true, force: true });
   return dest;
 }
-var BRIDGE_ID, PROTOCOL, CSXS_VERSIONS;
+var BRIDGE_ID, PROTOCOL, DIALOG_AFTER_MS, samePath5, CSXS_VERSIONS;
 var init_premiere = __esm({
   "src/engine/premiere.ts"() {
     "use strict";
     init_execa();
+    init_user_action();
     init_aerender();
     BRIDGE_ID = "com.catcut.bridge";
     PROTOCOL = 1;
+    DIALOG_AFTER_MS = 45e3;
+    samePath5 = (a2, b) => resolve9(a2).toLowerCase() === resolve9(b).toLowerCase();
     CSXS_VERSIONS = [9, 10, 11, 12];
   }
 });
 
 // src/mcp/tools-premiere.ts
 import { constants as constants9 } from "node:fs";
-import { copyFile as copyFile6, mkdir as mkdir17, rm as rm9 } from "node:fs/promises";
-import { basename as basename11, join as join17, resolve as resolve8 } from "node:path";
+import { copyFile as copyFile6, mkdir as mkdir18, readdir as readdir8, rm as rm10, stat as stat9 } from "node:fs/promises";
+import { basename as basename12, dirname as dirname8, extname as extname11, join as join18, relative as relative4, resolve as resolve10, sep as sep3 } from "node:path";
 function client(state) {
   state.premiere ??= createPremiereClient();
   return state.premiere;
 }
+function host(state) {
+  state.premiereHost ??= premiereHost();
+  return state.premiereHost;
+}
 function assertProject(open3, wanted) {
-  if (!open3) throw new ToolError("Premiere \u0E44\u0E21\u0E48\u0E44\u0E14\u0E49\u0E40\u0E1B\u0E34\u0E14\u0E42\u0E1B\u0E23\u0E40\u0E08\u0E01\u0E15\u0E4C\u0E44\u0E27\u0E49 / no project is open in Premiere");
+  if (!open3) throw new ToolError("Premiere \u0E44\u0E21\u0E48\u0E44\u0E14\u0E49\u0E40\u0E1B\u0E34\u0E14\u0E42\u0E1B\u0E23\u0E40\u0E08\u0E01\u0E15\u0E4C\u0E44\u0E27\u0E49 / no project is open in Premiere: call premiere_open {project}");
   const w = wanted.trim();
-  const hit = /[\\/]/.test(w) ? same2(open3.path, w) : [open3.name, basename11(open3.path)].some((n2) => n2.toLowerCase() === w.toLowerCase() || n2.toLowerCase() === `${w.toLowerCase()}.prproj`);
-  if (!hit) throw new ToolError(`\u0E42\u0E1B\u0E23\u0E40\u0E08\u0E01\u0E15\u0E4C\u0E17\u0E35\u0E48\u0E40\u0E1B\u0E34\u0E14\u0E43\u0E19 Premiere \u0E44\u0E21\u0E48\u0E15\u0E23\u0E07\u0E01\u0E31\u0E1A\u0E17\u0E35\u0E48\u0E23\u0E30\u0E1A\u0E38 / Premiere has a different project open`, { open: open3, wanted: w });
+  const hit = /[\\/]/.test(w) ? same2(open3.path, w) : [open3.name, basename12(open3.path)].some((n2) => n2.toLowerCase() === w.toLowerCase() || n2.toLowerCase() === `${w.toLowerCase()}.prproj`);
+  if (!hit) throw new ToolError(`\u0E42\u0E1B\u0E23\u0E40\u0E08\u0E01\u0E15\u0E4C\u0E17\u0E35\u0E48\u0E40\u0E1B\u0E34\u0E14\u0E43\u0E19 Premiere \u0E44\u0E21\u0E48\u0E15\u0E23\u0E07\u0E01\u0E31\u0E1A\u0E17\u0E35\u0E48\u0E23\u0E30\u0E1A\u0E38 / Premiere has a different project open: call premiere_open with the full path`, { open: open3, wanted: w });
   return open3;
+}
+async function ensureProject(state, wanted) {
+  const c3 = client(state);
+  if (/[\\/]/.test(wanted) && /\.prproj$/i.test(wanted.trim())) {
+    const now = await c3.status();
+    if (now.connected && now.project && same2(now.project.path, wanted.trim()) && !(now.busy && now.busy.seconds >= 45)) return { project: now.project, launched: false };
+    const r = await openPremiere(c3, host(state), { project: wanted.trim(), ...state.env.tools.premiereExe ? { premiereExe: state.env.tools.premiereExe } : {} });
+    if (r.launched) state.premiereLaunched = { project: r.project.path, ...r.pid !== void 0 ? { pid: r.pid } : {} };
+    return { project: r.project, launched: r.launched };
+  }
+  const st = await c3.status();
+  if (!st.connected) {
+    const d = await diagnosePremiere(c3, host(state), state.env.tools.premiereExe ? { premiereExe: state.env.tools.premiereExe } : {});
+    if (d.userAction) throw needsUser(d.note, d.userAction);
+    throw new ToolError("Premiere \u0E22\u0E31\u0E07\u0E44\u0E21\u0E48\u0E40\u0E1B\u0E34\u0E14: \u0E2A\u0E48\u0E07 path \u0E40\u0E15\u0E47\u0E21\u0E02\u0E2D\u0E07\u0E44\u0E1F\u0E25\u0E4C .prproj \u0E41\u0E25\u0E49\u0E27 CatCut \u0E08\u0E30\u0E40\u0E1B\u0E34\u0E14\u0E43\u0E2B\u0E49 / pass the full .prproj path and CatCut opens Premiere", { wanted });
+  }
+  return { project: assertProject(st.project, wanted), launched: false };
+}
+function closeHint(state, saved) {
+  const ours = !!state.premiereLaunched;
+  if (!saved) return "\u0E22\u0E31\u0E07\u0E44\u0E21\u0E48\u0E44\u0E14\u0E49 Save \u0E43\u0E19 Premiere: \u0E16\u0E49\u0E32\u0E08\u0E30\u0E1B\u0E34\u0E14 \u0E43\u0E2B\u0E49 premiere_save \u0E01\u0E48\u0E2D\u0E19 (\u0E2B\u0E23\u0E37\u0E2D premiere_close \u0E0B\u0E36\u0E48\u0E07 Save \u0E43\u0E2B\u0E49) / not saved yet";
+  return ours ? "Save \u0E41\u0E25\u0E49\u0E27 \u2014 \u0E1B\u0E34\u0E14 Premiere \u0E44\u0E14\u0E49 \u0E2B\u0E23\u0E37\u0E2D\u0E43\u0E2B\u0E49 CatCut \u0E1B\u0E34\u0E14\u0E43\u0E2B\u0E49\u0E14\u0E49\u0E27\u0E22 premiere_close / saved: Premiere may be closed" : "Save \u0E41\u0E25\u0E49\u0E27 \u2014 \u0E1B\u0E34\u0E14 Premiere \u0E44\u0E14\u0E49\u0E16\u0E49\u0E32\u0E44\u0E21\u0E48\u0E44\u0E14\u0E49\u0E43\u0E0A\u0E49\u0E15\u0E48\u0E2D / saved: Premiere may be closed";
 }
 async function callCatCut(state, name, args) {
   const { callTool: callTool2, toolResultData: toolResultData2 } = await Promise.resolve().then(() => (init_tools2(), tools_exports));
@@ -35258,52 +35878,204 @@ async function callCatCut(state, name, args) {
   if (r.isError) throw new ToolError(String(data["error"] ?? `${name} failed`), data);
   return data;
 }
-var same2, slug2, PREMIERE_TOOLS;
+async function walk2(dir, out2) {
+  for (const e of await readdir8(dir, { withFileTypes: true })) {
+    const full = join18(dir, e.name);
+    if (e.isDirectory()) await walk2(full, out2);
+    else if (e.isFile() && MEDIA.has(extname11(e.name).toLowerCase())) out2.push(full);
+  }
+}
+function binFor(file, root) {
+  if (!root) return basename12(dirname8(file));
+  const parts = relative4(root, dirname8(file)).split(sep3).filter((p) => p && p !== "." && !CARD_DIRS.test(p));
+  return [basename12(root), ...parts.slice(0, 1)].join("/");
+}
+var same2, slug2, MEDIA, CARD_DIRS, isProxyName, PREMIERE_TOOLS;
 var init_tools_premiere = __esm({
   "src/mcp/tools-premiere.ts"() {
     "use strict";
     init_zod();
     init_premiere();
     init_aerender();
+    init_user_action();
     init_state();
     init_tooldef();
-    same2 = (a2, b) => resolve8(a2).toLowerCase() === resolve8(b).toLowerCase();
+    same2 = (a2, b) => resolve10(a2).toLowerCase() === resolve10(b).toLowerCase();
     slug2 = (s) => s.replace(/[<>:"/\\|?*\u0000-\u001f]/g, "_").trim() || "sequence";
+    MEDIA = /* @__PURE__ */ new Set([".mp4", ".mov", ".mxf", ".mts", ".m2ts", ".avi", ".mkv", ".r3d", ".braw", ".crm", ".wav", ".mp3", ".aif", ".aiff", ".m4a", ".png", ".jpg", ".jpeg", ".tif", ".tiff", ".psd"]);
+    CARD_DIRS = /^(PRIVATE|M4ROOT|CLIP|SUB|THMBNL|AVCHD|BDMV|STREAM|XDROOT|Clip|DCIM|CONTENTS|VIDEO|\d{3}[A-Z_]+)$/i;
+    isProxyName = (f) => /_proxy$/i.test(basename12(f, extname11(f)));
     PREMIERE_TOOLS = [
       tool({
         name: "premiere_status",
-        description: "\u0E2A\u0E16\u0E32\u0E19\u0E30 Premiere \u0E1C\u0E48\u0E32\u0E19 CatCut bridge (\u0E44\u0E21\u0E48\u0E43\u0E0A\u0E49 computer use): \u0E15\u0E34\u0E14\u0E15\u0E31\u0E49\u0E07\u0E41\u0E25\u0E49\u0E27\u0E44\u0E2B\u0E21 \u0E40\u0E0A\u0E37\u0E48\u0E2D\u0E21\u0E2D\u0E22\u0E39\u0E48\u0E44\u0E2B\u0E21 \u0E42\u0E1B\u0E23\u0E40\u0E08\u0E01\u0E15\u0E4C\u0E17\u0E35\u0E48\u0E40\u0E1B\u0E34\u0E14 \u0E41\u0E25\u0E30 sequence \xB7 Premiere bridge status: installed, connected, open project, sequences",
+        description: "\u0E2A\u0E16\u0E32\u0E19\u0E30 Premiere \u0E1C\u0E48\u0E32\u0E19 CatCut bridge (\u0E44\u0E21\u0E48\u0E43\u0E0A\u0E49 computer use): \u0E1E\u0E23\u0E49\u0E2D\u0E21\u0E44\u0E2B\u0E21 \u0E16\u0E49\u0E32\u0E44\u0E21\u0E48\u0E1E\u0E23\u0E49\u0E2D\u0E21\u0E1A\u0E2D\u0E01\u0E40\u0E2B\u0E15\u0E38\u0E1C\u0E25\u0E41\u0E25\u0E30\u0E2A\u0E34\u0E48\u0E07\u0E17\u0E35\u0E48\u0E1C\u0E39\u0E49\u0E43\u0E0A\u0E49\u0E15\u0E49\u0E2D\u0E07\u0E17\u0E33 (userAction) \xB7 Premiere bridge status with the reason and the user action when not ready",
         input: {},
         handler: async (_a, state) => {
           const c3 = client(state);
-          const st = await c3.status();
-          if (!st.connected) {
-            return {
-              ...st,
-              hint: st.installed ? "\u0E40\u0E1B\u0E34\u0E14 Premiere Pro \u0E41\u0E25\u0E49\u0E27 bridge \u0E08\u0E30\u0E40\u0E23\u0E34\u0E48\u0E21\u0E40\u0E2D\u0E07 (\u0E2B\u0E23\u0E37\u0E2D Window > Extensions > CatCut Bridge) / start Premiere: the bridge starts by itself" : "\u0E15\u0E34\u0E14\u0E15\u0E31\u0E49\u0E07\u0E04\u0E23\u0E31\u0E49\u0E07\u0E40\u0E14\u0E35\u0E22\u0E27: `catcut premiere-bridge install` \u0E41\u0E25\u0E49\u0E27\u0E23\u0E35\u0E2A\u0E15\u0E32\u0E23\u0E4C\u0E15 Premiere / install once, then restart Premiere"
-            };
-          }
+          const d = await diagnosePremiere(c3, host(state), state.env.tools.premiereExe ? { premiereExe: state.env.tools.premiereExe } : {});
+          const base = { ...d.status, ready: d.ready, running: d.running, versions: d.versions, note: d.note, ...d.userAction ? { userAction: card(d.userAction), relay: RELAY } : {} };
+          if (!d.ready) return { ...base, ...!d.running && !d.userAction ? { hint: 'Premiere \u0E1B\u0E34\u0E14\u0E2D\u0E22\u0E39\u0E48 \u0E44\u0E21\u0E48\u0E40\u0E1B\u0E47\u0E19\u0E44\u0E23: premiere_open {project: "\u2026\\\u0E07\u0E32\u0E19.prproj"} \u0E40\u0E1B\u0E34\u0E14\u0E43\u0E2B\u0E49\u0E40\u0E2D\u0E07' } : {} };
           const live = await c3.call("status", {}, { timeoutMs: 3e4 });
-          return { ...st, ...live };
+          return { ...base, ...live };
+        }
+      }),
+      tool({
+        name: "premiere_open",
+        description: "\u0E40\u0E1B\u0E34\u0E14 Premiere \u0E1E\u0E23\u0E49\u0E2D\u0E21\u0E42\u0E1B\u0E23\u0E40\u0E08\u0E01\u0E15\u0E4C\u0E43\u0E2B\u0E49\u0E40\u0E2D\u0E07 (\u0E16\u0E49\u0E32\u0E1B\u0E34\u0E14\u0E2D\u0E22\u0E39\u0E48) \u0E2B\u0E23\u0E37\u0E2D\u0E40\u0E1B\u0E34\u0E14\u0E42\u0E1B\u0E23\u0E40\u0E08\u0E01\u0E15\u0E4C\u0E19\u0E35\u0E49\u0E43\u0E19 Premiere \u0E17\u0E35\u0E48\u0E40\u0E1B\u0E34\u0E14\u0E2D\u0E22\u0E39\u0E48 \u0E41\u0E25\u0E49\u0E27\u0E23\u0E2D\u0E08\u0E19 bridge \u0E1E\u0E23\u0E49\u0E2D\u0E21 \u2014 \u0E1C\u0E39\u0E49\u0E43\u0E0A\u0E49\u0E44\u0E21\u0E48\u0E15\u0E49\u0E2D\u0E07\u0E40\u0E1B\u0E34\u0E14\u0E04\u0E49\u0E32\u0E07\u0E44\u0E27\u0E49\u0E40\u0E2D\u0E07 \u0E44\u0E21\u0E48\u0E1B\u0E34\u0E14\u0E2B\u0E23\u0E37\u0E2D Save \u0E2D\u0E30\u0E44\u0E23 \xB7 Start Premiere with the project (or open it in the running Premiere) and wait for the bridge",
+        input: {
+          project: external_exports.string().describe("full path of the .prproj"),
+          waitSec: external_exports.number().int().min(10).max(900).optional().describe("how long to wait for a freshly started Premiere (default 240)")
+        },
+        handler: async (a2, state) => {
+          const r = await openPremiere(client(state), host(state), {
+            project: a2.project,
+            ...a2.waitSec ? { waitMs: a2.waitSec * 1e3 } : {},
+            ...state.env.tools.premiereExe ? { premiereExe: state.env.tools.premiereExe } : {}
+          });
+          if (r.launched) state.premiereLaunched = { project: r.project.path, ...r.pid !== void 0 ? { pid: r.pid } : {} };
+          return {
+            ok: true,
+            ...r,
+            hint: r.launched ? "CatCut \u0E40\u0E1B\u0E34\u0E14 Premiere \u0E43\u0E2B\u0E49\u0E41\u0E25\u0E49\u0E27 \u0E22\u0E48\u0E2D\u0E2B\u0E19\u0E49\u0E32\u0E15\u0E48\u0E32\u0E07\u0E44\u0E14\u0E49 \u0E17\u0E33\u0E07\u0E32\u0E19\u0E2D\u0E37\u0E48\u0E19\u0E44\u0E14\u0E49 \u0E2D\u0E22\u0E48\u0E32\u0E1B\u0E34\u0E14\u0E08\u0E19\u0E01\u0E27\u0E48\u0E32 CatCut \u0E08\u0E30\u0E1A\u0E2D\u0E01\u0E27\u0E48\u0E32 Save \u0E41\u0E25\u0E49\u0E27 / Premiere started by CatCut" : "\u0E42\u0E1B\u0E23\u0E40\u0E08\u0E01\u0E15\u0E4C\u0E1E\u0E23\u0E49\u0E2D\u0E21\u0E43\u0E19 Premiere / project is active"
+          };
+        }
+      }),
+      tool({
+        name: "premiere_save",
+        description: "Save \u0E42\u0E1B\u0E23\u0E40\u0E08\u0E01\u0E15\u0E4C Premiere \u0E17\u0E35\u0E48\u0E23\u0E30\u0E1A\u0E38 (\u0E15\u0E49\u0E2D\u0E07\u0E40\u0E1B\u0E47\u0E19\u0E42\u0E1B\u0E23\u0E40\u0E08\u0E01\u0E15\u0E4C\u0E17\u0E35\u0E48\u0E40\u0E1B\u0E34\u0E14\u0E2D\u0E22\u0E39\u0E48) \xB7 Save the named open Premiere project",
+        input: { project: external_exports.string().describe("the open Premiere project: file name or full path") },
+        handler: async (a2, state) => {
+          const { project: project2 } = await ensureProject(state, a2.project);
+          const r = await client(state).call("save", { expectProject: project2.path }, { timeoutMs: 18e4 });
+          return { ok: true, ...r, closeHint: closeHint(state, true) };
+        }
+      }),
+      tool({
+        name: "premiere_close",
+        description: "Save \u0E41\u0E25\u0E49\u0E27\u0E1B\u0E34\u0E14 Premiere \u0E43\u0E2B\u0E49 (\u0E04\u0E48\u0E32\u0E40\u0E23\u0E34\u0E48\u0E21\u0E15\u0E49\u0E19\u0E1B\u0E34\u0E14\u0E40\u0E09\u0E1E\u0E32\u0E30\u0E40\u0E21\u0E37\u0E48\u0E2D CatCut \u0E40\u0E1B\u0E47\u0E19\u0E04\u0E19\u0E40\u0E1B\u0E34\u0E14 Premiere \u0E40\u0E2D\u0E07; \u0E1C\u0E39\u0E49\u0E43\u0E0A\u0E49\u0E2A\u0E31\u0E48\u0E07\u0E1B\u0E34\u0E14\u0E40\u0E2D\u0E07\u0E43\u0E2B\u0E49\u0E43\u0E2A\u0E48 force) \xB7 Save and quit Premiere (only when CatCut started it, unless force)",
+        input: {
+          project: external_exports.string().describe("the open Premiere project: file name or full path"),
+          save: external_exports.boolean().optional().describe("save before quitting (default true)"),
+          force: external_exports.boolean().optional().describe("quit even though the user opened Premiere (only when the user asked)")
+        },
+        handler: async (a2, state) => {
+          if (!state.premiereLaunched && a2.force !== true) {
+            throw new ToolError("CatCut \u0E44\u0E21\u0E48\u0E44\u0E14\u0E49\u0E40\u0E1B\u0E34\u0E14 Premiere \u0E40\u0E2D\u0E07 \u0E08\u0E36\u0E07\u0E44\u0E21\u0E48\u0E1B\u0E34\u0E14\u0E43\u0E2B\u0E49 (\u0E1C\u0E39\u0E49\u0E43\u0E0A\u0E49\u0E2D\u0E32\u0E08\u0E43\u0E0A\u0E49\u0E2D\u0E22\u0E39\u0E48) \u2014 \u0E16\u0E49\u0E32\u0E1C\u0E39\u0E49\u0E43\u0E0A\u0E49\u0E2A\u0E31\u0E48\u0E07\u0E43\u0E2B\u0E49\u0E1B\u0E34\u0E14 \u0E2A\u0E48\u0E07 force: true / Premiere was not started by CatCut");
+          }
+          const { project: project2 } = await ensureProject(state, a2.project);
+          const r = await client(state).call("quit", { expectProject: project2.path, save: a2.save !== false }, { timeoutMs: 18e4 });
+          delete state.premiereLaunched;
+          return { ok: true, ...r, closed: true, hint: r.saved ? "Save \u0E41\u0E25\u0E49\u0E27\u0E41\u0E25\u0E30\u0E2A\u0E31\u0E48\u0E07\u0E1B\u0E34\u0E14 Premiere \u0E41\u0E25\u0E49\u0E27" : "\u0E2A\u0E31\u0E48\u0E07\u0E1B\u0E34\u0E14 Premiere \u0E42\u0E14\u0E22\u0E44\u0E21\u0E48 Save (Premiere \u0E2D\u0E32\u0E08\u0E16\u0E32\u0E21\u0E01\u0E48\u0E2D\u0E19\u0E1B\u0E34\u0E14)" };
+        }
+      }),
+      tool({
+        name: "premiere_import_media",
+        description: "\u0E19\u0E33\u0E40\u0E02\u0E49\u0E32\u0E44\u0E1F\u0E25\u0E4C\u0E15\u0E49\u0E19\u0E09\u0E1A\u0E31\u0E1A (\u0E0A\u0E37\u0E48\u0E2D\u0E40\u0E14\u0E34\u0E21 \u0E44\u0E21\u0E48\u0E2A\u0E23\u0E49\u0E32\u0E07\u0E44\u0E1F\u0E25\u0E4C\u0E43\u0E2B\u0E21\u0E48) \u0E40\u0E02\u0E49\u0E32 bin \u0E15\u0E32\u0E21\u0E0A\u0E37\u0E48\u0E2D\u0E42\u0E1F\u0E25\u0E40\u0E14\u0E2D\u0E23\u0E4C/\u0E01\u0E32\u0E23\u0E4C\u0E14 \u0E41\u0E25\u0E49\u0E27\u0E41\u0E19\u0E1A proxy `<\u0E0A\u0E37\u0E48\u0E2D\u0E40\u0E14\u0E34\u0E21>_Proxy.*` \u0E43\u0E2B\u0E49 (\u0E17\u0E33\u0E15\u0E48\u0E2D\u0E08\u0E32\u0E01\u0E40\u0E14\u0E34\u0E21\u0E44\u0E14\u0E49\u0E16\u0E49\u0E32\u0E40\u0E04\u0E22\u0E04\u0E49\u0E32\u0E07) \xB7 Import original media into bins named after their card folders and attach `<name>_Proxy.*` proxies; resumable",
+        input: {
+          project: external_exports.string().describe("full path of the .prproj (opened when needed) or the open project name"),
+          sources: external_exports.array(external_exports.string()).min(1).describe('files or folders (folders are scanned; each folder becomes a bin, e.g. "CARD 1")'),
+          proxyDir: external_exports.string().optional().describe("folder holding the proxies (searched recursively for <name>_Proxy.<ext>)"),
+          save: external_exports.boolean().optional().describe("save the project when done (default true)"),
+          batch: external_exports.number().int().min(1).max(200).optional().describe("files per Premiere request (default 25: a stuck import is found sooner and the next call resumes)")
+        },
+        handler: async (a2, state) => {
+          const files = [];
+          for (const s of a2.sources.map((x) => resolve10(x))) {
+            const st = await stat9(s).catch(() => void 0);
+            if (!st) throw new ToolError(`\u0E44\u0E21\u0E48\u0E1E\u0E1A ${s} / not found`);
+            if (st.isDirectory()) {
+              const found = [];
+              await walk2(s, found);
+              for (const f of found.sort()) if (!isProxyName(f)) files.push({ source: f, bin: binFor(f, s) });
+            } else files.push({ source: s, bin: binFor(s, void 0) });
+          }
+          if (!files.length) throw new ToolError("\u0E44\u0E21\u0E48\u0E1E\u0E1A\u0E44\u0E1F\u0E25\u0E4C\u0E2A\u0E37\u0E48\u0E2D\u0E43\u0E19\u0E17\u0E35\u0E48\u0E23\u0E30\u0E1A\u0E38 / no media files found");
+          const proxies = /* @__PURE__ */ new Map();
+          if (a2.proxyDir) {
+            const found = [];
+            await walk2(resolve10(a2.proxyDir), found);
+            for (const f of found) if (isProxyName(f)) proxies.set(basename12(f, extname11(f)).replace(/_proxy$/i, "").toLowerCase(), f);
+          }
+          const items = files.map((f) => {
+            const proxy = proxies.get(basename12(f.source, extname11(f.source)).toLowerCase());
+            return { ...f, ...proxy ? { proxy } : {} };
+          });
+          const { project: project2 } = await ensureProject(state, a2.project);
+          const c3 = client(state);
+          const size = a2.batch ?? 25;
+          const rows = [];
+          for (let i2 = 0; i2 < items.length; i2 += size) {
+            const r = await c3.call("importMedia", { expectProject: project2.path, items: items.slice(i2, i2 + size), enableProxies: !!a2.proxyDir }, { timeoutMs: 3e5 });
+            rows.push(...r.items);
+          }
+          let saved = false;
+          if (a2.save !== false) {
+            await c3.call("save", { expectProject: project2.path }, { timeoutMs: 18e4 });
+            saved = true;
+          }
+          const count2 = (k, v) => rows.filter((r) => r[k] === v).length;
+          const errors = rows.filter((r) => r["error"]);
+          return {
+            ok: errors.length === 0,
+            project: project2,
+            files: items.length,
+            imported: count2("imported", true),
+            proxies: { attached: count2("proxy", "attached"), already: count2("proxy", "already"), none: items.filter((x) => !("proxy" in x)).length, failed: count2("proxy", "failed") + count2("proxy", "different") },
+            bins: [...new Set(items.map((x) => x.bin))],
+            errors,
+            saved,
+            closeHint: closeHint(state, saved),
+            ...a2.proxyDir && items.some((x) => !("proxy" in x)) ? { withoutProxy: items.filter((x) => !("proxy" in x)).map((x) => x.source).slice(0, 50) } : {}
+          };
+        }
+      }),
+      tool({
+        name: "premiere_set_speed",
+        description: "\u0E1B\u0E23\u0E31\u0E1A speed \u0E04\u0E25\u0E34\u0E1B\u0E43\u0E19 sequence \u0E41\u0E1A\u0E1A native \u0E02\u0E2D\u0E07 Premiere (\u0E40\u0E0A\u0E48\u0E19 60% + Optical Flow) \u0E42\u0E14\u0E22\u0E44\u0E21\u0E48 export \u0E44\u0E1F\u0E25\u0E4C\u0E43\u0E2B\u0E21\u0E48 \u0E15\u0E33\u0E41\u0E2B\u0E19\u0E48\u0E07\u0E41\u0E25\u0E30\u0E04\u0E27\u0E32\u0E21\u0E22\u0E32\u0E27\u0E04\u0E25\u0E34\u0E1B\u0E1A\u0E19\u0E44\u0E17\u0E21\u0E4C\u0E44\u0E25\u0E19\u0E4C\u0E04\u0E07\u0E40\u0E14\u0E34\u0E21 \xB7 Native clip speed + interpolation in Premiere; the clip keeps its place and length",
+        input: {
+          project: external_exports.string().describe("the open Premiere project: file name or full path"),
+          sequence: external_exports.string().optional().describe("sequence name or id (default: active)"),
+          track: external_exports.number().int().min(1).optional().describe("video track number (default 1 = V1)"),
+          clips: external_exports.array(external_exports.object({
+            at: external_exports.union([external_exports.number().int().min(0), external_exports.string().regex(/^\d{1,2}:\d{2}:\d{2}[:;]\d{2}$/)]).describe("a frame (sequence fps) or timecode HH:MM:SS:FF inside the clip"),
+            speed: external_exports.number().positive().max(1e4).describe("percent, e.g. 60"),
+            interpolation: external_exports.enum(["optical-flow", "frame-blend", "frame-sampling"]).optional().describe("default optical-flow")
+          })).min(1),
+          save: external_exports.boolean().optional().describe("save when every clip applied (default true)")
+        },
+        handler: async (a2, state) => {
+          const { project: project2 } = await ensureProject(state, a2.project);
+          const c3 = client(state);
+          const r = await c3.call("setSpeed", {
+            expectProject: project2.path,
+            sequence: a2.sequence,
+            track: a2.track ?? 1,
+            clips: a2.clips.map((x) => ({ at: x.at, speed: x.speed / 100, interpolation: x.interpolation ?? "optical-flow" }))
+          }, { timeoutMs: 18e4 });
+          let saved = false;
+          if (a2.save !== false) {
+            await c3.call("save", { expectProject: project2.path }, { timeoutMs: 18e4 });
+            saved = true;
+          }
+          return { ok: true, ...r, saved, closeHint: closeHint(state, saved) };
         }
       }),
       tool({
         name: "premiere_push",
-        description: '\u0E2A\u0E48\u0E07\u0E44\u0E17\u0E21\u0E4C\u0E44\u0E25\u0E19\u0E4C CatCut \u0E40\u0E02\u0E49\u0E32\u0E42\u0E1B\u0E23\u0E40\u0E08\u0E01\u0E15\u0E4C\u0E17\u0E35\u0E48\u0E40\u0E1B\u0E34\u0E14\u0E2D\u0E22\u0E39\u0E48\u0E43\u0E19 Premiere \u0E40\u0E1B\u0E47\u0E19 sequence \u0E43\u0E2B\u0E21\u0E48\u0E43\u0E19 bin "CatCut" \u0E41\u0E25\u0E49\u0E27\u0E40\u0E1B\u0E34\u0E14\u0E43\u0E2B\u0E49 (\u0E44\u0E21\u0E48 save \u0E42\u0E1B\u0E23\u0E40\u0E08\u0E01\u0E15\u0E4C Premiere) \xB7 Hand the CatCut timeline to the open Premiere project as a new sequence (no computer use; Premiere is not saved). `project` must name the Premiere project that is open (see premiere_status) so a cut never lands in the wrong job.',
+        description: '\u0E2A\u0E48\u0E07\u0E44\u0E17\u0E21\u0E4C\u0E44\u0E25\u0E19\u0E4C CatCut \u0E40\u0E02\u0E49\u0E32\u0E42\u0E1B\u0E23\u0E40\u0E08\u0E01\u0E15\u0E4C Premiere \u0E40\u0E1B\u0E47\u0E19 sequence \u0E43\u0E2B\u0E21\u0E48\u0E43\u0E19 bin "CatCut" \u0E41\u0E25\u0E49\u0E27\u0E40\u0E1B\u0E34\u0E14\u0E43\u0E2B\u0E49 (\u0E2A\u0E48\u0E07 path \u0E40\u0E15\u0E47\u0E21\u0E02\u0E2D\u0E07 .prproj \u0E41\u0E25\u0E49\u0E27 CatCut \u0E40\u0E1B\u0E34\u0E14 Premiere \u0E43\u0E2B\u0E49\u0E40\u0E2D\u0E07\u0E16\u0E49\u0E32\u0E1B\u0E34\u0E14\u0E2D\u0E22\u0E39\u0E48; \u0E44\u0E21\u0E48 save \u0E40\u0E27\u0E49\u0E19\u0E41\u0E15\u0E48 save: true) \xB7 Hand the CatCut timeline to Premiere as a new sequence. `project` must name the Premiere project so a cut never lands in the wrong job.',
         input: {
-          project: external_exports.string().describe('the open Premiere project: file name (e.g. "JOB_EDIT.prproj") or full path'),
+          project: external_exports.string().describe("full path of the .prproj (opened when needed) or the open project name"),
           version: external_exports.string().optional().describe("CatCut version to hand off (default: latest)"),
           sequenceName: external_exports.string().optional(),
           bin: external_exports.string().optional().describe('Premiere bin for the import (default "CatCut")'),
-          open: external_exports.boolean().optional().describe("open the new sequence in the timeline (default true)")
+          open: external_exports.boolean().optional().describe("open the new sequence in the timeline (default true)"),
+          save: external_exports.boolean().optional().describe("save the Premiere project after the import (default false)")
         },
         writesProject: true,
         handler: async (a2, state) => {
           requireProject(state);
+          const { project: target } = await ensureProject(state, a2.project);
           const c3 = client(state);
-          const st = await c3.status();
-          if (!st.connected) throw new ToolError("Premiere bridge \u0E44\u0E21\u0E48\u0E44\u0E14\u0E49\u0E40\u0E0A\u0E37\u0E48\u0E2D\u0E21 / bridge not connected: call premiere_status", { ...st });
-          const target = assertProject(st.project, a2.project);
           const exported = await callCatCut(state, "export_premiere_xml", { version: a2.version, sequenceName: a2.sequenceName });
           const xml = String(exported["path"]);
           const staged = await stagePath(c3, ".xml");
@@ -35314,6 +36086,7 @@ var init_tools_premiere = __esm({
               { path: staged, bin: a2.bin ?? "CatCut", open: a2.open !== false, expectProject: target.path },
               { timeoutMs: 18e4 }
             );
+            if (a2.save === true) await c3.call("save", { expectProject: target.path }, { timeoutMs: 18e4 });
             return {
               ok: true,
               xml,
@@ -35321,10 +36094,12 @@ var init_tools_premiere = __esm({
               ...res,
               ...exported["warnings"] ? { warnings: exported["warnings"] } : {},
               ...exported["unrendered"] ? { unrendered: exported["unrendered"] } : {},
-              hint: "\u0E15\u0E31\u0E14\u0E15\u0E48\u0E2D\u0E43\u0E19 Premiere \u0E44\u0E14\u0E49\u0E40\u0E25\u0E22 \u0E40\u0E2A\u0E23\u0E47\u0E08\u0E41\u0E25\u0E49\u0E27\u0E43\u0E0A\u0E49 premiere_pull \u0E40\u0E1E\u0E37\u0E48\u0E2D\u0E14\u0E36\u0E07\u0E01\u0E25\u0E31\u0E1A (Premiere \u0E22\u0E31\u0E07\u0E44\u0E21\u0E48\u0E44\u0E14\u0E49 save) / edit in Premiere, then premiere_pull"
+              saved: a2.save === true,
+              closeHint: closeHint(state, a2.save === true),
+              hint: "\u0E15\u0E31\u0E14\u0E15\u0E48\u0E2D\u0E43\u0E19 Premiere \u0E44\u0E14\u0E49\u0E40\u0E25\u0E22 \u0E40\u0E2A\u0E23\u0E47\u0E08\u0E41\u0E25\u0E49\u0E27\u0E43\u0E0A\u0E49 premiere_pull \u0E40\u0E1E\u0E37\u0E48\u0E2D\u0E14\u0E36\u0E07\u0E01\u0E25\u0E31\u0E1A / edit in Premiere, then premiere_pull"
             };
           } finally {
-            await rm9(staged, { force: true });
+            await rm10(staged, { force: true });
           }
         }
       }),
@@ -35333,25 +36108,102 @@ var init_tools_premiere = __esm({
         description: "\u0E14\u0E36\u0E07 sequence \u0E08\u0E32\u0E01 Premiere \u0E01\u0E25\u0E31\u0E1A\u0E40\u0E02\u0E49\u0E32 CatCut: Premiere export FCP XML (\u0E44\u0E21\u0E48\u0E41\u0E01\u0E49\u0E42\u0E1B\u0E23\u0E40\u0E08\u0E01\u0E15\u0E4C Premiere) \u2192 import_premiere_xml; \u0E04\u0E48\u0E32\u0E40\u0E23\u0E34\u0E48\u0E21\u0E15\u0E49\u0E19\u0E41\u0E04\u0E48\u0E2A\u0E23\u0E38\u0E1B\u0E04\u0E27\u0E32\u0E21\u0E15\u0E48\u0E32\u0E07, apply: true \u0E40\u0E1E\u0E37\u0E48\u0E2D\u0E43\u0E0A\u0E49 \xB7 Pull a Premiere sequence back into CatCut (dry run by default)",
         input: {
           sequence: external_exports.string().optional().describe("sequence name or id (default: the active sequence)"),
+          project: external_exports.string().optional().describe("Premiere project (full .prproj path opens it when needed)"),
           apply: external_exports.boolean().optional().describe("commit the imported timeline (default false = summary, diff and warnings only)")
         },
         writesProject: true,
         mutating: true,
         handler: async (a2, state) => {
           const p = requireProject(state);
+          if (a2.project) await ensureProject(state, a2.project);
           const c3 = client(state);
           const staged = await stagePath(c3, ".xml");
           try {
             const res = await c3.call("exportXml", { sequence: a2.sequence, path: staged }, { timeoutMs: 18e4 });
-            const dir = join17(state.api.project.projectPaths(p).out, "premiere");
-            await mkdir17(dir, { recursive: true });
-            const xml = uniqueOutputPath(join17(dir, `${slug2(res.sequence.name)}.xml`));
+            const dir = join18(state.api.project.projectPaths(p).out, "premiere");
+            await mkdir18(dir, { recursive: true });
+            const xml = uniqueOutputPath(join18(dir, `${slug2(res.sequence.name)}.xml`));
             await copyFile6(staged, xml, constants9.COPYFILE_EXCL);
             const imported = await callCatCut(state, "import_premiere_xml", { path: xml, apply: a2.apply === true });
             return { ...imported, pulledFrom: { project: res.project, sequence: res.sequence }, xml };
           } finally {
-            await rm9(staged, { force: true });
+            await rm10(staged, { force: true });
           }
+        }
+      })
+    ];
+  }
+});
+
+// src/mcp/tools-ready.ts
+import { statfs as statfs2 } from "node:fs/promises";
+import os9 from "node:os";
+import { parse as parse5 } from "node:path";
+async function defaultFreeGb(path12) {
+  try {
+    const s = await statfs2(parse5(path12).root || path12);
+    return Number(s.bavail) * Number(s.bsize) / 2 ** 30;
+  } catch {
+    return void 0;
+  }
+}
+async function readiness(state, deps = {}) {
+  const apps = [];
+  const act = (a2) => card(a2);
+  if (state.env.tools.ffmpeg) apps.push({ app: "ffmpeg", status: "ok", keepOpen: "never", note: "\u0E1E\u0E23\u0E49\u0E2D\u0E21" });
+  else apps.push({ app: "ffmpeg", status: "action", keepOpen: "never", note: state.problems.join("; ") || "not found", userAction: act(ACTIONS.ffmpegMissing({ detail: state.problems[0] })) });
+  if (!state.env.tools.afterfx) {
+    apps.push({ app: "after-effects", status: "optional", keepOpen: "never", note: "\u0E44\u0E21\u0E48\u0E1E\u0E1A AE: \u0E43\u0E0A\u0E49\u0E44\u0E14\u0E49\u0E17\u0E38\u0E01\u0E2D\u0E22\u0E48\u0E32\u0E07\u0E22\u0E01\u0E40\u0E27\u0E49\u0E19\u0E07\u0E32\u0E19\u0E01\u0E23\u0E32\u0E1F\u0E34\u0E01 ae_*", userAction: act(ACTIONS.aeNotFound()) });
+  } else {
+    const pref = await (deps.aePref ?? (() => aeScriptingPref()))();
+    if (!pref.prefsFile) apps.push({ app: "after-effects", status: "action", keepOpen: "never", note: "AE \u0E22\u0E31\u0E07\u0E44\u0E21\u0E48\u0E40\u0E04\u0E22\u0E40\u0E1B\u0E34\u0E14\u0E43\u0E19\u0E1A\u0E31\u0E0D\u0E0A\u0E35\u0E19\u0E35\u0E49", userAction: act(ACTIONS.aeFirstRun({ detail: "\u0E22\u0E31\u0E07\u0E44\u0E21\u0E48\u0E40\u0E04\u0E22\u0E40\u0E1B\u0E34\u0E14 AE" })) });
+    else if (pref.allowed === false) apps.push({ app: "after-effects", status: "action", keepOpen: "never", note: `Allow Scripts \u0E1B\u0E34\u0E14\u0E2D\u0E22\u0E39\u0E48 (AE ${pref.aeVersion ?? "?"})`, userAction: act(ACTIONS.aeAllowScripts()) });
+    else apps.push({ app: "after-effects", status: "ok", keepOpen: "never", note: `\u0E1E\u0E23\u0E49\u0E2D\u0E21 (AE ${pref.aeVersion ?? "?"}): CatCut \u0E40\u0E1B\u0E34\u0E14\u0E41\u0E1A\u0E1A\u0E44\u0E21\u0E48\u0E21\u0E35\u0E2B\u0E19\u0E49\u0E32\u0E15\u0E48\u0E32\u0E07\u0E41\u0E25\u0E49\u0E27\u0E1B\u0E34\u0E14\u0E40\u0E2D\u0E07\u0E17\u0E38\u0E01\u0E07\u0E32\u0E19 \u0E44\u0E21\u0E48\u0E15\u0E49\u0E2D\u0E07\u0E40\u0E1B\u0E34\u0E14 AE` });
+  }
+  state.premiere ??= createPremiereClient();
+  state.premiereHost ??= premiereHost();
+  const d = await diagnosePremiere(state.premiere, state.premiereHost, state.env.tools.premiereExe ? { premiereExe: state.env.tools.premiereExe } : {});
+  if (d.userAction?.code === "premiere-not-found") apps.push({ app: "premiere", status: "optional", keepOpen: "never", note: "\u0E44\u0E21\u0E48\u0E1E\u0E1A Premiere: \u0E2A\u0E48\u0E07\u0E07\u0E32\u0E19\u0E40\u0E1B\u0E47\u0E19 XML \u0E44\u0E14\u0E49", userAction: act(d.userAction) });
+  else if (d.userAction) apps.push({ app: "premiere", status: "action", keepOpen: d.userAction.keepOpen ? "while-working" : "catcut-opens-it", note: d.note, userAction: act(d.userAction) });
+  else apps.push({ app: "premiere", status: "ok", keepOpen: "catcut-opens-it", note: d.ready ? `\u0E40\u0E0A\u0E37\u0E48\u0E2D\u0E21\u0E2D\u0E22\u0E39\u0E48: ${d.status.project?.name ?? "\u0E22\u0E31\u0E07\u0E44\u0E21\u0E48\u0E21\u0E35\u0E42\u0E1B\u0E23\u0E40\u0E08\u0E01\u0E15\u0E4C"}` : "\u0E1B\u0E34\u0E14\u0E2D\u0E22\u0E39\u0E48 \u0E44\u0E21\u0E48\u0E40\u0E1B\u0E47\u0E19\u0E44\u0E23: CatCut \u0E40\u0E1B\u0E34\u0E14\u0E43\u0E2B\u0E49\u0E1E\u0E23\u0E49\u0E2D\u0E21\u0E42\u0E1B\u0E23\u0E40\u0E08\u0E01\u0E15\u0E4C\u0E40\u0E21\u0E37\u0E48\u0E2D\u0E15\u0E49\u0E2D\u0E07\u0E43\u0E0A\u0E49 \u0E41\u0E25\u0E49\u0E27\u0E1A\u0E2D\u0E01\u0E40\u0E21\u0E37\u0E48\u0E2D\u0E1B\u0E34\u0E14\u0E44\u0E14\u0E49" });
+  const freeGb = deps.freeGb ?? defaultFreeGb;
+  const paths = [...new Set([state.project?.dir, os9.tmpdir()].filter((p) => !!p).map((p) => parse5(p).root.toUpperCase()))];
+  for (const root of paths) {
+    const gb = await freeGb(root);
+    if (gb === void 0) continue;
+    const r = Math.round(gb * 10) / 10;
+    if (gb < LOW_DISK_GB) apps.push({ app: "disk", status: "action", keepOpen: "never", note: `${root} \u0E40\u0E2B\u0E25\u0E37\u0E2D ${r} GB`, userAction: act(ACTIONS.diskLow({ drive: root, freeGb: r })) });
+    else apps.push({ app: "disk", status: "ok", keepOpen: "never", note: `${root} \u0E40\u0E2B\u0E25\u0E37\u0E2D ${r} GB` });
+  }
+  const name = { ffmpeg: "ffmpeg", "after-effects": "After Effects", premiere: "Premiere Pro", disk: "\u0E14\u0E34\u0E2A\u0E01\u0E4C", catcut: "CatCut" };
+  const keep = { never: "\u0E44\u0E21\u0E48\u0E15\u0E49\u0E2D\u0E07\u0E40\u0E1B\u0E34\u0E14", "catcut-opens-it": "CatCut \u0E40\u0E1B\u0E34\u0E14\u0E43\u0E2B\u0E49\u0E40\u0E2D\u0E07\u0E40\u0E21\u0E37\u0E48\u0E2D\u0E43\u0E0A\u0E49", "while-working": "\u0E40\u0E1B\u0E34\u0E14\u0E44\u0E27\u0E49\u0E23\u0E30\u0E2B\u0E27\u0E48\u0E32\u0E07 CatCut \u0E17\u0E33\u0E07\u0E32\u0E19" };
+  const mark = { ok: "\u2713", action: "\u26A0", optional: "\u2013" };
+  const lines = apps.map((a2) => `${mark[a2.status]} ${name[a2.app]}: ${a2.note}${a2.app === "disk" || a2.app === "ffmpeg" ? "" : ` \xB7 ${keep[a2.keepOpen]}`}`);
+  const todo = apps.filter((a2) => a2.status === "action" && a2.userAction);
+  const say = [
+    "\u0E04\u0E27\u0E32\u0E21\u0E1E\u0E23\u0E49\u0E2D\u0E21\u0E02\u0E2D\u0E07\u0E40\u0E04\u0E23\u0E37\u0E48\u0E2D\u0E07",
+    ...lines,
+    ...todo.length ? ["", "\u0E15\u0E49\u0E2D\u0E07\u0E17\u0E33:", ...todo.map((a2) => userActionText(a2.userAction))] : ["", "\u0E1E\u0E23\u0E49\u0E2D\u0E21\u0E17\u0E31\u0E49\u0E07\u0E2B\u0E21\u0E14 \u0E44\u0E21\u0E48\u0E15\u0E49\u0E2D\u0E07\u0E40\u0E1B\u0E34\u0E14\u0E42\u0E1B\u0E23\u0E41\u0E01\u0E23\u0E21\u0E44\u0E2B\u0E19\u0E04\u0E49\u0E32\u0E07\u0E44\u0E27\u0E49"]
+  ].join("\n");
+  return { ready: todo.length === 0, apps, say };
+}
+var LOW_DISK_GB, READY_TOOLS;
+var init_tools_ready = __esm({
+  "src/mcp/tools-ready.ts"() {
+    "use strict";
+    init_user_action();
+    init_housekeeping();
+    init_premiere();
+    init_tooldef();
+    LOW_DISK_GB = 20;
+    READY_TOOLS = [
+      tool({
+        name: "ready_check",
+        description: '\u0E15\u0E23\u0E27\u0E08\u0E04\u0E27\u0E32\u0E21\u0E1E\u0E23\u0E49\u0E2D\u0E21\u0E02\u0E2D\u0E07\u0E40\u0E04\u0E23\u0E37\u0E48\u0E2D\u0E07\u0E42\u0E14\u0E22\u0E44\u0E21\u0E48\u0E40\u0E1B\u0E34\u0E14\u0E42\u0E1B\u0E23\u0E41\u0E01\u0E23\u0E21 Adobe: ffmpeg, After Effects, Premiere + bridge, \u0E14\u0E34\u0E2A\u0E01\u0E4C \u2014 \u0E41\u0E15\u0E48\u0E25\u0E30\u0E15\u0E31\u0E27\u0E1A\u0E2D\u0E01\u0E27\u0E48\u0E32\u0E1E\u0E23\u0E49\u0E2D\u0E21\u0E44\u0E2B\u0E21 \u0E15\u0E49\u0E2D\u0E07\u0E40\u0E1B\u0E34\u0E14\u0E04\u0E49\u0E32\u0E07\u0E44\u0E2B\u0E21 \u0E41\u0E25\u0E30\u0E16\u0E49\u0E32\u0E15\u0E49\u0E2D\u0E07\u0E17\u0E33\u0E2D\u0E30\u0E44\u0E23\u0E1A\u0E2D\u0E01\u0E02\u0E31\u0E49\u0E19\u0E15\u0E2D\u0E19/\u0E40\u0E2B\u0E15\u0E38\u0E1C\u0E25/\u0E17\u0E33\u0E04\u0E23\u0E31\u0E49\u0E07\u0E40\u0E14\u0E35\u0E22\u0E27\u0E44\u0E2B\u0E21/\u0E1B\u0E34\u0E14\u0E44\u0E14\u0E49\u0E40\u0E21\u0E37\u0E48\u0E2D\u0E44\u0E23 (userAction) \xB7 Readiness without starting Adobe apps, with user action cards. Call first in a session and whenever an app seems "not connected".',
+        input: {},
+        handler: async (_a, state) => {
+          const r = await readiness(state);
+          return { ...r, relay: RELAY.replace("userAction.say", "`say`") };
         }
       })
     ];
@@ -35370,7 +36222,8 @@ var init_tools_extra = __esm({
     init_tools_edit();
     init_tools_review2();
     init_tools_premiere();
-    EXTRA_TOOLS = [...BOARD_TOOLS, ...MEDIA_TOOLS, ...AE_TOOLS, ...RULES_TOOLS, ...EDIT_TOOLS, ...REVIEW2_TOOLS, ...PREMIERE_TOOLS];
+    init_tools_ready();
+    EXTRA_TOOLS = [...READY_TOOLS, ...BOARD_TOOLS, ...MEDIA_TOOLS, ...AE_TOOLS, ...RULES_TOOLS, ...EDIT_TOOLS, ...REVIEW2_TOOLS, ...PREMIERE_TOOLS];
   }
 });
 
@@ -35385,10 +36238,10 @@ __export(tools_exports, {
   toolResultData: () => toolResultData,
   uniquePath: () => uniquePath3
 });
-import { existsSync as existsSync19 } from "node:fs";
-import { mkdir as mkdir18, readdir as readdir7, readFile as readFile13, rename as rename11, writeFile as writeFile14 } from "node:fs/promises";
-import os9 from "node:os";
-import { basename as basename12, dirname as dirname7, extname as extname10, isAbsolute as isAbsolute2, join as join18, relative as relative3, resolve as resolve9 } from "node:path";
+import { existsSync as existsSync20 } from "node:fs";
+import { mkdir as mkdir19, readdir as readdir9, readFile as readFile13, rename as rename12, writeFile as writeFile14 } from "node:fs/promises";
+import os10 from "node:os";
+import { basename as basename13, dirname as dirname9, extname as extname12, isAbsolute as isAbsolute2, join as join19, relative as relative5, resolve as resolve11 } from "node:path";
 async function runTool(t, args, state) {
   try {
     if (MUTATING.has(t.name) || t.mutating) {
@@ -35427,18 +36280,18 @@ function toolResultData(r) {
   const text2 = r.content[0]?.text ?? "{}";
   return JSON.parse(text2);
 }
-function samePath5(a2, b) {
-  const x = resolve9(a2);
-  const y = resolve9(b);
+function samePath6(a2, b) {
+  const x = resolve11(a2);
+  const y = resolve11(b);
   return WIN ? x.toLowerCase() === y.toLowerCase() : x === y;
 }
 function uniquePath3(p) {
-  if (!existsSync19(p)) return p;
-  const ext = extname10(p);
+  if (!existsSync20(p)) return p;
+  const ext = extname12(p);
   const base = ext ? p.slice(0, -ext.length) : p;
   for (let i2 = 2; ; i2++) {
     const c3 = `${base}_${i2}${ext}`;
-    if (!existsSync19(c3)) return c3;
+    if (!existsSync20(c3)) return c3;
   }
 }
 function fileSafe(name) {
@@ -35452,14 +36305,14 @@ function asciiSlug(s) {
   return `${slug3 || "comp"}_${h2.toString(16)}`;
 }
 function isInside(child2, parent) {
-  const rel = relative3(resolve9(parent), resolve9(child2));
+  const rel = relative5(resolve11(parent), resolve11(child2));
   return rel === "" || !rel.startsWith("..") && !isAbsolute2(rel);
 }
 function assertWritable(target, what) {
   if (isProtected(target)) throw new ToolError(`\u0E2B\u0E49\u0E32\u0E21\u0E40\u0E02\u0E35\u0E22\u0E19\u0E43\u0E19\u0E42\u0E1F\u0E25\u0E40\u0E14\u0E2D\u0E23\u0E4C\u0E17\u0E35\u0E48\u0E1B\u0E49\u0E2D\u0E07\u0E01\u0E31\u0E19\u0E44\u0E27\u0E49 / refusing to write ${what} inside a protected path`, { path: target });
 }
 function assertConfined(state, target, aep, what) {
-  const roots = [dirname7(aep), ...state.project ? [state.project.dir] : []];
+  const roots = [dirname9(aep), ...state.project ? [state.project.dir] : []];
   if (!roots.some((r) => isInside(target, r))) {
     throw new ToolError(`${what} \u0E15\u0E49\u0E2D\u0E07\u0E2D\u0E22\u0E39\u0E48\u0E43\u0E19\u0E42\u0E1F\u0E25\u0E40\u0E14\u0E2D\u0E23\u0E4C\u0E42\u0E1B\u0E23\u0E40\u0E08\u0E01\u0E15\u0E4C\u0E2B\u0E23\u0E37\u0E2D\u0E42\u0E1F\u0E25\u0E40\u0E14\u0E2D\u0E23\u0E4C\u0E02\u0E2D\u0E07 .aep / ${what} must be inside the project folder or next to the .aep`, { path: target, allowed: roots });
   }
@@ -35494,7 +36347,7 @@ function isOpaque(res, comp) {
   return r.opaque === true || Array.isArray(r.opaqueComps) && r.opaqueComps.includes(comp);
 }
 function opaqueHint(state, aep, comp) {
-  const ids = state.project ? Object.values(state.project.assets).filter(isAeComp).filter((a2) => a2.comp === comp && samePath5(a2.aep, aep)).map((a2) => a2.id) : [];
+  const ids = state.project ? Object.values(state.project.assets).filter(isAeComp).filter((a2) => a2.comp === comp && samePath6(a2.aep, aep)).map((a2) => a2.id) : [];
   const forceArg = ids.length ? `build {forceAssets: ${JSON.stringify(ids)}}` : "build {forceAssets: [<asset id>]}";
   return {
     opaque: true,
@@ -35509,10 +36362,10 @@ async function forgetRenders(state, p, ids, ctx) {
     const a2 = p.assets[id];
     if (!a2 || !isAeComp(a2)) continue;
     const old = a2.render?.path;
-    if (old && existsSync19(old)) {
-      const ext = extname10(old);
+    if (old && existsSync20(old)) {
+      const ext = extname12(old);
       const aside = uniquePath3(`${old.slice(0, old.length - ext.length)}_forced${ext}`);
-      await rename11(old, aside);
+      await rename12(old, aside);
       moved[id] = aside;
       ctx.log(`${id}: previous render kept as ${aside}`);
     }
@@ -35522,14 +36375,14 @@ async function forgetRenders(state, p, ids, ctx) {
   return moved;
 }
 async function backupTimeline4(p, reason) {
-  const dir = join18(p.dir, "history");
-  await mkdir18(dir, { recursive: true });
+  const dir = join19(p.dir, "history");
+  await mkdir19(dir, { recursive: true });
   const now = (/* @__PURE__ */ new Date()).toISOString();
   const stamp = now.replace(/[:.]/g, "-");
   const body2 = `${JSON.stringify({ savedAt: now, reason, timeline: p.timeline }, null, 2)}
 `;
   for (let n2 = 1; ; n2++) {
-    const file = join18(dir, `timeline-${stamp}-${n2}.json`);
+    const file = join19(dir, `timeline-${stamp}-${n2}.json`);
     try {
       await writeFile14(file, body2, { encoding: "utf8", flag: "wx" });
       return file;
@@ -35539,8 +36392,8 @@ async function backupTimeline4(p, reason) {
   }
 }
 async function listBackups(p) {
-  const dir = join18(p.dir, "history");
-  const names = existsSync19(dir) ? (await readdir7(dir)).filter((n2) => BACKUP_RE.test(n2)) : [];
+  const dir = join19(p.dir, "history");
+  const names = existsSync20(dir) ? (await readdir9(dir)).filter((n2) => BACKUP_RE.test(n2)) : [];
   const key = (n2) => {
     const m = BACKUP_RE.exec(n2);
     return [m[1], Number(m[2])];
@@ -35552,7 +36405,7 @@ async function listBackups(p) {
   });
   return Promise.all(names.map(async (name) => {
     try {
-      const d = JSON.parse(await readFile13(join18(dir, name), "utf8"));
+      const d = JSON.parse(await readFile13(join19(dir, name), "utf8"));
       const video = d.timeline?.video ?? [];
       return { name, savedAt: d.savedAt, reason: d.reason, clips: video.length, frames: video.reduce((s, c3) => s + (c3.dur > 0 ? c3.dur : 0), 0) };
     } catch {
@@ -35617,10 +36470,10 @@ function startReviewJob(state, id, open3, wait = true) {
   const running = activeJob2(state, PROJECT_JOBS2);
   if (running) throw new ToolError(`wait for ${running.name} before creating a review`, { jobId: running.id });
   const snapshot2 = versionPlan(p, v);
-  if (!open3 || !v.reviewProxy || !existsSync19(v.reviewProxy)) requireFfmpeg(state);
+  if (!open3 || !v.reviewProxy || !existsSync20(v.reviewProxy)) requireFfmpeg(state);
   const job = state.jobs.start(open3 ? "review_open" : "preview", async (ctx) => {
     v.reviewPlan ??= structuredClone(snapshot2);
-    if (!open3 || !v.reviewProxy || !existsSync19(v.reviewProxy)) {
+    if (!open3 || !v.reviewProxy || !existsSync20(v.reviewProxy)) {
       ctx.log("creating review proxy");
       v.reviewProxy = await state.assembler.reviewProxy(p, v.id, { signal: ctx.signal });
     }
@@ -35946,11 +36799,11 @@ var init_tools2 = __esm({
           targets: external_exports.array(external_exports.string()).optional().describe("delivery target ids (see delivery_presets)")
         },
         handler: async (a2, state) => {
-          const dir = resolve9(a2.dir);
+          const dir = resolve11(a2.dir);
           assertWritable(dir, "project_new.dir");
           const unknown2 = (a2.targets ?? []).filter((t) => !PRESETS[t]);
           if (unknown2.length) throw new ToolError(`\u0E44\u0E21\u0E48\u0E23\u0E39\u0E49\u0E08\u0E31\u0E01 target / unknown delivery targets: ${unknown2.join(", ")}`, { known: Object.keys(PRESETS) });
-          if (existsSync19(join18(dir, "project.json"))) throw new ToolError("\u0E21\u0E35\u0E42\u0E1B\u0E23\u0E40\u0E08\u0E01\u0E15\u0E4C\u0E2D\u0E22\u0E39\u0E48\u0E41\u0E25\u0E49\u0E27 \u0E43\u0E0A\u0E49 project_open / project already exists, use project_open", { dir });
+          if (existsSync20(join19(dir, "project.json"))) throw new ToolError("\u0E21\u0E35\u0E42\u0E1B\u0E23\u0E40\u0E08\u0E01\u0E15\u0E4C\u0E2D\u0E22\u0E39\u0E48\u0E41\u0E25\u0E49\u0E27 \u0E43\u0E0A\u0E49 project_open / project already exists, use project_open", { dir });
           const p = await state.api.project.createProject(dir, { name: a2.name, fps: a2.fps, width: a2.width, height: a2.height });
           if (a2.targets?.length) {
             p.delivery.targets = [...new Set(a2.targets)];
@@ -35983,8 +36836,8 @@ var init_tools2 = __esm({
         description: "\u0E40\u0E1B\u0E34\u0E14\u0E42\u0E1B\u0E23\u0E40\u0E08\u0E01\u0E15\u0E4C\u0E17\u0E35\u0E48\u0E21\u0E35\u0E2D\u0E22\u0E39\u0E48 \xB7 Open an existing project folder",
         input: { dir: external_exports.string() },
         handler: async (a2, state) => {
-          assertWritable(resolve9(a2.dir), "project (opened for editing)");
-          const p = await state.api.project.loadProject(resolve9(a2.dir));
+          assertWritable(resolve11(a2.dir), "project (opened for editing)");
+          const p = await state.api.project.loadProject(resolve11(a2.dir));
           state.project = p;
           return { ok: true, ...projectStatus(state, p) };
         }
@@ -36010,13 +36863,13 @@ var init_tools2 = __esm({
           let asset;
           if (a2.aep) {
             if (!a2.comp) throw new ToolError("\u0E15\u0E49\u0E2D\u0E07\u0E23\u0E30\u0E1A\u0E38 comp \u0E04\u0E39\u0E48\u0E01\u0E31\u0E1A aep / comp is required with aep");
-            const aep = resolve9(a2.aep);
-            if (!existsSync19(aep)) throw new ToolError(`\u0E44\u0E21\u0E48\u0E1E\u0E1A\u0E44\u0E1F\u0E25\u0E4C / file not found: ${aep}`);
+            const aep = resolve11(a2.aep);
+            if (!existsSync20(aep)) throw new ToolError(`\u0E44\u0E21\u0E48\u0E1E\u0E1A\u0E44\u0E1F\u0E25\u0E4C / file not found: ${aep}`);
             asset = state.api.project.addAeComp(p, aep, a2.comp, a2.id);
           } else if (a2.path) {
             requireFfmpeg(state);
-            const path12 = resolve9(a2.path);
-            if (!existsSync19(path12)) throw new ToolError(`\u0E44\u0E21\u0E48\u0E1E\u0E1A\u0E44\u0E1F\u0E25\u0E4C / file not found: ${path12}`);
+            const path12 = resolve11(a2.path);
+            if (!existsSync20(path12)) throw new ToolError(`\u0E44\u0E21\u0E48\u0E1E\u0E1A\u0E44\u0E1F\u0E25\u0E4C / file not found: ${path12}`);
             asset = await state.api.project.addFileAsset(p, path12, { id: a2.id, kind: a2.kind, probe: state.api.probe });
           } else {
             throw new ToolError("\u0E15\u0E49\u0E2D\u0E07\u0E23\u0E30\u0E1A\u0E38 path \u0E2B\u0E23\u0E37\u0E2D aep+comp / give path, or aep + comp");
@@ -36096,7 +36949,7 @@ var init_tools2 = __esm({
         description: "\u0E23\u0E32\u0E22\u0E0A\u0E37\u0E48\u0E2D comp \u0E43\u0E19 .aep \u0E2B\u0E23\u0E37\u0E2D .ecproj (job \u2014 \u0E16\u0E49\u0E32\u0E04\u0E34\u0E27\u0E27\u0E48\u0E32\u0E07\u0E23\u0E2D\u0E1C\u0E25\u0E44\u0E21\u0E48\u0E40\u0E01\u0E34\u0E19 ~20 \u0E27\u0E34) \xB7 List comps in an .aep / .ecproj (job; waits up to ~20 s when idle)",
         input: { aep: external_exports.string(), wait: external_exports.boolean().optional().describe("wait up to ~20 s for the result (default: only when no other job is queued)") },
         handler: async (a2, state) => {
-          const aep = resolve9(a2.aep);
+          const aep = resolve11(a2.aep);
           return runAeJob2(state, "ae_list_comps", a2.wait, async () => ({ comps: await state.ae.listComps(aep) }));
         }
       }),
@@ -36105,7 +36958,7 @@ var init_tools2 = __esm({
         description: "\u0E14\u0E39 layer \u0E02\u0E2D\u0E07 comp (\u0E0A\u0E19\u0E34\u0E14, in/out, \u0E02\u0E49\u0E2D\u0E04\u0E27\u0E32\u0E21, effects, \u0E02\u0E2D\u0E1A\u0E40\u0E02\u0E15; job) \xB7 Inspect a comp's layers (job)",
         input: { aep: external_exports.string(), comp: external_exports.string(), atFrame: frames2.min(0).optional(), wait: external_exports.boolean().optional() },
         handler: async (a2, state) => {
-          const aep = resolve9(a2.aep);
+          const aep = resolve11(a2.aep);
           return runAeJob2(state, "ae_inspect_comp", a2.wait, async () => {
             const detail = await state.ae.inspectComp(aep, a2.comp, a2.atFrame);
             return { ...detail, ...isOpaque(detail, a2.comp) ? opaqueHint(state, aep, a2.comp) : {} };
@@ -36123,9 +36976,9 @@ var init_tools2 = __esm({
           wait: external_exports.boolean().optional()
         },
         handler: async (a2, state) => {
-          const aep = resolve9(a2.aep);
-          const saveAs = a2.saveAs ? resolve9(a2.saveAs) : void 0;
-          if (saveAs && extname10(saveAs).toLowerCase() !== extname10(aep).toLowerCase()) throw new ToolError(`saveAs \u0E15\u0E49\u0E2D\u0E07\u0E40\u0E1B\u0E47\u0E19\u0E44\u0E1F\u0E25\u0E4C\u0E0A\u0E19\u0E34\u0E14\u0E40\u0E14\u0E35\u0E22\u0E27\u0E01\u0E31\u0E1A\u0E15\u0E49\u0E19\u0E09\u0E1A\u0E31\u0E1A (${extname10(aep)}) / saveAs must have the source's extension`);
+          const aep = resolve11(a2.aep);
+          const saveAs = a2.saveAs ? resolve11(a2.saveAs) : void 0;
+          if (saveAs && extname12(saveAs).toLowerCase() !== extname12(aep).toLowerCase()) throw new ToolError(`saveAs \u0E15\u0E49\u0E2D\u0E07\u0E40\u0E1B\u0E47\u0E19\u0E44\u0E1F\u0E25\u0E4C\u0E0A\u0E19\u0E34\u0E14\u0E40\u0E14\u0E35\u0E22\u0E27\u0E01\u0E31\u0E1A\u0E15\u0E49\u0E19\u0E09\u0E1A\u0E31\u0E1A (${extname12(aep)}) / saveAs must have the source's extension`);
           if (saveAs) assertConfined(state, saveAs, aep, "saveAs");
           else assertWritable(aep, "the .aep (in-place edit)");
           return runAeJob2(state, "ae_edit", a2.wait, async () => {
@@ -36134,7 +36987,7 @@ var init_tools2 = __esm({
             const p = state.project;
             if (p && res.ok) {
               for (const asset of Object.values(p.assets)) {
-                if (isAeComp(asset) && asset.comp === a2.comp && samePath5(asset.aep, res.savedTo)) {
+                if (isAeComp(asset) && asset.comp === a2.comp && samePath6(asset.aep, res.savedTo)) {
                   asset.fingerprint = res.fingerprint;
                   stale.push(asset.id);
                 }
@@ -36163,20 +37016,20 @@ var init_tools2 = __esm({
         handler: async (a2, state) => {
           if (!state.ae.create) throw new ToolError("AE backend cannot create projects");
           if (!a2.jsx === !a2.jsxPath) throw new ToolError("\u0E23\u0E30\u0E1A\u0E38 jsx \u0E2B\u0E23\u0E37\u0E2D jsxPath \u0E2D\u0E22\u0E48\u0E32\u0E07\u0E43\u0E14\u0E2D\u0E22\u0E48\u0E32\u0E07\u0E2B\u0E19\u0E36\u0E48\u0E07 / give exactly one of jsx or jsxPath");
-          const jsxPath = a2.jsxPath ? resolve9(a2.jsxPath) : void 0;
-          if (jsxPath && !existsSync19(jsxPath)) throw new ToolError(`\u0E44\u0E21\u0E48\u0E1E\u0E1A\u0E44\u0E1F\u0E25\u0E4C / file not found: ${jsxPath}`);
+          const jsxPath = a2.jsxPath ? resolve11(a2.jsxPath) : void 0;
+          if (jsxPath && !existsSync20(jsxPath)) throw new ToolError(`\u0E44\u0E21\u0E48\u0E1E\u0E1A\u0E44\u0E1F\u0E25\u0E4C / file not found: ${jsxPath}`);
           if (!jsxPath || a2.asset) requireProject(state);
-          const saveAs = resolve9(a2.saveAs);
-          const ext = extname10(saveAs).toLowerCase();
+          const saveAs = resolve11(a2.saveAs);
+          const ext = extname12(saveAs).toLowerCase();
           if (ext !== ".aep" && ext !== ".ecproj") throw new ToolError("saveAs \u0E15\u0E49\u0E2D\u0E07\u0E40\u0E1B\u0E47\u0E19 .aep \u0E2B\u0E23\u0E37\u0E2D .ecproj / saveAs must end in .aep or .ecproj");
           if (ext === ".ecproj" && !state.env.tools.effectcraftCli) throw new ToolError("\u0E44\u0E21\u0E48\u0E1E\u0E1A EffectCraft / effectcraft-cli not found (install EffectCraft or set EDITMCP_EFFECTCRAFT_DIR)");
-          if (existsSync19(saveAs)) throw new ToolError(`\u0E21\u0E35\u0E44\u0E1F\u0E25\u0E4C\u0E19\u0E35\u0E49\u0E41\u0E25\u0E49\u0E27 \u0E43\u0E0A\u0E49\u0E0A\u0E37\u0E48\u0E2D\u0E43\u0E2B\u0E21\u0E48 / refusing to overwrite: ${saveAs}`);
-          assertConfined(state, saveAs, jsxPath ?? join18(state.project.dir, "x"), "saveAs");
+          if (existsSync20(saveAs)) throw new ToolError(`\u0E21\u0E35\u0E44\u0E1F\u0E25\u0E4C\u0E19\u0E35\u0E49\u0E41\u0E25\u0E49\u0E27 \u0E43\u0E0A\u0E49\u0E0A\u0E37\u0E48\u0E2D\u0E43\u0E2B\u0E21\u0E48 / refusing to overwrite: ${saveAs}`);
+          assertConfined(state, saveAs, jsxPath ?? join19(state.project.dir, "x"), "saveAs");
           const existing = a2.asset?.id ? state.project.assets[a2.asset.id] : void 0;
           if (existing && existing.kind !== "aecomp") throw new ToolError(`asset id already in use by a ${existing.kind} file: ${a2.asset.id}`);
           const jsx = a2.jsx ?? await readFile13(jsxPath, "utf8");
           return runAeJob2(state, "ae_create", a2.wait, async () => {
-            const res = await state.ae.create({ jsx, saveAs, ...jsxPath ? { scriptDir: dirname7(jsxPath) } : {} });
+            const res = await state.ae.create({ jsx, saveAs, ...jsxPath ? { scriptDir: dirname9(jsxPath) } : {} });
             let asset;
             const p = state.project;
             if (p && a2.asset) {
@@ -36208,15 +37061,15 @@ var init_tools2 = __esm({
           wait: external_exports.boolean().optional()
         },
         handler: async (a2, state) => {
-          const aep = resolve9(a2.aep);
-          let out2 = a2.out ? resolve9(a2.out) : "";
+          const aep = resolve11(a2.aep);
+          let out2 = a2.out ? resolve11(a2.out) : "";
           if (out2) {
             assertConfined(state, out2, aep, "out");
-            await mkdir18(dirname7(out2), { recursive: true });
+            await mkdir19(dirname9(out2), { recursive: true });
           } else {
-            const dir = state.project ? state.api.project.projectPaths(state.project).review : join18(os9.tmpdir(), "editmcp");
-            await mkdir18(dir, { recursive: true });
-            out2 = join18(dir, `preview_${asciiSlug(a2.comp)}_${a2.frame}.png`);
+            const dir = state.project ? state.api.project.projectPaths(state.project).review : join19(os10.tmpdir(), "editmcp");
+            await mkdir19(dir, { recursive: true });
+            out2 = join19(dir, `preview_${asciiSlug(a2.comp)}_${a2.frame}.png`);
           }
           return runAeJob2(state, "ae_preview_frame", a2.wait, async () => {
             const png = await state.ae.previewFrame(aep, a2.comp, a2.frame, uniquePath3(out2));
@@ -36417,9 +37270,9 @@ var init_tools2 = __esm({
           const sequenceName = a2.sequenceName ?? `${p.meta.name}_${version3}`;
           const target = a2.target ?? "premiere";
           const xml = state.api.xmeml.writeXmeml(p, { sequenceName, flavor: target });
-          const dir = join18(state.api.project.projectPaths(p).out, version3);
-          await mkdir18(dir, { recursive: true });
-          const path12 = uniquePath3(join18(dir, `${fileSafe(p.meta.name)}${target === "premiere" ? "" : `_${target}`}.xml`));
+          const dir = join19(state.api.project.projectPaths(p).out, version3);
+          await mkdir19(dir, { recursive: true });
+          const path12 = uniquePath3(join19(dir, `${fileSafe(p.meta.name)}${target === "premiere" ? "" : `_${target}`}.xml`));
           await writeFile14(path12, xml, { encoding: "utf8", flag: "wx" });
           const warnings = xmemlExportWarnings(p);
           return {
@@ -36444,8 +37297,8 @@ var init_tools2 = __esm({
         },
         handler: async (a2, state) => {
           const p = requireProject(state);
-          const path12 = resolve9(a2.path);
-          if (!existsSync19(path12)) throw new ToolError(`\u0E44\u0E21\u0E48\u0E1E\u0E1A\u0E44\u0E1F\u0E25\u0E4C / file not found: ${path12}`);
+          const path12 = resolve11(a2.path);
+          if (!existsSync20(path12)) throw new ToolError(`\u0E44\u0E21\u0E48\u0E1E\u0E1A\u0E44\u0E1F\u0E25\u0E4C / file not found: ${path12}`);
           const r = state.api.xmeml.readXmeml(await readFile13(path12, "utf8"), p);
           const warnings = [...r.warnings ?? []];
           if (r.fps !== p.meta.fps) warnings.push(`fps \u0E43\u0E19 XML = ${r.fps} \u0E41\u0E15\u0E48\u0E42\u0E1B\u0E23\u0E40\u0E08\u0E01\u0E15\u0E4C = ${p.meta.fps}`);
@@ -36453,7 +37306,7 @@ var init_tools2 = __esm({
           const diff = diffTimelines(p.timeline, r.timeline);
           const summary = summarizeDiff(diff, p.meta.fps);
           const { errors } = validateCandidate(state, p, r.timeline);
-          const report2 = { file: basename12(path12), summary, diff, warnings, unresolvedPaths: r.unresolvedPaths };
+          const report2 = { file: basename13(path12), summary, diff, warnings, unresolvedPaths: r.unresolvedPaths };
           if (!a2.apply) {
             return {
               ok: true,
@@ -36466,7 +37319,7 @@ var init_tools2 = __esm({
             };
           }
           if (errors.length) throw new ToolError("\u0E44\u0E17\u0E21\u0E4C\u0E44\u0E25\u0E19\u0E4C\u0E08\u0E32\u0E01 XML \u0E44\u0E21\u0E48\u0E1C\u0E48\u0E32\u0E19\u0E01\u0E32\u0E23\u0E15\u0E23\u0E27\u0E08\u0E2A\u0E2D\u0E1A \u0E44\u0E21\u0E48\u0E44\u0E14\u0E49\u0E1A\u0E31\u0E19\u0E17\u0E36\u0E01 / imported timeline invalid, not applied", { errors, ...report2 });
-          const backup = await backupTimeline4(p, `before import_premiere_xml ${basename12(path12)}`);
+          const backup = await backupTimeline4(p, `before import_premiere_xml ${basename13(path12)}`);
           await commitOrThrow(state, p, r.timeline, "timeline");
           return { ok: true, applied: true, backup, ...report2, timeline: timelineSummary(state, p), hint: "\u0E22\u0E49\u0E2D\u0E19\u0E01\u0E25\u0E31\u0E1A\u0E44\u0E14\u0E49\u0E14\u0E49\u0E27\u0E22 timeline_restore / undo with timeline_restore" };
         }
@@ -36478,9 +37331,9 @@ var init_tools2 = __esm({
         handler: async (a2, state) => {
           const p = requireProject(state);
           if (!a2.backup) return { backups: await listBackups(p), hint: 'timeline_restore {backup: "<name>"} \u0E40\u0E1E\u0E37\u0E48\u0E2D\u0E22\u0E49\u0E2D\u0E19\u0E01\u0E25\u0E31\u0E1A / pass a name to restore' };
-          if (basename12(a2.backup) !== a2.backup || !BACKUP_RE.test(a2.backup)) throw new ToolError(`\u0E0A\u0E37\u0E48\u0E2D\u0E44\u0E1F\u0E25\u0E4C\u0E2A\u0E33\u0E23\u0E2D\u0E07\u0E44\u0E21\u0E48\u0E16\u0E39\u0E01\u0E15\u0E49\u0E2D\u0E07 / not a timeline backup name: ${a2.backup}`);
-          const file = join18(p.dir, "history", a2.backup);
-          if (!existsSync19(file)) throw new ToolError(`\u0E44\u0E21\u0E48\u0E1E\u0E1A\u0E44\u0E1F\u0E25\u0E4C\u0E2A\u0E33\u0E23\u0E2D\u0E07 / backup not found: ${a2.backup}`, { backups: (await listBackups(p)).map((b) => b.name) });
+          if (basename13(a2.backup) !== a2.backup || !BACKUP_RE.test(a2.backup)) throw new ToolError(`\u0E0A\u0E37\u0E48\u0E2D\u0E44\u0E1F\u0E25\u0E4C\u0E2A\u0E33\u0E23\u0E2D\u0E07\u0E44\u0E21\u0E48\u0E16\u0E39\u0E01\u0E15\u0E49\u0E2D\u0E07 / not a timeline backup name: ${a2.backup}`);
+          const file = join19(p.dir, "history", a2.backup);
+          if (!existsSync20(file)) throw new ToolError(`\u0E44\u0E21\u0E48\u0E1E\u0E1A\u0E44\u0E1F\u0E25\u0E4C\u0E2A\u0E33\u0E23\u0E2D\u0E07 / backup not found: ${a2.backup}`, { backups: (await listBackups(p)).map((b) => b.name) });
           let next;
           try {
             next = JSON.parse(await readFile13(file, "utf8")).timeline;
@@ -36502,7 +37355,7 @@ var init_tools2 = __esm({
         input: {},
         handler: async (_a, state) => {
           const env = state.env;
-          const freeRamGb = os9.freemem() / 2 ** 30;
+          const freeRamGb = os10.freemem() / 2 ** 30;
           let aeVersion = "unknown (not launched)";
           if (process.env["EDITMCP_ALLOW_AE"] === "1" && env.tools.afterfx) {
             try {
@@ -36530,7 +37383,7 @@ var init_tools2 = __esm({
             premiereBridge: await (async () => {
               const st = await (state.premiere ?? createPremiereClient()).status();
               if (st.connected) return `connected (Premiere ${st.premiere ?? "?"}, project ${st.project?.name ?? "none"}): premiere_push / premiere_pull`;
-              return st.installed ? "installed, not running (start Premiere Pro)" : "not installed (optional; `catcut premiere-bridge install` for push/pull without computer use)";
+              return st.installed ? "installed, Premiere closed (fine: premiere_open starts it with the project)" : "not installed (optional; `catcut premiere-bridge install` for premiere_* tools without computer use)";
             })(),
             effectcraft: env.tools.effectcraftCli ? "found (optional; .ecproj comps: ae_create / build render them headless)" : "not found (optional)",
             problems: state.problems,
@@ -36548,10 +37401,10 @@ var init_tools2 = __esm({
 import { parseArgs } from "node:util";
 
 // src/mcp/server.ts
-import { resolve as resolve10 } from "node:path";
+import { resolve as resolve12 } from "node:path";
 import { fileURLToPath as fileURLToPath6 } from "node:url";
 
-// ../../../node_modules/zod/v4/core/core.js
+// node_modules/zod/v4/core/core.js
 var NEVER2 = Object.freeze({
   status: "aborted"
 });
@@ -36610,7 +37463,7 @@ function config(newConfig) {
   return globalConfig;
 }
 
-// ../../../node_modules/zod/v4/core/util.js
+// node_modules/zod/v4/core/util.js
 var util_exports = {};
 __export(util_exports, {
   BIGINT_FORMAT_RANGES: () => BIGINT_FORMAT_RANGES,
@@ -37131,7 +37984,7 @@ var Class = class {
   }
 };
 
-// ../../../node_modules/zod/v4/core/errors.js
+// node_modules/zod/v4/core/errors.js
 var initializer = (inst, def) => {
   inst.name = "$ZodError";
   Object.defineProperty(inst, "_zod", {
@@ -37206,7 +38059,7 @@ function formatError(error2, _mapper) {
   return fieldErrors;
 }
 
-// ../../../node_modules/zod/v4/core/parse.js
+// node_modules/zod/v4/core/parse.js
 var _parse = (_Err) => (schema, value, _ctx, _params) => {
   const ctx = _ctx ? Object.assign(_ctx, { async: false }) : { async: false };
   const result = schema._zod.run({ value, issues: [] }, ctx);
@@ -37258,7 +38111,7 @@ var _safeParseAsync = (_Err) => async (schema, value, _ctx) => {
 };
 var safeParseAsync = /* @__PURE__ */ _safeParseAsync($ZodRealError);
 
-// ../../../node_modules/zod/v4/core/regexes.js
+// node_modules/zod/v4/core/regexes.js
 var cuid = /^[cC][^\s-]{8,}$/;
 var cuid2 = /^[0-9a-z]+$/;
 var ulid = /^[0-9A-HJKMNP-TV-Za-hjkmnp-tv-z]{26}$/;
@@ -37316,7 +38169,7 @@ var _null = /null/i;
 var lowercase = /^[^A-Z]*$/;
 var uppercase = /^[^a-z]*$/;
 
-// ../../../node_modules/zod/v4/core/checks.js
+// node_modules/zod/v4/core/checks.js
 var $ZodCheck = /* @__PURE__ */ $constructor("$ZodCheck", (inst, def) => {
   var _a;
   inst._zod ?? (inst._zod = {});
@@ -37701,7 +38554,7 @@ var $ZodCheckOverwrite = /* @__PURE__ */ $constructor("$ZodCheckOverwrite", (ins
   };
 });
 
-// ../../../node_modules/zod/v4/core/doc.js
+// node_modules/zod/v4/core/doc.js
 var Doc = class {
   constructor(args = []) {
     this.content = [];
@@ -37737,14 +38590,14 @@ var Doc = class {
   }
 };
 
-// ../../../node_modules/zod/v4/core/versions.js
+// node_modules/zod/v4/core/versions.js
 var version = {
   major: 4,
   minor: 0,
   patch: 0
 };
 
-// ../../../node_modules/zod/v4/core/schemas.js
+// node_modules/zod/v4/core/schemas.js
 var $ZodType = /* @__PURE__ */ $constructor("$ZodType", (inst, def) => {
   var _a;
   inst ?? (inst = {});
@@ -38982,7 +39835,7 @@ function handleRefineResult(result, payload, input, inst) {
   }
 }
 
-// ../../../node_modules/zod/v4/locales/en.js
+// node_modules/zod/v4/locales/en.js
 var parsedType = (data) => {
   const t = typeof data;
   switch (t) {
@@ -39100,7 +39953,7 @@ function en_default2() {
   };
 }
 
-// ../../../node_modules/zod/v4/core/registries.js
+// node_modules/zod/v4/core/registries.js
 var $ZodRegistry = class {
   constructor() {
     this._map = /* @__PURE__ */ new Map();
@@ -39148,7 +40001,7 @@ function registry() {
 }
 var globalRegistry = /* @__PURE__ */ registry();
 
-// ../../../node_modules/zod/v4/core/api.js
+// node_modules/zod/v4/core/api.js
 function _string(Class2, params) {
   return new Class2({
     type: "string",
@@ -39587,7 +40440,7 @@ function _refine(Class2, fn, _params) {
   return schema;
 }
 
-// ../../../node_modules/zod/v4/core/to-json-schema.js
+// node_modules/zod/v4/core/to-json-schema.js
 var JSONSchemaGenerator = class {
   constructor(params) {
     this.counter = 0;
@@ -40354,7 +41207,7 @@ function isTransforming(_schema, _ctx) {
   throw new Error(`Unknown schema type: ${def.type}`);
 }
 
-// ../../../node_modules/zod/v4/mini/schemas.js
+// node_modules/zod/v4/mini/schemas.js
 var ZodMiniType = /* @__PURE__ */ $constructor("ZodMiniType", (inst, def) => {
   if (!inst._zod)
     throw new Error("Uninitialized schema in ZodMiniType.");
@@ -40400,7 +41253,7 @@ function object(shape, params) {
   return new ZodMiniObject(def);
 }
 
-// ../../../node_modules/@modelcontextprotocol/sdk/dist/esm/server/zod-compat.js
+// node_modules/@modelcontextprotocol/sdk/dist/esm/server/zod-compat.js
 function isZ4Schema(s) {
   const schema = s;
   return !!schema._zod;
@@ -40560,7 +41413,7 @@ function getLiteralValue(schema) {
   return void 0;
 }
 
-// ../../../node_modules/zod/v4/classic/iso.js
+// node_modules/zod/v4/classic/iso.js
 var iso_exports2 = {};
 __export(iso_exports2, {
   ZodISODate: () => ZodISODate,
@@ -40601,7 +41454,7 @@ function duration2(params) {
   return _isoDuration(ZodISODuration, params);
 }
 
-// ../../../node_modules/zod/v4/classic/errors.js
+// node_modules/zod/v4/classic/errors.js
 var initializer2 = (inst, issues) => {
   $ZodError.init(inst, issues);
   inst.name = "ZodError";
@@ -40635,13 +41488,13 @@ var ZodRealError = $constructor("ZodError", initializer2, {
   Parent: Error
 });
 
-// ../../../node_modules/zod/v4/classic/parse.js
+// node_modules/zod/v4/classic/parse.js
 var parse2 = /* @__PURE__ */ _parse(ZodRealError);
 var parseAsync2 = /* @__PURE__ */ _parseAsync(ZodRealError);
 var safeParse3 = /* @__PURE__ */ _safeParse(ZodRealError);
 var safeParseAsync3 = /* @__PURE__ */ _safeParseAsync(ZodRealError);
 
-// ../../../node_modules/zod/v4/classic/schemas.js
+// node_modules/zod/v4/classic/schemas.js
 var ZodType2 = /* @__PURE__ */ $constructor("ZodType", (inst, def) => {
   $ZodType.init(inst, def);
   inst.def = def;
@@ -41252,10 +42105,10 @@ function preprocess(fn, schema) {
   return pipe(transform(fn), schema);
 }
 
-// ../../../node_modules/zod/v4/classic/external.js
+// node_modules/zod/v4/classic/external.js
 config(en_default2());
 
-// ../../../node_modules/@modelcontextprotocol/sdk/dist/esm/types.js
+// node_modules/@modelcontextprotocol/sdk/dist/esm/types.js
 var LATEST_PROTOCOL_VERSION = "2025-11-25";
 var SUPPORTED_PROTOCOL_VERSIONS = [LATEST_PROTOCOL_VERSION, "2025-06-18", "2025-03-26", "2024-11-05", "2024-10-07"];
 var RELATED_TASK_META_KEY = "io.modelcontextprotocol/related-task";
@@ -42786,12 +43639,12 @@ var UrlElicitationRequiredError = class extends McpError {
   }
 };
 
-// ../../../node_modules/@modelcontextprotocol/sdk/dist/esm/experimental/tasks/interfaces.js
+// node_modules/@modelcontextprotocol/sdk/dist/esm/experimental/tasks/interfaces.js
 function isTerminal(status) {
   return status === "completed" || status === "failed" || status === "cancelled";
 }
 
-// ../../../node_modules/zod-to-json-schema/dist/esm/Options.js
+// node_modules/zod-to-json-schema/dist/esm/Options.js
 var ignoreOverride = /* @__PURE__ */ Symbol("Let zodToJsonSchema decide on which parser to use");
 var defaultOptions = {
   name: void 0,
@@ -42825,7 +43678,7 @@ var getDefaultOptions = (options) => typeof options === "string" ? {
   ...options
 };
 
-// ../../../node_modules/zod-to-json-schema/dist/esm/Refs.js
+// node_modules/zod-to-json-schema/dist/esm/Refs.js
 var getRefs = (options) => {
   const _options = getDefaultOptions(options);
   const currentPath = _options.name !== void 0 ? [..._options.basePath, _options.definitionPath, _options.name] : _options.basePath;
@@ -42846,7 +43699,7 @@ var getRefs = (options) => {
   };
 };
 
-// ../../../node_modules/zod-to-json-schema/dist/esm/errorMessages.js
+// node_modules/zod-to-json-schema/dist/esm/errorMessages.js
 function addErrorMessage(res, key, errorMessage2, refs) {
   if (!refs?.errorMessages)
     return;
@@ -42862,7 +43715,7 @@ function setResponseValueAndErrors(res, key, value, errorMessage2, refs) {
   addErrorMessage(res, key, errorMessage2, refs);
 }
 
-// ../../../node_modules/zod-to-json-schema/dist/esm/getRelativePath.js
+// node_modules/zod-to-json-schema/dist/esm/getRelativePath.js
 var getRelativePath = (pathA, pathB) => {
   let i2 = 0;
   for (; i2 < pathA.length && i2 < pathB.length; i2++) {
@@ -42872,7 +43725,7 @@ var getRelativePath = (pathA, pathB) => {
   return [(pathA.length - i2).toString(), ...pathB.slice(i2)].join("/");
 };
 
-// ../../../node_modules/zod-to-json-schema/dist/esm/parsers/any.js
+// node_modules/zod-to-json-schema/dist/esm/parsers/any.js
 function parseAnyDef(refs) {
   if (refs.target !== "openAi") {
     return {};
@@ -42888,7 +43741,7 @@ function parseAnyDef(refs) {
   };
 }
 
-// ../../../node_modules/zod-to-json-schema/dist/esm/parsers/array.js
+// node_modules/zod-to-json-schema/dist/esm/parsers/array.js
 function parseArrayDef(def, refs) {
   const res = {
     type: "array"
@@ -42912,7 +43765,7 @@ function parseArrayDef(def, refs) {
   return res;
 }
 
-// ../../../node_modules/zod-to-json-schema/dist/esm/parsers/bigint.js
+// node_modules/zod-to-json-schema/dist/esm/parsers/bigint.js
 function parseBigintDef(def, refs) {
   const res = {
     type: "integer",
@@ -42958,24 +43811,24 @@ function parseBigintDef(def, refs) {
   return res;
 }
 
-// ../../../node_modules/zod-to-json-schema/dist/esm/parsers/boolean.js
+// node_modules/zod-to-json-schema/dist/esm/parsers/boolean.js
 function parseBooleanDef() {
   return {
     type: "boolean"
   };
 }
 
-// ../../../node_modules/zod-to-json-schema/dist/esm/parsers/branded.js
+// node_modules/zod-to-json-schema/dist/esm/parsers/branded.js
 function parseBrandedDef(_def, refs) {
   return parseDef(_def.type._def, refs);
 }
 
-// ../../../node_modules/zod-to-json-schema/dist/esm/parsers/catch.js
+// node_modules/zod-to-json-schema/dist/esm/parsers/catch.js
 var parseCatchDef = (def, refs) => {
   return parseDef(def.innerType._def, refs);
 };
 
-// ../../../node_modules/zod-to-json-schema/dist/esm/parsers/date.js
+// node_modules/zod-to-json-schema/dist/esm/parsers/date.js
 function parseDateDef(def, refs, overrideDateStrategy) {
   const strategy = overrideDateStrategy ?? refs.dateStrategy;
   if (Array.isArray(strategy)) {
@@ -43034,7 +43887,7 @@ var integerDateParser = (def, refs) => {
   return res;
 };
 
-// ../../../node_modules/zod-to-json-schema/dist/esm/parsers/default.js
+// node_modules/zod-to-json-schema/dist/esm/parsers/default.js
 function parseDefaultDef(_def, refs) {
   return {
     ...parseDef(_def.innerType._def, refs),
@@ -43042,12 +43895,12 @@ function parseDefaultDef(_def, refs) {
   };
 }
 
-// ../../../node_modules/zod-to-json-schema/dist/esm/parsers/effects.js
+// node_modules/zod-to-json-schema/dist/esm/parsers/effects.js
 function parseEffectsDef(_def, refs) {
   return refs.effectStrategy === "input" ? parseDef(_def.schema._def, refs) : parseAnyDef(refs);
 }
 
-// ../../../node_modules/zod-to-json-schema/dist/esm/parsers/enum.js
+// node_modules/zod-to-json-schema/dist/esm/parsers/enum.js
 function parseEnumDef(def) {
   return {
     type: "string",
@@ -43055,7 +43908,7 @@ function parseEnumDef(def) {
   };
 }
 
-// ../../../node_modules/zod-to-json-schema/dist/esm/parsers/intersection.js
+// node_modules/zod-to-json-schema/dist/esm/parsers/intersection.js
 var isJsonSchema7AllOfType = (type) => {
   if ("type" in type && type.type === "string")
     return false;
@@ -43097,7 +43950,7 @@ function parseIntersectionDef(def, refs) {
   } : void 0;
 }
 
-// ../../../node_modules/zod-to-json-schema/dist/esm/parsers/literal.js
+// node_modules/zod-to-json-schema/dist/esm/parsers/literal.js
 function parseLiteralDef(def, refs) {
   const parsedType2 = typeof def.value;
   if (parsedType2 !== "bigint" && parsedType2 !== "number" && parsedType2 !== "boolean" && parsedType2 !== "string") {
@@ -43117,7 +43970,7 @@ function parseLiteralDef(def, refs) {
   };
 }
 
-// ../../../node_modules/zod-to-json-schema/dist/esm/parsers/string.js
+// node_modules/zod-to-json-schema/dist/esm/parsers/string.js
 var emojiRegex2 = void 0;
 var zodPatterns = {
   /**
@@ -43442,7 +44295,7 @@ function stringifyRegExpWithFlags(regex, refs) {
   return pattern;
 }
 
-// ../../../node_modules/zod-to-json-schema/dist/esm/parsers/record.js
+// node_modules/zod-to-json-schema/dist/esm/parsers/record.js
 function parseRecordDef(def, refs) {
   if (refs.target === "openAi") {
     console.warn("Warning: OpenAI may not support records in schemas! Try an array of key-value pairs instead.");
@@ -43494,7 +44347,7 @@ function parseRecordDef(def, refs) {
   return schema;
 }
 
-// ../../../node_modules/zod-to-json-schema/dist/esm/parsers/map.js
+// node_modules/zod-to-json-schema/dist/esm/parsers/map.js
 function parseMapDef(def, refs) {
   if (refs.mapStrategy === "record") {
     return parseRecordDef(def, refs);
@@ -43519,7 +44372,7 @@ function parseMapDef(def, refs) {
   };
 }
 
-// ../../../node_modules/zod-to-json-schema/dist/esm/parsers/nativeEnum.js
+// node_modules/zod-to-json-schema/dist/esm/parsers/nativeEnum.js
 function parseNativeEnumDef(def) {
   const object3 = def.values;
   const actualKeys = Object.keys(def.values).filter((key) => {
@@ -43533,7 +44386,7 @@ function parseNativeEnumDef(def) {
   };
 }
 
-// ../../../node_modules/zod-to-json-schema/dist/esm/parsers/never.js
+// node_modules/zod-to-json-schema/dist/esm/parsers/never.js
 function parseNeverDef(refs) {
   return refs.target === "openAi" ? void 0 : {
     not: parseAnyDef({
@@ -43543,7 +44396,7 @@ function parseNeverDef(refs) {
   };
 }
 
-// ../../../node_modules/zod-to-json-schema/dist/esm/parsers/null.js
+// node_modules/zod-to-json-schema/dist/esm/parsers/null.js
 function parseNullDef(refs) {
   return refs.target === "openApi3" ? {
     enum: ["null"],
@@ -43553,7 +44406,7 @@ function parseNullDef(refs) {
   };
 }
 
-// ../../../node_modules/zod-to-json-schema/dist/esm/parsers/union.js
+// node_modules/zod-to-json-schema/dist/esm/parsers/union.js
 var primitiveMappings = {
   ZodString: "string",
   ZodNumber: "number",
@@ -43621,7 +44474,7 @@ var asAnyOf = (def, refs) => {
   return anyOf.length ? { anyOf } : void 0;
 };
 
-// ../../../node_modules/zod-to-json-schema/dist/esm/parsers/nullable.js
+// node_modules/zod-to-json-schema/dist/esm/parsers/nullable.js
 function parseNullableDef(def, refs) {
   if (["ZodString", "ZodNumber", "ZodBigInt", "ZodBoolean", "ZodNull"].includes(def.innerType._def.typeName) && (!def.innerType._def.checks || !def.innerType._def.checks.length)) {
     if (refs.target === "openApi3") {
@@ -43653,7 +44506,7 @@ function parseNullableDef(def, refs) {
   return base && { anyOf: [base, { type: "null" }] };
 }
 
-// ../../../node_modules/zod-to-json-schema/dist/esm/parsers/number.js
+// node_modules/zod-to-json-schema/dist/esm/parsers/number.js
 function parseNumberDef(def, refs) {
   const res = {
     type: "number"
@@ -43702,7 +44555,7 @@ function parseNumberDef(def, refs) {
   return res;
 }
 
-// ../../../node_modules/zod-to-json-schema/dist/esm/parsers/object.js
+// node_modules/zod-to-json-schema/dist/esm/parsers/object.js
 function parseObjectDef(def, refs) {
   const forceOptionalIntoNullable = refs.target === "openAi";
   const result = {
@@ -43772,7 +44625,7 @@ function safeIsOptional(schema) {
   }
 }
 
-// ../../../node_modules/zod-to-json-schema/dist/esm/parsers/optional.js
+// node_modules/zod-to-json-schema/dist/esm/parsers/optional.js
 var parseOptionalDef = (def, refs) => {
   if (refs.currentPath.toString() === refs.propertyPath?.toString()) {
     return parseDef(def.innerType._def, refs);
@@ -43791,7 +44644,7 @@ var parseOptionalDef = (def, refs) => {
   } : parseAnyDef(refs);
 };
 
-// ../../../node_modules/zod-to-json-schema/dist/esm/parsers/pipeline.js
+// node_modules/zod-to-json-schema/dist/esm/parsers/pipeline.js
 var parsePipelineDef = (def, refs) => {
   if (refs.pipeStrategy === "input") {
     return parseDef(def.in._def, refs);
@@ -43811,12 +44664,12 @@ var parsePipelineDef = (def, refs) => {
   };
 };
 
-// ../../../node_modules/zod-to-json-schema/dist/esm/parsers/promise.js
+// node_modules/zod-to-json-schema/dist/esm/parsers/promise.js
 function parsePromiseDef(def, refs) {
   return parseDef(def.type._def, refs);
 }
 
-// ../../../node_modules/zod-to-json-schema/dist/esm/parsers/set.js
+// node_modules/zod-to-json-schema/dist/esm/parsers/set.js
 function parseSetDef(def, refs) {
   const items = parseDef(def.valueType._def, {
     ...refs,
@@ -43836,7 +44689,7 @@ function parseSetDef(def, refs) {
   return schema;
 }
 
-// ../../../node_modules/zod-to-json-schema/dist/esm/parsers/tuple.js
+// node_modules/zod-to-json-schema/dist/esm/parsers/tuple.js
 function parseTupleDef(def, refs) {
   if (def.rest) {
     return {
@@ -43864,24 +44717,24 @@ function parseTupleDef(def, refs) {
   }
 }
 
-// ../../../node_modules/zod-to-json-schema/dist/esm/parsers/undefined.js
+// node_modules/zod-to-json-schema/dist/esm/parsers/undefined.js
 function parseUndefinedDef(refs) {
   return {
     not: parseAnyDef(refs)
   };
 }
 
-// ../../../node_modules/zod-to-json-schema/dist/esm/parsers/unknown.js
+// node_modules/zod-to-json-schema/dist/esm/parsers/unknown.js
 function parseUnknownDef(refs) {
   return parseAnyDef(refs);
 }
 
-// ../../../node_modules/zod-to-json-schema/dist/esm/parsers/readonly.js
+// node_modules/zod-to-json-schema/dist/esm/parsers/readonly.js
 var parseReadonlyDef = (def, refs) => {
   return parseDef(def.innerType._def, refs);
 };
 
-// ../../../node_modules/zod-to-json-schema/dist/esm/selectParser.js
+// node_modules/zod-to-json-schema/dist/esm/selectParser.js
 var selectParser = (def, typeName, refs) => {
   switch (typeName) {
     case ZodFirstPartyTypeKind.ZodString:
@@ -43957,7 +44810,7 @@ var selectParser = (def, typeName, refs) => {
   }
 };
 
-// ../../../node_modules/zod-to-json-schema/dist/esm/parseDef.js
+// node_modules/zod-to-json-schema/dist/esm/parseDef.js
 function parseDef(def, refs, forceResolution = false) {
   const seenItem = refs.seen.get(def);
   if (refs.override) {
@@ -44013,7 +44866,7 @@ var addMeta = (def, refs, jsonSchema) => {
   return jsonSchema;
 };
 
-// ../../../node_modules/zod-to-json-schema/dist/esm/zodToJsonSchema.js
+// node_modules/zod-to-json-schema/dist/esm/zodToJsonSchema.js
 var zodToJsonSchema = (schema, options) => {
   const refs = getRefs(options);
   let definitions = typeof options === "object" && options.definitions ? Object.entries(options.definitions).reduce((acc, [name2, schema2]) => ({
@@ -44075,7 +44928,7 @@ var zodToJsonSchema = (schema, options) => {
   return combined;
 };
 
-// ../../../node_modules/@modelcontextprotocol/sdk/dist/esm/server/zod-json-schema-compat.js
+// node_modules/@modelcontextprotocol/sdk/dist/esm/server/zod-json-schema-compat.js
 function mapMiniTarget(t) {
   if (!t)
     return "draft-7";
@@ -44117,7 +44970,7 @@ function parseWithCompat(schema, data) {
   return result.data;
 }
 
-// ../../../node_modules/@modelcontextprotocol/sdk/dist/esm/shared/protocol.js
+// node_modules/@modelcontextprotocol/sdk/dist/esm/shared/protocol.js
 var DEFAULT_REQUEST_TIMEOUT_MSEC = 6e4;
 var Protocol = class {
   constructor(_options) {
@@ -44639,7 +45492,7 @@ var Protocol = class {
           return;
         }
         const pollInterval = task2.pollInterval ?? this._options?.defaultTaskPollInterval ?? 1e3;
-        await new Promise((resolve11) => setTimeout(resolve11, pollInterval));
+        await new Promise((resolve13) => setTimeout(resolve13, pollInterval));
         options?.signal?.throwIfAborted();
       }
     } catch (error2) {
@@ -44656,7 +45509,7 @@ var Protocol = class {
    */
   request(request, resultSchema, options) {
     const { relatedRequestId, resumptionToken, onresumptiontoken, task, relatedTask } = options ?? {};
-    return new Promise((resolve11, reject) => {
+    return new Promise((resolve13, reject) => {
       const earlyReject = (error2) => {
         reject(error2);
       };
@@ -44734,7 +45587,7 @@ var Protocol = class {
           if (!parseResult.success) {
             reject(parseResult.error);
           } else {
-            resolve11(parseResult.data);
+            resolve13(parseResult.data);
           }
         } catch (error2) {
           reject(error2);
@@ -44996,12 +45849,12 @@ var Protocol = class {
       }
     } catch {
     }
-    return new Promise((resolve11, reject) => {
+    return new Promise((resolve13, reject) => {
       if (signal.aborted) {
         reject(new McpError(ErrorCode.InvalidRequest, "Request cancelled"));
         return;
       }
-      const timeoutId = setTimeout(resolve11, interval);
+      const timeoutId = setTimeout(resolve13, interval);
       signal.addEventListener("abort", () => {
         clearTimeout(timeoutId);
         reject(new McpError(ErrorCode.InvalidRequest, "Request cancelled"));
@@ -45094,7 +45947,7 @@ function mergeCapabilities(base, additional) {
   return result;
 }
 
-// ../../../node_modules/@modelcontextprotocol/sdk/dist/esm/validation/ajv-provider.js
+// node_modules/@modelcontextprotocol/sdk/dist/esm/validation/ajv-provider.js
 var import_ajv = __toESM(require_ajv(), 1);
 var import_ajv_formats = __toESM(require_dist(), 1);
 function createDefaultAjvInstance() {
@@ -45162,7 +46015,7 @@ var AjvJsonSchemaValidator = class {
   }
 };
 
-// ../../../node_modules/@modelcontextprotocol/sdk/dist/esm/experimental/tasks/server.js
+// node_modules/@modelcontextprotocol/sdk/dist/esm/experimental/tasks/server.js
 var ExperimentalServerTasks = class {
   constructor(_server) {
     this._server = _server;
@@ -45375,7 +46228,7 @@ var ExperimentalServerTasks = class {
   }
 };
 
-// ../../../node_modules/@modelcontextprotocol/sdk/dist/esm/experimental/tasks/helpers.js
+// node_modules/@modelcontextprotocol/sdk/dist/esm/experimental/tasks/helpers.js
 function assertToolsCallTaskCapability(requests, method, entityName) {
   if (!requests) {
     throw new Error(`${entityName} does not support task creation (required for ${method})`);
@@ -45410,7 +46263,7 @@ function assertClientRequestTaskCapability(requests, method, entityName) {
   }
 }
 
-// ../../../node_modules/@modelcontextprotocol/sdk/dist/esm/server/index.js
+// node_modules/@modelcontextprotocol/sdk/dist/esm/server/index.js
 var Server = class extends Protocol {
   /**
    * Initializes this server with the given name and version information.
@@ -45781,7 +46634,7 @@ var Server = class extends Protocol {
   }
 };
 
-// ../../../node_modules/@modelcontextprotocol/sdk/dist/esm/server/completable.js
+// node_modules/@modelcontextprotocol/sdk/dist/esm/server/completable.js
 var COMPLETABLE_SYMBOL = /* @__PURE__ */ Symbol.for("mcp.completable");
 function isCompletable(schema) {
   return !!schema && typeof schema === "object" && COMPLETABLE_SYMBOL in schema;
@@ -45795,7 +46648,7 @@ var McpZodTypeKind;
   McpZodTypeKind2["Completable"] = "McpCompletable";
 })(McpZodTypeKind || (McpZodTypeKind = {}));
 
-// ../../../node_modules/@modelcontextprotocol/sdk/dist/esm/shared/toolNameValidation.js
+// node_modules/@modelcontextprotocol/sdk/dist/esm/shared/toolNameValidation.js
 var TOOL_NAME_REGEX = /^[A-Za-z0-9._-]{1,128}$/;
 function validateToolName(name) {
   const warnings = [];
@@ -45853,7 +46706,7 @@ function validateAndWarnToolName(name) {
   return result.isValid;
 }
 
-// ../../../node_modules/@modelcontextprotocol/sdk/dist/esm/experimental/tasks/mcp-server.js
+// node_modules/@modelcontextprotocol/sdk/dist/esm/experimental/tasks/mcp-server.js
 var ExperimentalMcpServerTasks = class {
   constructor(_mcpServer) {
     this._mcpServer = _mcpServer;
@@ -45868,7 +46721,7 @@ var ExperimentalMcpServerTasks = class {
   }
 };
 
-// ../../../node_modules/@modelcontextprotocol/sdk/dist/esm/server/mcp.js
+// node_modules/@modelcontextprotocol/sdk/dist/esm/server/mcp.js
 init_zod();
 function toolInputElementCount(value, max) {
   let count2 = 0;
@@ -46133,7 +46986,7 @@ var McpServer = class {
     let task = createTaskResult.task;
     const pollInterval = task.pollInterval ?? 5e3;
     while (task.status !== "completed" && task.status !== "failed" && task.status !== "cancelled") {
-      await new Promise((resolve11) => setTimeout(resolve11, pollInterval));
+      await new Promise((resolve13) => setTimeout(resolve13, pollInterval));
       const updatedTask = await extra.taskStore.getTask(taskId);
       if (!updatedTask) {
         throw new McpError(ErrorCode.InternalError, `Task ${taskId} not found during polling`);
@@ -46701,10 +47554,10 @@ var EMPTY_COMPLETION_RESULT = {
   }
 };
 
-// ../../../node_modules/@modelcontextprotocol/sdk/dist/esm/server/stdio.js
+// node_modules/@modelcontextprotocol/sdk/dist/esm/server/stdio.js
 import process2 from "node:process";
 
-// ../../../node_modules/@modelcontextprotocol/sdk/dist/esm/shared/stdio.js
+// node_modules/@modelcontextprotocol/sdk/dist/esm/shared/stdio.js
 var STDIO_DEFAULT_MAX_BUFFER_SIZE = 10 * 1024 * 1024;
 var ReadBuffer = class {
   constructor(options) {
@@ -46741,7 +47594,7 @@ function serializeMessage(message) {
   return JSON.stringify(message) + "\n";
 }
 
-// ../../../node_modules/@modelcontextprotocol/sdk/dist/esm/server/stdio.js
+// node_modules/@modelcontextprotocol/sdk/dist/esm/server/stdio.js
 var StdioServerTransport = class {
   constructor(_stdin = process2.stdin, _stdout = process2.stdout, options) {
     this._stdin = _stdin;
@@ -46797,12 +47650,12 @@ var StdioServerTransport = class {
     this.onclose?.();
   }
   send(message) {
-    return new Promise((resolve11) => {
+    return new Promise((resolve13) => {
       const json3 = serializeMessage(message);
       if (this._stdout.write(json3)) {
-        resolve11();
+        resolve13();
       } else {
-        this._stdout.once("drain", resolve11);
+        this._stdout.once("drain", resolve13);
       }
     });
   }
@@ -46857,8 +47710,8 @@ function isMain(metaUrl) {
   const entry = process.argv[1];
   if (!entry) return false;
   try {
-    const a2 = resolve10(fileURLToPath6(metaUrl));
-    const b = resolve10(entry);
+    const a2 = resolve12(fileURLToPath6(metaUrl));
+    const b = resolve12(entry);
     return process.platform === "win32" ? a2.toLowerCase() === b.toLowerCase() : a2 === b;
   } catch {
     return false;
@@ -46877,6 +47730,7 @@ init_state();
 init_tools2();
 var USAGE = `CatCut \u{1F43E} \u2014 headless video editing MCP (After Effects headless + aerender + ffmpeg)
 
+  editmcp ready                                    \u0E40\u0E04\u0E23\u0E37\u0E48\u0E2D\u0E07\u0E1E\u0E23\u0E49\u0E2D\u0E21\u0E44\u0E2B\u0E21 \u0E15\u0E49\u0E2D\u0E07\u0E40\u0E1B\u0E34\u0E14\u0E2D\u0E30\u0E44\u0E23\u0E04\u0E49\u0E32\u0E07\u0E44\u0E2B\u0E21 \u0E15\u0E49\u0E2D\u0E07\u0E17\u0E33\u0E2D\u0E30\u0E44\u0E23 / what is ready, what you must do
   editmcp doctor                                   \u0E15\u0E23\u0E27\u0E08\u0E40\u0E04\u0E23\u0E37\u0E48\u0E2D\u0E07\u0E21\u0E37\u0E2D / check tools, encoders, RAM, compat notes
   editmcp serve [projectDir]                       MCP stdio server (\u0E43\u0E0A\u0E49\u0E01\u0E31\u0E1A Claude Code / Codex)
   editmcp build <projectDir> [--force] [--force-assets C_a,C_b] [--skip-qc] [--skip-deliver]
@@ -46897,6 +47751,9 @@ function pretty(v) {
 function report(r) {
   const data = toolResultData(r);
   if (r.isError) {
+    const ua = data["userAction"];
+    if (ua?.say) err(`${ua.say}
+`);
     err(pretty(data));
     return null;
   }
@@ -46979,6 +47836,13 @@ async function main(argv = process.argv.slice(2)) {
     return d;
   };
   switch (cmd) {
+    case "ready": {
+      const state = await createAppState();
+      const d = report(await callTool(state, "ready_check"));
+      if (!d) return 1;
+      out(String(d["say"]));
+      return d["ready"] ? 0 : 2;
+    }
     case "doctor": {
       const state = await createAppState();
       const d = report(await callTool(state, "doctor"));
@@ -47061,8 +47925,8 @@ async function main(argv = process.argv.slice(2)) {
         const r = await installBridge2();
         out(`installed: ${r.installedTo}`);
         out(`PlayerDebugMode=1 (unsigned extensions allowed): ${r.debugModeKeys.join(", ")}`);
-        out("Restart Premiere Pro (save your work first). The bridge starts by itself; check with: catcut premiere-bridge status");
-        out("\u0E15\u0E34\u0E14\u0E15\u0E31\u0E49\u0E07\u0E41\u0E25\u0E49\u0E27 \u2014 save \u0E07\u0E32\u0E19\u0E41\u0E25\u0E49\u0E27\u0E1B\u0E34\u0E14\u0E40\u0E1B\u0E34\u0E14 Premiere \u0E43\u0E2B\u0E21\u0E48 bridge \u0E08\u0E30\u0E40\u0E23\u0E34\u0E48\u0E21\u0E40\u0E2D\u0E07");
+        out("Premiere does not need to be open: CatCut starts it with the project when needed (premiere_open). If Premiere is open now, `catcut ready` says whether it needs one restart.");
+        out("\u0E15\u0E34\u0E14\u0E15\u0E31\u0E49\u0E07\u0E41\u0E25\u0E49\u0E27 \u2014 \u0E44\u0E21\u0E48\u0E15\u0E49\u0E2D\u0E07\u0E40\u0E1B\u0E34\u0E14 Premiere \u0E40\u0E2D\u0E07 CatCut \u0E40\u0E1B\u0E34\u0E14\u0E43\u0E2B\u0E49\u0E1E\u0E23\u0E49\u0E2D\u0E21\u0E42\u0E1B\u0E23\u0E40\u0E08\u0E01\u0E15\u0E4C\u0E40\u0E21\u0E37\u0E48\u0E2D\u0E15\u0E49\u0E2D\u0E07\u0E43\u0E0A\u0E49; \u0E16\u0E49\u0E32\u0E40\u0E1B\u0E34\u0E14\u0E2D\u0E22\u0E39\u0E48\u0E15\u0E2D\u0E19\u0E19\u0E35\u0E49 `catcut ready` \u0E08\u0E30\u0E1A\u0E2D\u0E01\u0E27\u0E48\u0E32\u0E15\u0E49\u0E2D\u0E07\u0E1B\u0E34\u0E14\u2013\u0E40\u0E1B\u0E34\u0E14\u0E2B\u0E19\u0E36\u0E48\u0E07\u0E04\u0E23\u0E31\u0E49\u0E07\u0E44\u0E2B\u0E21");
         return 0;
       }
       if (sub === "uninstall") {

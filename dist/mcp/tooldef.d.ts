@@ -3,7 +3,12 @@
  * tools.ts concatenates them into TOOLS.
  */
 import type { z } from 'zod';
+import type { UserAction } from '../core/types.js';
 import type { AppState } from './state.js';
+/** Told to the agent next to every card: show it as is, then wait. */
+export declare const RELAY = "Show userAction.say to the user exactly as written (Thai), then stop and wait for their reply. Do not invent other steps.";
+/** A tool failure that needs the person to do something (DESIGN.md §14). */
+export declare function needsUser(message: string, action: UserAction, data?: Record<string, unknown>): ToolError;
 export interface ToolResult {
     content: Array<{
         type: 'text';

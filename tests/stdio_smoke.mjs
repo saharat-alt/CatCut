@@ -50,7 +50,9 @@ try {
   assert.notEqual(first.master, cached.master);
   assert.equal((await call('qc_report')).qc.frames, 25);
   const xml = await call('export_premiere_xml');
-  assert.equal((await call('import_premiere_xml', { path: xml.path })).applied, true);
+  assert.equal((await call('import_premiere_xml', { path: xml.path })).applied, false); // dry run by default
+  assert.equal((await call('import_premiere_xml', { path: xml.path, apply: true })).applied, true);
+  assert.ok((await call('ready_check')).apps.some((a) => a.app === 'after-effects'));
   const review = await job('review_open');
   const data = await fetch(review.url + 'data').then(r => r.json());
   assert.equal(data.plan.frames, 25);

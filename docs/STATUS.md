@@ -1,5 +1,15 @@
 # CatCut (EDITMCP) implementation status
 
+## อัปเดต 2026-10-12: ง่ายขึ้น ไม่ต้องเปิดโปรแกรมค้าง (DESIGN ข้อ 14, จากงาน Thai Agri Foods reshoot)
+
+- `ready_check` / `catcut ready`: การ์ดต่อโปรแกรม (ffmpeg, After Effects, Premiere + bridge, ดิสก์) ตรวจโดยไม่เปิด Adobe — ทดลองบนเครื่องนี้แล้ว: เจอ AE 26.5 พร้อม, bridge ที่ติดตั้งเป็นรุ่นเก่า (ของ Codex), C: เหลือน้อย
+- User Action Card (`userAction` ใน error): ทำอะไร · ทำไม · ครั้งเดียว/ทุกครั้ง · ต้องเปิดค้างไหม · ปิดได้เมื่อไร; AE: Allow Scripts / Sign in ครั้งเดียว / ไม่พบ AE; Premiere: ยังไม่ติดตั้ง, ต้องอัปเดต, ต้องปิด–เปิดครั้งเดียว, bridge ไม่เริ่มเอง, มีหน้าต่างค้าง, เปิดช้า
+- bridge 0.2.0: heartbeat เดินต่อระหว่าง Premiere ทำงาน (`busy`), โหลด host.jsx ใหม่เองเมื่อไฟล์เปลี่ยน, เขียน heartbeat ทนการอ่านพร้อมกันบน Windows, ปิด Premiere หลังตอบผลแล้วเท่านั้น
+- ใหม่: `premiere_open` (เปิด Premiere + โปรเจกต์ให้เอง), `premiere_save`, `premiere_close`, `premiere_import_media` (ต้นฉบับชื่อเดิม bin ตามการ์ด แนบ `_Proxy`), `premiere_set_speed` (native + Optical Flow), `proxy_make`; `timeline_lint` `slowmo`; `board_vs_cut` เช็กชื่อไฟล์ที่บอร์ดระบุ; `disk_report` แยกโฟลเดอร์อื่น + งบ 50 GB
+- `npm test`: 33 files / 403 tests ผ่าน (1 skipped: EffectCraft จริง); `tests/stdio_smoke.mjs` ผ่าน (แก้ assertion เดิมที่ค้างจากตอนเปลี่ยน import XML เป็น dry run)
+- **ยังไม่ได้ลองกับ Premiere/AE จริง**: เปิด Premiere จาก command line + auto-start, `app.openDocument`, `app.quit`, QE `setSpeed`/`setTimeInterpolationType(2)` (Codex ใช้ได้จริงในงานนั้น), hot reload `$.evalFile`; ข้อความ error ของ AE ตอนยังไม่ Sign in
+- bridge ที่ติดตั้งอยู่ในเครื่องตอนนี้เป็นฉบับที่ Codex แก้ (มีคำสั่งเฉพาะงาน reshoot) — `catcut premiere-bridge install` จะแทนที่ฉบับนั้น
+
 ## อัปเดต 2026-10-11 (รอบ 2): แก้ตามรีวิว + บทเรียนงาน CSR (DESIGN ข้อ 13)
 
 - ชื่อแอป **CatCut** 🐾 (โลโก้ `assets/brand/catcut-logo.svg`; CLI `catcut` และ alias `editmcp`; env `EDITMCP_*` ยังใช้ได้)

@@ -18,6 +18,8 @@ const DISK_WARN_BYTES = 20 * GB;
 const PLAN_MAX_AGE_MS = 10 * 60_000;
 const MIN_AGE_MS = 60 * 60_000; // orphan/temp files younger than this may belong to a running build
 const CONFIRM_TOKENS = new Set(['ลบ', 'delete']);
+/** Project folder size that earns a warning in disk_report (the reshoot job reached ~100 GB unnoticed). */
+const DEFAULT_BUDGET_GB = 50;
 async function freeSpace(target, statfs) {
     let p = path.resolve(target);
     while (!existsSync(p)) {
@@ -61,44 +63,64 @@ export function parseAePrefs(text) {
 function versionKey(v) {
     return v.split('.').map((x) => parseInt(x, 10) || 0);
 }
+/** AE prefs version folders under %APPDATA%, newest first, with their "*Prefs*.txt" files. */
+async function aePrefsDirs(env) {
+    const appdata = env['APPDATA'];
+    if (!appdata)
+        return [];
+    const root = path.join(appdata, 'Adobe', 'After Effects');
+    const versions = (await readdir(root).catch(() => [])).filter((v) => /^\d+(\.\d+)*$/.test(v))
+        .sort((a, b) => { const x = versionKey(a); const y = versionKey(b); for (let i = 0; i < Math.max(x.length, y.length); i++) {
+        const d = (y[i] ?? 0) - (x[i] ?? 0);
+        if (d)
+            return d;
+    } return 0; });
+    const out = [];
+    for (const ver of versions) {
+        const dir = path.join(root, ver);
+        out.push({ ver, dir, files: (await readdir(dir).catch(() => [])).filter((f) => /^Adobe After Effects .*Prefs.*\.txt$/i.test(f)).sort() });
+    }
+    return out;
+}
+/** "Allow Scripts to Write Files and Access Network" from the newest AE main prefs, read without starting AE. */
+export async function aeScriptingPref(env = process.env) {
+    for (const { ver, dir, files } of await aePrefsDirs(env)) {
+        const main = files.find((f) => /^Adobe After Effects [\d.]+ Prefs\.txt$/i.test(f));
+        if (!main)
+            continue;
+        const file = path.join(dir, main);
+        // the value is written quoted ("1") or as raw hex (01) depending on the AE version
+        const m = /"Pref_SCRIPTING_FILE_NETWORK_SECURITY"\s*=\s*"?([0-9A-Fa-f]+)"?/.exec(await readFile(file, 'utf8').catch(() => ''));
+        return m ? { allowed: parseInt(m[1], 16) === 1, prefsFile: file, aeVersion: ver } : { prefsFile: file, aeVersion: ver };
+    }
+    return {};
+}
 /** AE disk cache folder from the newest AE prefs under %APPDATA%; default %LOCALAPPDATA%\Temp; else unknown. */
 export async function findAeDiskCache(env = process.env) {
-    const appdata = env['APPDATA'];
-    if (appdata) {
-        const root = path.join(appdata, 'Adobe', 'After Effects');
-        const versions = (await readdir(root).catch(() => [])).filter((v) => /^\d+(\.\d+)*$/.test(v))
-            .sort((a, b) => { const x = versionKey(a); const y = versionKey(b); for (let i = 0; i < Math.max(x.length, y.length); i++) {
-            const d = (y[i] ?? 0) - (x[i] ?? 0);
-            if (d)
-                return d;
-        } return 0; });
-        for (const ver of versions) {
-            const dir = path.join(root, ver);
-            const files = (await readdir(dir).catch(() => [])).filter((f) => /^Adobe After Effects .*Prefs.*\.txt$/i.test(f)).sort();
-            for (const f of files) {
-                const file = path.join(dir, f);
-                const prefs = parseAePrefs(await readFile(file, 'utf8').catch(() => ''));
-                let folder;
-                let maxSizeGb;
-                const dc = prefs.get('Disk Cache Controls');
-                if (dc) {
-                    for (const [k, v] of dc) {
-                        if (/^Folder( \d+)?$/i.test(k) && v)
-                            folder = v;
-                        if (/^Max Size( \d+)?$/i.test(k) && Number.isFinite(Number(v)))
-                            maxSizeGb = Number(v);
-                    }
+    for (const { ver, dir, files } of await aePrefsDirs(env)) {
+        for (const f of files) {
+            const file = path.join(dir, f);
+            const prefs = parseAePrefs(await readFile(file, 'utf8').catch(() => ''));
+            let folder;
+            let maxSizeGb;
+            const dc = prefs.get('Disk Cache Controls');
+            if (dc) {
+                for (const [k, v] of dc) {
+                    if (/^Folder( \d+)?$/i.test(k) && v)
+                        folder = v;
+                    if (/^Max Size( \d+)?$/i.test(k) && Number.isFinite(Number(v)))
+                        maxSizeGb = Number(v);
                 }
-                if (!folder) {
-                    for (const sec of prefs.values()) {
-                        for (const [k, v] of sec)
-                            if (/^(Disk Cache Folder|Conformed Media Cache)/i.test(k) && v)
-                                folder = v;
-                    }
-                }
-                if (folder)
-                    return { folder, source: 'prefs', prefsFile: file, aeVersion: ver, ...(maxSizeGb !== undefined ? { maxSizeGb } : {}) };
             }
+            if (!folder) {
+                for (const sec of prefs.values()) {
+                    for (const [k, v] of sec)
+                        if (/^(Disk Cache Folder|Conformed Media Cache)/i.test(k) && v)
+                            folder = v;
+                }
+            }
+            if (folder)
+                return { folder, source: 'prefs', prefsFile: file, aeVersion: ver, ...(maxSizeGb !== undefined ? { maxSizeGb } : {}) };
         }
     }
     const local = env['LOCALAPPDATA'];
@@ -209,10 +231,24 @@ export async function diskReport(p, opts = {}) {
         else
             orphans[e.name] = size;
     }
+    const review = await sizeOf(path.join(p.dir, 'review'));
+    const other = {};
+    for (const e of await readdir(p.dir, { withFileTypes: true }).catch(() => [])) {
+        if (['cache', 'out', 'review'].includes(e.name))
+            continue;
+        const full = path.join(p.dir, e.name);
+        other[e.name] = e.isDirectory() ? await sizeOf(full) : ((await lstat(full).catch(() => undefined))?.size ?? 0);
+    }
+    const total = cache.total + outTotal + review + Object.values(other).reduce((a, b) => a + b, 0);
+    const budget = (opts.budgetGb ?? DEFAULT_BUDGET_GB) * GB;
+    if (total > budget) {
+        const top = Object.entries({ cache: cache.total, out: outTotal, review, ...other }).sort((a, b) => b[1] - a[1]).slice(0, 3).map(([k, v]) => `${k} ${fmtGb(v)}`).join(', ');
+        warnings.push(`โปรเจกต์ใช้พื้นที่ ${fmtGb(total)} เกินงบ ${fmtGb(budget)} (มากสุด: ${top}) — ดู cache_gc_plan / project uses ${fmtGb(total)}, over the ${fmtGb(budget)} budget`);
+    }
     return {
         drives,
         aeCache,
-        project: { dir: p.dir, cache, out: { byVersion, orphans, total: outTotal }, review: await sizeOf(path.join(p.dir, 'review')) },
+        project: { dir: p.dir, cache, out: { byVersion, orphans, total: outTotal }, review, other, total },
         keptVersions: p.versions.filter((v) => v.keep).map((v) => v.id),
         warnings,
     };

@@ -1,4 +1,5 @@
 import type { AeBackend, AeEditRequest, AeEditResult, CompDetail, CompInfo, CompLint, Frames, LayerInfo, RenderRequest, RenderResult, StyleRules, TemplateComp, TemplateScan, ToolPaths } from '../core/types.js';
+import { type AeScriptingPref } from './housekeeping.js';
 import { type PurgeOutcome, type PurgePolicy, type SpawnFn, type StatfsFn } from './aerender.js';
 export interface AeProcess {
     name: string;
@@ -27,6 +28,8 @@ interface AeOptions {
     minFreeRamGb?: number;
     /** Running processes named AfterFX.exe (injectable for tests; default: tasklist on Windows). */
     listProcesses?: () => Promise<AeProcess[]>;
+    /** AE's "Allow Scripts to Write Files" pref (injectable for tests; default: read from AE prefs). */
+    scriptingPref?: () => Promise<AeScriptingPref>;
 }
 export interface FingerprintDetail {
     hash: string;

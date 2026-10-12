@@ -7,6 +7,21 @@ description: Edit video with the CatCut MCP (headless After Effects + ffmpeg, FC
 
 CatCut builds video headlessly: AE comps render with aerender, ffmpeg stitches cached ProRes segments into a master, and Premiere gets FCP7 XML. All times are **frames** at the project fps. Nothing is ever overwritten: each build is a new version (`v001`, `v002`, ...).
 
+## Setup: the user never guesses what to open
+- Start every session with `ready_check` and show its `say` text unchanged. It lists each app, whether it must stay open, and the steps the user must take.
+- **After Effects never stays open.** CatCut runs it without a window and closes it after every job. When AE needs the user, a tool returns a `userAction` card, for example a one-time Sign in or ticking "Allow Scripts to Write Files". Show `userAction.say` **exactly as written**, then stop and wait. Never ask the user to "keep AE open", "open an empty project", or run scripts inside the AE GUI.
+- **Premiere is opened by CatCut.** Call `premiere_open {project: "<full path>.prproj"}`. It starts Premiere with that project, or opens the project in the running Premiere, and waits for the bridge. Do not ask the user to open Premiere or the CatCut Bridge panel unless a `userAction` card says so.
+- Any tool error that carries `userAction`: show `userAction.say` as is and wait. Do not invent steps, restarts or workarounds. Do not switch to computer use.
+- After Premiere work, relay `closeHint`: say whether the project is saved and that Premiere may be closed. Close it with `premiere_close` only if CatCut opened it, or if the user asks (`force: true`).
+- Never take over the screen (computer use) to do what a CatCut tool does. If a CatCut tool is missing for the job, say so and ask; do not script Premiere or AE yourself.
+
+## Files and disk: nothing the user cannot trace
+- **Use the original files under their original names.** Never copy, rename or re-export footage to use it (no `b46_1.mov`). Bins are named after card folders (`premiere_import_media` does this). Board shot numbers go in CatCut's `slot`, not in file names.
+- **Never export a clip to fake an edit.** Speed and slow motion: `premiere_set_speed` (native, e.g. 60% + Optical Flow) in Premiere, or `Clip.speed` with `interpolation: 'motion'` in CatCut. Colour and motion stay editable layers. If the user says "revert what you exported", put the originals back and remove the pasted files from the sequence.
+- Proxies: `proxy_make` makes `<original name>_Proxy.mp4`. Then `premiere_import_media {project, sources, proxyDir}` imports the originals and attaches the proxies. Do not make proxies with your own ffmpeg commands.
+- Before any job that writes many files, check `disk_report`. After the job, say how much it added. Evidence frames and previews are small; renders and proxies are not. Report the project size when `disk_report` warns about the budget.
+- Never delete files without the user's OK. Use `cache_gc_plan`, show the plan, and wait for approval.
+
 ## The highest rule: the brief decides
 - Priority: **brief / board → the user's instructions in this project → general defaults**.
 - No style rule applies to every project. Template use, Thai typography, join lengths and similar choices depend on each brief. Advisory tools (template scan, Thai lint, join policy) are information, not law.
@@ -31,6 +46,11 @@ Cards only collect choices; the actual work still goes through CatCut tools.
 
 ## Workflow
 1. **Brief/board first.** No brief (a one-off effect or test)? Skip the board; say so in one line. `board_import` the storyboard/brief, then `board_check`. Tie every clip to a board `slot`. If the board contradicts itself, ask before cutting.
+   - **File names and take notes written on the board win over matching by eye.** Put them in the slot's `sourceHint`. `board_vs_cut` flags a slot that uses other files. Read the photo/real-shot reference before the block-shot drawing.
+   - **Reshoot projects:** when the user says the new cards are a reshoot, use reshoot footage first for every process shot. Old/client footage only fills what the reshoot lacks. Record this with `rules_add_constraint` (source: the user's words).
+   - When the board is unclear, use the footage closest to the board and mark the slot `substitute`. Never leave a slot on a still frame because footage is hard to find.
+   - **Slow motion:** check the source fps first (`timeline_lint` → `slowmo`). Client footage at 25/30 fps slowed down stutters unless it uses Optical Flow. Never replace a stuttering slow-mo with a still.
+   - **Motion graphics and text are AE layers** (`ae_create`), built to match the board's look: typography, frames, light. Never use image generation for titles, frames or motion. When the user picks an earlier version ("use Rev3's frames"), revert to that version's comps; do not rebuild a new look.
 2. **Capture rules** the brief or user states: `rules_add_constraint` (checks: `board-only`, `logo-static`, `no-repeat-gimmick` are automatic; `no-cover-photo`, `manual` are checked by eye) and `rules_set_style` (radius, safe margin, palette, joins, thai, maxStaticSec).
 3. **Before every edit and every build, call `rules_get`** and re-read the checklist.
 4. **Edit**: use `timeline_edit` for small changes, `ae_edit` for existing comps and `ae_create` for new ones. To hand the cut to a human editor in Premiere, use `premiere_push` / `premiere_pull` (CatCut bridge), never screenshots or clicks.
@@ -55,4 +75,4 @@ Before saying a fix is done (for example "corners are round everywhere"), call `
 
 ## Money and the screen
 - Before calling any paid external service or connector (generation, stock, upscaling, TTS ...), tell the user it may cost money and ask: "<service> อาจมีค่าใช้จ่าย — ใช้ไหม? / may cost money — OK?".
-- Stay headless. Never take over the user's screen or launch Adobe apps with a UI unless they ask.
+- Stay headless. Never take over the user's screen. The only Adobe window CatCut opens is Premiere, through `premiere_open`.

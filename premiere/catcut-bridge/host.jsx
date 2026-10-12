@@ -1,6 +1,8 @@
 // CatCut bridge, ExtendScript side (ES3, Premiere Pro). bridge-core.js calls catcut_dispatch(job)
-// and gets a JSON string back. Only these actions exist; nothing here saves, closes or opens a
-// project. Paths arrive from CatCut already copied into the bridge's ASCII temp folder.
+// and gets a JSON string back. Only these actions exist. Every action that changes a project names
+// it (expectProject) and refuses when another one is active; only save/quit save, and quit only
+// after CatCut asked for it. XML paths arrive staged in the bridge's ASCII temp folder; media and
+// proxy paths are the original files (never copies).
 var catcut_dispatch = (function () {
     function stringify(v) {
         if (v === null || v === undefined) return "null";
@@ -52,8 +54,138 @@ var catcut_dispatch = (function () {
         for (i = 0; i < root.children.numItems; i++) if (root.children[i].type === 2 && root.children[i].name === name) return root.children[i];
         throw new Error("cannot create bin: " + name);
     }
+    function requireProject(a) {
+        if (!app.project) throw new Error("no project open in Premiere");
+        if (a.expectProject && norm(app.project.path) !== norm(a.expectProject)) throw new Error("the active Premiere project is " + app.project.path + ", not " + a.expectProject + "; nothing changed");
+    }
+    function saveProject() {
+        var r = app.project.save();
+        if (r === false) throw new Error("Premiere could not save " + app.project.path);
+    }
+    /** Nested bin by "A/B" path under the project root, created when missing. */
+    function binAt(pathText) {
+        var parts = String(pathText || "").split("/"), cur = app.project.rootItem, i, j, hit;
+        for (i = 0; i < parts.length; i++) {
+            if (!parts[i]) continue;
+            hit = null;
+            for (j = 0; j < cur.children.numItems; j++) if (cur.children[j].type === 2 && cur.children[j].name === parts[i]) hit = cur.children[j];
+            if (!hit) {
+                cur.createBin(parts[i]);
+                for (j = 0; j < cur.children.numItems; j++) if (cur.children[j].type === 2 && cur.children[j].name === parts[i]) hit = cur.children[j];
+            }
+            if (!hit) throw new Error("cannot create bin: " + parts[i]);
+            cur = hit;
+        }
+        return cur;
+    }
+    /** The project item whose media is path, searching root and its bins. */
+    function findMedia(root, path) {
+        for (var i = 0; i < root.children.numItems; i++) {
+            var c = root.children[i];
+            if (c.type === 2) { var hit = findMedia(c, path); if (hit) return hit; } else if (c.getMediaPath && norm(c.getMediaPath()) === norm(path)) return c;
+        }
+        return null;
+    }
+    var INTERP = { "frame-sampling": 0, "frame-blend": 1, "optical-flow": 2 };
     var actions = {
         ping: function () { return { premiere: app.version, project: project() }; },
+        openProject: function (a) {
+            if (app.project && norm(app.project.path) === norm(a.path)) return { project: project(), opened: false };
+            if (!new File(a.path).exists) throw new Error("project not found: " + a.path);
+            // suppress conversion dialog, bypass locate-file and warning dialogs, keep the MRU list
+            if (!app.openDocument(a.path, true, true, true, true)) throw new Error("Premiere refused to open " + a.path);
+            if (!app.project || norm(app.project.path) !== norm(a.path)) throw new Error("opened " + a.path + " but the active project is " + (app.project ? app.project.path : "none"));
+            return { project: project(), opened: true };
+        },
+        save: function (a) {
+            requireProject(a);
+            saveProject();
+            return { project: project(), saved: true };
+        },
+        quit: function (a) {
+            requireProject(a);
+            if (a.save !== false) saveProject();
+            return { project: project(), saved: a.save !== false, quitting: true };
+        },
+        importMedia: function (a) {
+            requireProject(a);
+            var items = a.items || [], byBin = {}, order = [], out = [], i, it, bin, item;
+            for (i = 0; i < items.length; i++) {
+                it = items[i];
+                if (!new File(it.source).exists) { out.push({ source: it.source, error: "source not found" }); continue; }
+                if (it.proxy && !new File(it.proxy).exists) { out.push({ source: it.source, error: "proxy not found: " + it.proxy }); continue; }
+                if (!byBin.hasOwnProperty(it.bin)) { byBin[it.bin] = []; order.push(it.bin); }
+                byBin[it.bin].push(it);
+            }
+            // import only what the project does not have yet, so a retry after a cancelled import resumes
+            for (i = 0; i < order.length; i++) {
+                bin = binAt(order[i]);
+                var missing = [];
+                for (var k = 0; k < byBin[order[i]].length; k++) if (!findMedia(app.project.rootItem, byBin[order[i]][k].source)) missing.push(byBin[order[i]][k].source);
+                if (missing.length && !app.project.importFiles(missing, true, bin, false)) throw new Error("Premiere refused to import into " + order[i]);
+                for (k = 0; k < byBin[order[i]].length; k++) {
+                    it = byBin[order[i]][k];
+                    item = findMedia(app.project.rootItem, it.source);
+                    var row = { source: it.source, bin: order[i], name: item ? item.name : null, imported: !!item, proxy: "none" };
+                    if (!item) row.error = "not in the project after import";
+                    else if (it.proxy) {
+                        if (item.hasProxy() && norm(item.getProxyPath()) === norm(it.proxy)) row.proxy = "already";
+                        else if (item.hasProxy()) { row.proxy = "different"; row.error = "another proxy is attached: " + item.getProxyPath(); }
+                        else if (!item.canProxy()) { row.proxy = "failed"; row.error = "Premiere cannot attach a proxy to this item"; }
+                        else {
+                            item.attachProxy(new File(it.proxy).fsName, 0);
+                            if (item.hasProxy() && norm(item.getProxyPath()) === norm(it.proxy)) row.proxy = "attached";
+                            else { row.proxy = "failed"; row.error = "attachProxy did not take"; }
+                        }
+                    }
+                    out.push(row);
+                }
+            }
+            if (a.enableProxies) app.setEnableProxies(1);
+            return { project: project(), items: out };
+        },
+        setSpeed: function (a) {
+            requireProject(a);
+            var s = findSequence(a.sequence), settings = s.getSettings(), fps = 1 / settings.videoFrameRate.seconds;
+            var ti = (a.track || 1) - 1, track = s.videoTracks[ti], report = [], i, j;
+            if (!track) throw new Error("no video track V" + (ti + 1));
+            function fr(t) { return Math.round(t.seconds * fps); }
+            function at(frame) {
+                for (var n = 0; n < track.clips.numItems; n++) { var c = track.clips[n]; if (fr(c.start) <= frame && frame < fr(c.end)) return n; }
+                return -1;
+            }
+            app.project.openSequence(s.sequenceID);
+            app.enableQE();
+            for (i = 0; i < a.clips.length; i++) {
+                var want = a.clips[i], frame = want.at;
+                if (typeof frame === "string") { var tc = frame.split(/[:;]/), r = Math.round(fps); frame = ((Number(tc[0]) * 60 + Number(tc[1])) * 60 + Number(tc[2])) * r + Number(tc[3]); }
+                var n = at(frame);
+                if (n < 0) throw new Error("no clip on V" + (ti + 1) + " at " + want.at);
+                if (!(want.speed > 0)) throw new Error("speed must be > 0 at frame " + want.at);
+                var c = track.clips[n], before = { start: fr(c.start), end: fr(c.end), name: c.name };
+                // QE lists gaps too: the n-th clip of the track is the n-th QE item of type Clip
+                var qt = qe.project.getActiveSequence().getVideoTrackAt(ti), q = null, seen = 0;
+                for (j = 0; j < qt.numItems; j++) { var x = qt.getItemAt(j); if (x && x.type === "Clip") { if (seen === n) q = x; seen++; } }
+                if (!q || q.name !== c.name) throw new Error("cannot match " + c.name + " in Premiere's QE track; nothing changed for it");
+                var dur = new Time();
+                dur.seconds = (before.end - before.start) / fps;
+                q.setSpeed(want.speed, dur.getFormatted(settings.videoFrameRate, settings.videoDisplayFormat), false, false, false);
+                q.setTimeInterpolationType(INTERP[want.interpolation || "optical-flow"]);
+                c = track.clips[n];
+                // keep the clip where it was: QE may move its edges
+                if (fr(c.start) !== before.start || fr(c.end) !== before.end) {
+                    var t = new Time(); t.seconds = before.start / fps; c.start = t;
+                    t = new Time(); t.seconds = before.end / fps; c.end = t;
+                    c = track.clips[n];
+                }
+                var after = { start: fr(c.start), end: fr(c.end), speed: c.getSpeed() };
+                if (after.start !== before.start || after.end !== before.end || Math.abs(after.speed - want.speed) > 0.001) {
+                    throw new Error("speed on " + before.name + " did not apply cleanly (" + stringify({ before: before, after: after }) + "); not saved: press Ctrl+Z in Premiere to undo");
+                }
+                report.push({ name: before.name, at: frame, start: after.start, end: after.end, speed: after.speed, interpolation: want.interpolation || "optical-flow" });
+            }
+            return { project: project(), sequence: { name: s.name, id: s.sequenceID }, clips: report };
+        },
         status: function () { return { premiere: app.version, project: project(), sequences: app.project ? sequences() : [] }; },
         importXml: function (a) {
             if (!app.project) throw new Error("no project open in Premiere");

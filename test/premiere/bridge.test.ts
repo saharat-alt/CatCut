@@ -24,6 +24,7 @@ const { createBridge } = require('../../premiere/catcut-bridge/bridge-core.js') 
 };
 const BRIDGE_SRC = join(process.cwd(), 'premiere', 'catcut-bridge');
 const HOST = readFileSync(join(BRIDGE_SRC, 'host.jsx'), 'utf8');
+const SOURCE_VERSION = (JSON.parse(readFileSync(join(BRIDGE_SRC, 'package.json'), 'utf8')) as { version: string }).version;
 
 // ---------- fake Premiere (just the object model host.jsx touches) ----------
 
@@ -77,10 +78,13 @@ async function liveBridge(prem = fakePremiere(), o: { pid?: number } = {}) {
   const root = await mkdtemp(join(os.tmpdir(), 'catcut-ppro-'));
   const dir = join(root, 'queue');
   await mkdir(dir, { recursive: true });
-  const bridge = createBridge({ fs: require('node:fs'), path: require('node:path'), dir, pid: o.pid ?? process.pid, version: '0.1.0', evalScript: prem.evalScript });
+  const bridge = createBridge({ fs: require('node:fs'), path: require('node:path'), dir, pid: o.pid ?? process.pid, version: SOURCE_VERSION, evalScript: prem.evalScript });
   await bridge.heartbeat();
   pumps.push(setInterval(() => { void bridge.tick(); }, 5));
   const installDir = join(root, 'ext', BRIDGE_ID);
+  await mkdir(join(installDir, 'CSXS'), { recursive: true });
+  await writeFile(join(installDir, 'CSXS', 'manifest.xml'), '<x/>');
+  await writeFile(join(installDir, 'package.json'), JSON.stringify({ version: SOURCE_VERSION }));
   const client = createPremiereClient({ queueDir: dir, installDir, pollMs: 5 });
   return { root, dir, bridge, client, prem, installDir };
 }
@@ -146,7 +150,7 @@ describe('bridge queue (bridge-core.js ⇄ CatCut client)', () => {
   it('serves requests in order and keeps a heartbeat the client reads as connected', async () => {
     const { client, dir } = await liveBridge();
     const st = await client.status();
-    expect(st).toMatchObject({ connected: true, installed: false, premiere: '26.0.0', bridge: '0.1.0', project: { name: 'JOB_EDIT.prproj' } });
+    expect(st).toMatchObject({ connected: true, installed: true, premiere: '26.0.0', bridge: SOURCE_VERSION, project: { name: 'JOB_EDIT.prproj' }, busy: null });
     const [s1, s2] = await Promise.all([client.call<{ premiere: string }>('status'), client.call<{ premiere: string }>('ping')]);
     expect(s1.premiere).toBe('26.0.0');
     expect(s2.premiere).toBe('26.0.0');
@@ -171,10 +175,10 @@ describe('bridge queue (bridge-core.js ⇄ CatCut client)', () => {
     const installDir = join(root, 'ext', BRIDGE_ID);
     const client = createPremiereClient({ queueDir: join(root, 'queue'), installDir, pollMs: 5 });
     expect(await client.status()).toMatchObject({ installed: false, connected: false });
-    await expect(client.call('status')).rejects.toThrow(/not installed: run `catcut premiere-bridge install`/);
+    await expect(client.call('status')).rejects.toMatchObject({ message: expect.stringMatching(/not installed/), userAction: { code: 'bridge-not-installed', steps: expect.arrayContaining([expect.stringContaining('catcut premiere-bridge install')]) } });
     await mkdir(join(installDir, 'CSXS'), { recursive: true });
     await writeFile(join(installDir, 'CSXS', 'manifest.xml'), '<x/>');
-    await expect(client.call('status')).rejects.toThrow(/not running: open Premiere Pro/);
+    await expect(client.call('status')).rejects.toThrow(/premiere_open/);
   });
 
   it('a stale heartbeat is not connected; an unclaimed request is withdrawn on timeout', async () => {
@@ -224,6 +228,7 @@ async function toolState(prem: ReturnType<typeof fakePremiere>) {
     assembler: { build: async () => { throw new Error('no build'); }, deliver: async () => ({}), reviewProxy: async () => '' },
     api: { project: projectApi, xmeml: xmemlApi, probe: async () => ({ durationFrames: 500, width: 1920, height: 1080, fps: 25, hasVideo: true, hasAudio: false }) },
     premiere: live.client,
+    premiereHost: { running: async () => [], debugModeMissing: async () => [], launch: () => ({}) },
   };
   const dir = join(live.root, 'โปรเจกต์');
   const p = await projectApi.createProject(dir, { name: 'งานทดสอบ' });
@@ -250,7 +255,7 @@ describe('premiere_status / premiere_push / premiere_pull', () => {
     const st = await call('premiere_status');
     expect(st.data).toMatchObject({ connected: true, premiere: '26.0.0', project: { name: 'JOB_EDIT.prproj' }, sequences: [] });
     state.premiere = createPremiereClient({ queueDir: join(os.tmpdir(), 'catcut-no-bridge-here'), installDir: join(os.tmpdir(), 'catcut-no-ext') });
-    expect((await call('premiere_status')).data).toMatchObject({ connected: false, installed: false, hint: expect.stringContaining('catcut premiere-bridge install') });
+    expect((await call('premiere_status')).data).toMatchObject({ connected: false, installed: false, ready: false, userAction: { code: 'bridge-not-installed', say: expect.stringContaining('catcut premiere-bridge install') } });
   });
 
   it('premiere_push refuses another open project, then hands the cut over as a new opened sequence', async () => {

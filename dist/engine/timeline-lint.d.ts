@@ -11,7 +11,7 @@ export interface LintRules {
     nearClips?: number;
     maxStaticSec?: number;
     staticMotion?: number;
-    checks?: Array<'cutcross' | 'flash' | 'repeat' | 'lowmotion'>;
+    checks?: Array<'cutcross' | 'flash' | 'repeat' | 'lowmotion' | 'slowmo'>;
 }
 export interface LintIssue extends QcIssue {
     tc?: string;

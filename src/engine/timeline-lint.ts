@@ -26,7 +26,7 @@ export interface LintRules {
   nearClips?: number; // repeat check looks this many clips ahead (default 3)
   maxStaticSec?: number; // default project.styleRules.maxStaticSec ?? 4
   staticMotion?: number; // mafd below this counts as static (default 0.5 at 320 px analysis width)
-  checks?: Array<'cutcross' | 'flash' | 'repeat' | 'lowmotion'>; // default all
+  checks?: Array<'cutcross' | 'flash' | 'repeat' | 'lowmotion' | 'slowmo'>; // default all
 }
 
 export interface LintIssue extends QcIssue {
@@ -138,7 +138,7 @@ export function lintTimeline(p: Project, shots: ShotIndexMap, rules: LintRules =
   const near = rules.nearClips ?? DEFAULT_NEAR;
   const staticFrames = Math.round((rules.maxStaticSec ?? p.styleRules?.maxStaticSec ?? DEFAULT_STATIC_SEC) * fps);
   const staticMotion = rules.staticMotion ?? DEFAULT_STATIC_MOTION;
-  const on = (k: 'cutcross' | 'flash' | 'repeat' | 'lowmotion') => !rules.checks || rules.checks.includes(k);
+  const on = (k: 'cutcross' | 'flash' | 'repeat' | 'lowmotion' | 'slowmo') => !rules.checks || rules.checks.includes(k);
   const ranges = clipRanges(p);
   const issues: LintIssue[] = [];
 
@@ -155,6 +155,8 @@ export function lintTimeline(p: Project, shots: ShotIndexMap, rules: LintRules =
         message: `คลิป ${clip.id} ยาวแค่ ${clip.dur} เฟรม (< ${flashN}) ที่ ${tc(r.start)} — อาจเห็นเป็นเฟรมแวบ / clip shorter than ${flashN} frames`,
       });
     }
+
+    if (on('slowmo')) { const s = slowmoIssue(p, clip, r.start, fps); if (s) issues.push(s); }
 
     if (sd?.motion && on('lowmotion') && !clip.pushIn) {
       const run = longestStaticRun(sd.motion, r.srcIn, r.srcOut, sd.cuts, staticMotion);
@@ -195,6 +197,25 @@ export function lintTimeline(p: Project, shots: ShotIndexMap, rules: LintRules =
 
   issues.sort((x, y) => (x.startFrame ?? 0) - (y.startFrame ?? 0));
   return issues;
+}
+
+/**
+ * Slow motion that must repeat source frames: the source gives rate × sourceFps frames per second
+ * of timeline, fewer than the project fps (e.g. 25 fps client footage at 60%). Without motion
+ * interpolation it stutters; it is not a reason to swap in a still frame.
+ */
+function slowmoIssue(p: Project, clip: Clip, start: Frames, fps: number): LintIssue | undefined {
+  const a = p.assets[clip.src];
+  const srcFps = a && a.kind !== 'aecomp' ? a.probe?.fps : undefined;
+  if (!clip.speed || !srcFps || clip.speed.interpolation === 'motion') return undefined;
+  const slowest = Math.min(clip.speed.rate, clip.speed.rampFrom ?? clip.speed.rate);
+  if (slowest * srcFps >= fps - 0.01) return undefined;
+  const pct = Math.round(slowest * 100);
+  return {
+    kind: 'slowmo', severity: 'warn', clipId: clip.id, startFrame: start, endFrame: start + clip.dur, tc: framesToTc(start, fps),
+    suggestion: "speed.interpolation 'motion' (Optical Flow); in Premiere premiere_set_speed interpolation optical-flow",
+    message: `คลิป ${clip.id} สโลว์ ${pct}% แต่ต้นทางมีแค่ ${srcFps} fps (ได้ ${Math.round(slowest * srcFps * 10) / 10} เฟรม/วิ < ${fps}) — ภาพจะกระตุก ใช้ Optical Flow (interpolation 'motion') ห้ามแทนด้วยภาพนิ่ง / slow-mo repeats frames: use optical flow`,
+  };
 }
 
 function cutIssues(r: ClipRange, sd: ShotData, flashN: Frames, fps: number, on: (k: 'cutcross' | 'flash') => boolean): LintIssue[] {

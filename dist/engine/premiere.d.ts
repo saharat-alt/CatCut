@@ -1,3 +1,4 @@
+import type { UserAction } from '../core/types.js';
 import { type SpawnFn } from './aerender.js';
 export declare const BRIDGE_ID = "com.catcut.bridge";
 export interface PremiereProjectRef {
@@ -17,18 +18,25 @@ export interface PremiereBridgeStatus {
     connected: boolean;
     queueDir: string;
     premiere?: string;
+    /** bridge version Premiere is running (from the heartbeat) */
     bridge?: string;
     project?: PremiereProjectRef | null;
     heartbeatAgeMs?: number;
+    /** the request Premiere is working on right now */
+    busy?: {
+        action: string;
+        seconds: number;
+    } | null;
 }
 export interface PremiereClient {
     status(): Promise<PremiereBridgeStatus>;
-    /** Run one bridge action; rejects with Premiere's error text. */
+    /** Run one bridge action; rejects with Premiere's error text (or a UserActionError). */
     call<T>(action: string, args?: Record<string, unknown>, opts?: {
         timeoutMs?: number;
     }): Promise<T>;
     /** Folder both sides can read and write (ASCII). */
     readonly queueDir: string;
+    readonly installDir: string;
 }
 export declare function defaultQueueDir(): string;
 export declare function cepExtensionsDir(): string;
@@ -40,6 +48,55 @@ export declare function createPremiereClient(opts?: {
 }): PremiereClient;
 /** A unique ASCII file in the queue folder for Premiere to read or write. */
 export declare function stagePath(client: PremiereClient, ext: string): Promise<string>;
+export interface PremiereHost {
+    /** "Adobe Premiere Pro.exe" processes running */
+    running(): Promise<number[]>;
+    /** CSXS runtimes whose PlayerDebugMode is not 1 (CatCut's unsigned bridge would not load there) */
+    debugModeMissing(): Promise<string[]>;
+    /** Start Premiere with a project; must not wait for it to exit. */
+    launch(exe: string, project: string): {
+        pid?: number;
+    };
+}
+export declare function premiereHost(spawn?: SpawnFn): PremiereHost;
+export interface PremiereDiagnosis {
+    /** connected, current bridge, nothing in the way */
+    ready: boolean;
+    status: PremiereBridgeStatus;
+    running: boolean;
+    versions: {
+        catcut?: string;
+        installed?: string;
+        loaded?: string;
+    };
+    /** what the person must do, when anything */
+    userAction?: UserAction;
+    /** one line for the agent */
+    note: string;
+}
+export declare function diagnosePremiere(client: PremiereClient, host: PremiereHost, opts?: {
+    premiereExe?: string;
+    sourceDir?: string;
+}): Promise<PremiereDiagnosis>;
+export interface OpenResult {
+    project: PremiereProjectRef;
+    /** CatCut started Premiere in this call */
+    launched: boolean;
+    /** CatCut opened the project (Premiere was running with another one, or started without it) */
+    openedProject: boolean;
+    pid?: number;
+}
+/**
+ * Make `project` the active project in a connected Premiere: start Premiere with it when closed,
+ * open it through the bridge when Premiere runs another one. Never closes or saves anything.
+ */
+export declare function openPremiere(client: PremiereClient, host: PremiereHost, opts: {
+    premiereExe?: string;
+    project: string;
+    waitMs?: number;
+    pollMs?: number;
+    sourceDir?: string;
+}): Promise<OpenResult>;
 export declare function bridgeSourceDir(): string;
 export interface InstallResult {
     installedTo: string;
@@ -48,6 +105,7 @@ export interface InstallResult {
 /**
  * Copies the extension into the user's CEP folder (replacing an older CatCut bridge only) and sets
  * PlayerDebugMode=1 for the CEP runtimes, which lets Premiere load an unsigned extension.
+ * A running Premiere picks up host.jsx changes by itself; bridge-core/index changes need one restart.
  */
 export declare function installBridge(opts?: {
     spawn?: SpawnFn;

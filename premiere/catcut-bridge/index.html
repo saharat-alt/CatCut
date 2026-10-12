@@ -15,20 +15,24 @@
 <div id="e" class="err"></div>
 <script>
 (function () {
-  var VERSION = '0.1.0';
   var cep = window.__adobe_cep__;
   var show = function (id, text) { var el = document.getElementById(id); if (el) el.textContent = text; };
-  show('v', VERSION);
   try {
     // getSystemPath(1) = extension folder, as a file URL (same decoding as Adobe's CSInterface)
     var ext = decodeURI(cep.getSystemPath('extension')).replace(/^file:\/{2,3}/, '');
     var path = require('path'), fs = require('fs'), os = require('os');
+    // the version CatCut compares against: read once, the code below is what this Premiere session runs
+    var VERSION = JSON.parse(fs.readFileSync(path.join(ext, 'package.json'), 'utf8')).version;
+    show('v', VERSION);
     var core = require(path.join(ext, 'bridge-core.js'));
     var bridge = core.createBridge({
       fs: fs, path: path, dir: path.join(os.tmpdir(), 'catcut-premiere-bridge'), pid: process.pid, version: VERSION,
+      hostFile: path.join(ext, 'host.jsx'),
       evalScript: function (script) { return new Promise(function (resolve) { cep.evalScript(script, resolve); }); },
       onStatus: function (st) {
-        show('s', st.serving ? 'connected · ' + (st.project ? st.project.name : 'no project') + ' · ' + st.handled + ' job(s)' : 'standing by (another CatCut bridge is serving)');
+        show('s', st.serving
+          ? 'connected · ' + (st.project ? st.project.name : 'no project') + ' · ' + st.handled + ' job(s)' + (st.busy ? ' · working: ' + st.busy.action : '')
+          : 'standing by (another CatCut bridge is serving)');
         show('e', st.lastError ? 'last error: ' + st.lastError : '');
       },
     });

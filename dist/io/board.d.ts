@@ -294,7 +294,8 @@ export interface ShotLike {
     start: Frames;
     dur: Frames;
     marker?: string;
-    slot?: string;
+    slot?: string; /** source file name (not for AE comps) */
+    file?: string;
 }
 /** Slot id a clip realises: explicit `slot`, else a marker equal to a slot id, else the source file/comp name prefix. */
 export declare function inferSlot(shot: ShotLike, board: Board, asset: Asset | undefined): {
@@ -319,6 +320,11 @@ export interface SlotRow {
     boardStatus?: BoardSlot['status'];
     onScreenText?: string;
     thumb?: string;
+    /** the board names files for this slot but the cut uses none of them */
+    fileMismatch?: {
+        wanted: string[];
+        used: string[];
+    };
 }
 export interface ChapterRow {
     name: string;
@@ -356,6 +362,11 @@ export interface BoardVsCut {
     issues: QcIssue[];
     summary: string[];
 }
+/**
+ * File ids a board names for a slot ("C094 หรือ C095", "B025C030_261009FG.MP4", "CARD 1 / C0033"):
+ * tokens with digits that look like camera clip names. Folder words without digits are ignored.
+ */
+export declare function boardFileIds(hint: string | undefined): string[];
 /** Compare a cut (shots with resolved slot ids, in timeline order) with the board. Pure. */
 export declare function compareBoardToCut(board: Board, shots: ShotLike[], totalFrames: Frames, fps: number, toleranceFrames: Frames): BoardVsCut;
 /** Path usable from an HTML file in `fromDir`: relative when possible, else file:/// URL. */

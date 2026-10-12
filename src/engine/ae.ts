@@ -10,6 +10,8 @@ import type {
   TemplateComp, TemplateScan, ToolPaths,
 } from '../core/types.js';
 import { hashFile, hashJson } from '../core/hash.js';
+import { ACTIONS, UserActionError } from '../core/user-action.js';
+import { aeScriptingPref, type AeScriptingPref } from './housekeeping.js';
 import {
   aerender, defaultMfrPercent, isAscii, isMissingOmTemplate, killTree, moveFile, purgeIfLowCacheSpace, uniqueOutputPath,
   type AerenderOptions, type PurgeOutcome, type PurgePolicy, type SpawnFn, type StatfsFn,
@@ -36,6 +38,8 @@ interface AeOptions {
   minFreeRamGb?: number;
   /** Running processes named AfterFX.exe (injectable for tests; default: tasklist on Windows). */
   listProcesses?: () => Promise<AeProcess[]>;
+  /** AE's "Allow Scripts to Write Files" pref (injectable for tests; default: read from AE prefs). */
+  scriptingPref?: () => Promise<AeScriptingPref>;
 }
 interface Detail extends CompInfo { layers: CompDetail['layers']; snapshot: unknown }
 interface Result<T> { ok: boolean; data: T; log?: string[]; error?: string }
@@ -119,8 +123,17 @@ export function createAeBackend(tools: ToolPaths, opts: AeOptions = {}): Headles
     ...(opts.retryDelayMs !== undefined ? { retryDelayMs: opts.retryDelayMs } : {}),
   };
 
+  const scriptingPref = opts.scriptingPref ?? (() => aeScriptingPref());
+
+  async function noResult(action: string, exitCode: number | undefined, stderr: string): Promise<UserActionError> {
+    const detail = `AfterFX ${action}: exit ${exitCode ?? '?'}, no result${stderr.trim() ? `: ${stderr.trim()}` : ''}`;
+    const pref = await scriptingPref();
+    if (pref.allowed === false) return new UserActionError(detail, ACTIONS.aeAllowScripts());
+    return new UserActionError(detail, ACTIONS.aeFirstRun({ detail: `exit ${exitCode ?? '?'}` }));
+  }
+
   async function run<T>(action: string, payload: Record<string, unknown> = {}): Promise<Result<T>> {
-    if (!tools.afterfx) throw new Error('AfterFX not found; install After Effects or set EDITMCP_AE_DIR');
+    if (!tools.afterfx) throw new UserActionError('AfterFX not found; install After Effects or set EDITMCP_AE_DIR', ACTIONS.aeNotFound());
     const minRam = opts.minFreeRamGb ?? 0.75;
     if (os.freemem() / 2 ** 30 < minRam) throw new Error(`not enough free RAM for After Effects (need ${minRam} GB)`);
     const tempRoot = os.tmpdir();
@@ -141,12 +154,18 @@ export function createAeBackend(tools: ToolPaths, opts: AeOptions = {}): Headles
       let output;
       try { output = await child; } finally { clearTimeout(timer); }
       if (timedOut) throw new Error(`AfterFX ${action} timed out after ${timeoutMs} ms (process tree killed)`);
-      if (output.exitCode !== 0) {
-        const report = await readFile(resultPath, 'utf8').catch(() => '');
-        throw new Error(`AfterFX failed (${output.exitCode}): ${report || String(output.stderr).slice(-2000)}`);
+      const report = await readFile(resultPath, 'utf8').catch(() => undefined);
+      // No result at all: the runner never got to write one (scripts may not write files, or AE quit
+      // at a first-run screen). Both need the person, so say which one instead of a raw error.
+      if (report === undefined) throw await noResult(action, output.exitCode, String(output.stderr ?? '').slice(-500));
+      if (output.exitCode !== 0) throw new Error(`AfterFX failed (${output.exitCode}): ${report}`);
+      const result = JSON.parse(report.replace(/^\uFEFF/, '')) as Result<T>;
+      if (result.ok !== true) {
+        if (/cannot write /.test(result.error ?? '') && (await scriptingPref()).allowed === false) {
+          throw new UserActionError(`AfterFX: ${result.error}`, ACTIONS.aeAllowScripts());
+        }
+        throw new Error(`AfterFX: ${result.error ?? 'job failed'}`);
       }
-      const result = JSON.parse((await readFile(resultPath, 'utf8')).replace(/^\uFEFF/, '')) as Result<T>;
-      if (result.ok !== true) throw new Error(`AfterFX: ${result.error ?? 'job failed'}`);
       return result;
     } finally { await rm(dir, { recursive: true, force: true }); }
   }

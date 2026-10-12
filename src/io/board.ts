@@ -791,7 +791,7 @@ export async function matchFootage(board: Board, dir: string): Promise<FootageMa
 
 // ---------- slot assignment for clips ----------
 
-export interface ShotLike { id: string; src: string; start: Frames; dur: Frames; marker?: string; slot?: string }
+export interface ShotLike { id: string; src: string; start: Frames; dur: Frames; marker?: string; slot?: string; /** source file name (not for AE comps) */ file?: string }
 
 /** Slot id a clip realises: explicit `slot`, else a marker equal to a slot id, else the source file/comp name prefix. */
 export function inferSlot(shot: ShotLike, board: Board, asset: Asset | undefined): { slot?: string; how?: 'clip' | 'marker' | 'source' } {
@@ -834,6 +834,8 @@ export interface SlotRow {
   boardStatus?: BoardSlot['status'];
   onScreenText?: string;
   thumb?: string;
+  /** the board names files for this slot but the cut uses none of them */
+  fileMismatch?: { wanted: string[]; used: string[] };
 }
 
 export interface ChapterRow {
@@ -880,6 +882,25 @@ function lisIndices(seq: number[]): Set<number> {
   return keep;
 }
 
+/**
+ * File ids a board names for a slot ("C094 หรือ C095", "B025C030_261009FG.MP4", "CARD 1 / C0033"):
+ * tokens with digits that look like camera clip names. Folder words without digits are ignored.
+ */
+export function boardFileIds(hint: string | undefined): string[] {
+  if (!hint) return [];
+  return [...new Set(hint.split(/[\s,/|+;]+|หรือ|\bor\b/i)
+    .map((t) => t.trim().replace(/\.(mp4|mov|mxf|mts|m2ts|avi|r3d|braw|png|jpe?g|tiff?|psd|wav|mp3)$/i, ''))
+    .filter((t) => /^[A-Za-z]{1,8}_?\d{2,}[\w-]*$/.test(t)))];
+}
+
+/** "C094" also names Sony's C0094 (leading zeros after the letters ignored); a prefix must end before a digit. */
+function fileMatches(file: string, id: string): boolean {
+  const norm = (x: string) => x.toLowerCase().replace(/^([a-z_]*?)0*(\d)/, '$1$2');
+  const stem = norm(path.basename(file, path.extname(file)));
+  const want = norm(id);
+  return stem === want || (stem.startsWith(want) && !/\d/.test(stem.charAt(want.length)));
+}
+
 /** Compare a cut (shots with resolved slot ids, in timeline order) with the board. Pure. */
 export function compareBoardToCut(board: Board, shots: ShotLike[], totalFrames: Frames, fps: number, toleranceFrames: Frames): BoardVsCut {
   const tc = (f: number) => framesToTc(f, fps);
@@ -915,6 +936,9 @@ export function compareBoardToCut(board: Board, shots: ShotLike[], totalFrames: 
     const contiguous = clips.every((c, i) => i === 0 || c.start === clips[i - 1]!.start + clips[i - 1]!.dur);
     if (row.boardStart !== undefined) { row.startDrift = row.cutStart - row.boardStart; row.startDriftTc = signedTc(row.startDrift, fps); }
     if (row.boardDur !== undefined) row.durDiff = row.cutDur - row.boardDur;
+    const wanted = boardFileIds(s.sourceHint);
+    const used = [...new Set(clips.map((c) => c.file).filter((f): f is string => !!f))];
+    if (wanted.length && used.length && !used.some((f) => wanted.some((w) => fileMatches(f, w)))) row.fileMismatch = { wanted, used };
     if (moved.includes(s.id)) row.status = 'moved';
     else if (!contiguous) row.status = 'split';
     else if (Math.abs(row.startDrift ?? 0) > toleranceFrames || Math.abs(row.durDiff ?? 0) > toleranceFrames) row.status = 'drift';
@@ -930,6 +954,7 @@ export function compareBoardToCut(board: Board, shots: ShotLike[], totalFrames: 
       issues.push({ kind: 'board', severity: r.boardStatus === 'missing' ? 'warn' : 'error', ...(r.boardStart !== undefined ? { startFrame: r.boardStart } : {}), message: `slot ${r.slot} ไม่อยู่ในคัท${r.boardStatus ? ` (บอร์ด: ${r.boardStatus})` : ''} / board slot missing from the cut` });
       continue;
     }
+    if (r.fileMismatch) issues.push({ ...base, severity: 'error', message: `slot ${r.slot} บอร์ดระบุไฟล์ ${r.fileMismatch.wanted.join(' / ')} แต่คัทใช้ ${r.fileMismatch.used.join(', ')} — ชื่อไฟล์ที่บอร์ดเขียนชนะการเทียบภาพ / the board names other files for this slot` });
     if (r.status === 'moved') issues.push({ ...base, severity: 'warn', message: `slot ${r.slot} อยู่ผิดลำดับเมื่อเทียบกับบอร์ด / slot out of board order` });
     if (r.status === 'split') issues.push({ ...base, severity: 'warn', message: `slot ${r.slot} ถูกแยกเป็นหลายช่วงที่ไม่ติดกัน (${r.clips.join(', ')}) / slot split across the cut` });
     if (r.startDrift !== undefined && Math.abs(r.startDrift) > toleranceFrames) issues.push({ ...base, severity: 'warn', message: `slot ${r.slot} เริ่ม ${r.cutStartTc} บอร์ด ${r.boardStartTc} (เลื่อน ${r.startDriftTc}, ${r.startDrift} เฟรม) / start drift` });
@@ -980,6 +1005,7 @@ export function compareBoardToCut(board: Board, shots: ShotLike[], totalFrames: 
   const worstChapter = chapters.filter((c) => c.startDrift !== undefined).sort((a, b) => Math.abs(b.startDrift!) - Math.abs(a.startDrift!))[0];
   const summary = [
     `บอร์ด ${board.slots.length} slot · ในคัท ${rows.length - missing.length} · หาย ${missing.length}${missing.length ? ` (${missing.join(', ')})` : ''}`,
+    ...(rows.some((r) => r.fileMismatch) ? [`ใช้ไฟล์ไม่ตรงที่บอร์ดระบุ ${rows.filter((r) => r.fileMismatch).length} slot (${rows.filter((r) => r.fileMismatch).map((r) => r.slot).join(', ')})`] : []),
     `คลิปนอกบอร์ด ${extra.length}${extra.length ? ` (${extra.map((e) => e.clipId).join(', ')})` : ''} · ผิดลำดับ ${moved.length}${moved.length ? ` (${moved.join(', ')})` : ''} · เวลาเลื่อนเกิน ${toleranceFrames} เฟรม ${drifted} slot`,
     total.target !== undefined ? `ความยาวรวม ${total.cutTc} / เป้า ${total.targetTc} (${total.diffTc})` : `ความยาวรวม ${total.cutTc} (บอร์ดไม่ระบุเป้าหมาย)`,
     ...(worstChapter?.startDrift ? [`chapter ที่เลื่อนมากสุด: "${worstChapter.name}" ${worstChapter.startDriftTc}`] : []),

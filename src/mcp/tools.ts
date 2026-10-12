@@ -1179,7 +1179,7 @@ const CORE_TOOLS: readonly ToolDef[] = [
         premiereBridge: await (async () => {
           const st = await (state.premiere ?? createPremiereClient()).status();
           if (st.connected) return `connected (Premiere ${st.premiere ?? '?'}, project ${st.project?.name ?? 'none'}): premiere_push / premiere_pull`;
-          return st.installed ? 'installed, not running (start Premiere Pro)' : 'not installed (optional; `catcut premiere-bridge install` for push/pull without computer use)';
+          return st.installed ? 'installed, Premiere closed (fine: premiere_open starts it with the project)' : 'not installed (optional; `catcut premiere-bridge install` for premiere_* tools without computer use)';
         })(),
         effectcraft: env.tools.effectcraftCli ? 'found (optional; .ecproj comps: ae_create / build render them headless)' : 'not found (optional)',
         problems: state.problems,

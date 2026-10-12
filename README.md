@@ -53,6 +53,20 @@ irm https://raw.githubusercontent.com/thefogusz/CatCut/main/install.ps1 | iex
 
 ต้องมี Node ≥ 22 และ ffmpeg ในเครื่อง (After Effects ถ้าจะใช้ comp)
 
+## ต้องเปิดโปรแกรมอะไรค้างไว้ไหม / What must stay open
+
+`catcut ready` (หรือ tool `ready_check`) ตรวจทุกอย่างโดยไม่เปิดโปรแกรม Adobe แล้วบอกว่าต้องทำอะไร ทำไม ทำครั้งเดียวไหม และปิดได้เมื่อไร
+
+| โปรแกรม | ต้องเปิดค้างไหม | ต้องทำเองครั้งเดียว |
+|---|---|---|
+| After Effects | **ไม่ต้องเปิดเลย** — CatCut เปิดแบบไม่มีหน้าต่างแล้วปิดเองทุกงาน | เปิด AE หนึ่งครั้งเพื่อ Sign in และติ๊ก Preferences > Scripting & Expressions > *Allow Scripts to Write Files and Access Network* แล้วปิด (ไม่ต้องสร้างโปรเจกต์) |
+| Premiere Pro | **ไม่ต้องเปิดเอง** — `premiere_open` เปิดให้พร้อมโปรเจกต์ ทำงาน แล้วบอกว่า Save แล้ว ปิดได้ | `catcut premiere-bridge install` ครั้งเดียว (อัปเดต CatCut แล้วรันซ้ำ) |
+| ffmpeg | ไม่ใช่โปรแกรมที่เปิดค้าง | มากับตัวติดตั้ง |
+
+ถ้ามีอะไรต้องให้คุณกด (เช่น Premiere มีหน้าต่างค้าง) CatCut ตอบเป็นการ์ดเดียวกันทุกครั้ง: ทำอะไร · ทำไม · ครั้งเดียว/ทุกครั้ง · ต้องเปิดค้างไหม · ปิดได้เมื่อไร
+
+งานใน Premiere: `proxy_make` (proxy `<ชื่อเดิม>_Proxy.mp4`) → `premiere_import_media` (ไฟล์ต้นฉบับชื่อเดิม bin ตามการ์ด แนบ proxy) → `premiere_set_speed` (เช่น 60% + Optical Flow แบบ native ไม่ export ไฟล์ใหม่) → `premiere_save` / `premiere_close`
+
 ## ติดตั้งจากซอร์ส / Install from source
 
 ต้องมี Node ≥ 22, ffmpeg/ffprobe (winget `Gyan.FFmpeg` หรือกำหนด `EDITMCP_FFMPEG=<bin folder>`) และ After Effects (ถ้าจะใช้ `ae_*`)
