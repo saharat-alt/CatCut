@@ -1,8 +1,11 @@
 // CatCut bridge, ExtendScript side (ES3, Premiere Pro). bridge-core.js calls catcut_dispatch(job)
-// and gets a JSON string back. Only these actions exist. Every action that changes a project names
-// it (expectProject) and refuses when another one is active; only save/quit save, and quit only
-// after CatCut asked for it. XML paths arrive staged in the bridge's ASCII temp folder; media and
-// proxy paths are the original files (never copies).
+// and gets a JSON string back. Every action that changes a project names it (expectProject) and
+// refuses when another one is active; only save/quit/edit-with-save save. XML paths arrive staged in
+// the bridge's ASCII folder; media and proxy paths are the original files (never copies).
+// Extra per-job actions belong in host.user.jsx next to this file (kept across bridge updates):
+//   catcut_user_actions = { myAction: function (args, h) { ... } };   h = helpers below
+// Times crossing the bridge are frames at the sequence frame rate.
+var catcut_user_actions = typeof catcut_user_actions === "object" && catcut_user_actions ? catcut_user_actions : {};
 var catcut_dispatch = (function () {
     function stringify(v) {
         if (v === null || v === undefined) return "null";
@@ -13,7 +16,7 @@ var catcut_dispatch = (function () {
         if (typeof v === "number") return isFinite(v) ? String(v) : "null";
         if (typeof v === "boolean") return String(v);
         var parts = [], i, k;
-        if (v instanceof Array) {
+        if (Object.prototype.toString.call(v) === "[object Array]") {
             for (i = 0; i < v.length; i++) parts.push(stringify(v[i]));
             return "[" + parts.join(",") + "]";
         }
@@ -86,6 +89,353 @@ var catcut_dispatch = (function () {
         }
         return null;
     }
+    /** The project item named exactly name (AE comps imported by name). */
+    function findNamed(root, name) {
+        for (var i = 0; i < root.children.numItems; i++) {
+            var c = root.children[i];
+            if (c.type === 2) { var hit = findNamed(c, name); if (hit) return hit; } else if (String(c.name) === name) return c;
+        }
+        return null;
+    }
+
+    // ---------- sequence clips as frames ----------
+
+    function seqFps(s) { return 1 / s.getSettings().videoFrameRate.seconds; }
+    function fr(t, fps) { return Math.round(t.seconds * fps); }
+    function time(frames, fps) { var t = new Time(); t.seconds = frames / fps; return t; }
+    function tcFrames(tc, fps) {
+        var p = String(tc).split(/[:;]/), r = Math.round(fps);
+        return ((Number(p[0]) * 60 + Number(p[1])) * 60 + Number(p[2])) * r + Number(p[3]);
+    }
+    function frameArg(v, fps) { return typeof v === "string" ? tcFrames(v, fps) : v; }
+    function tcOf(frame, fps) {
+        var r = Math.round(fps), f = frame % r, sec = Math.floor(frame / r);
+        function pad(n) { return (n < 10 ? "0" : "") + n; }
+        return pad(Math.floor(sec / 3600)) + ":" + pad(Math.floor(sec / 60) % 60) + ":" + pad(sec % 60) + ":" + pad(f);
+    }
+    function parseTrack(t) {
+        var m = /^([VA])(\d+)$/i.exec(String(t));
+        if (!m) throw new Error("track must look like V1 or A2: " + t);
+        return { kind: m[1].toUpperCase(), index: Number(m[2]) - 1 };
+    }
+    function trackOf(s, ref) {
+        var p = parseTrack(ref), tracks = p.kind === "A" ? s.audioTracks : s.videoTracks;
+        if (p.index < 0 || p.index >= tracks.numTracks) throw new Error("no track " + ref);
+        return { kind: p.kind, index: p.index, name: p.kind + (p.index + 1), track: tracks[p.index] };
+    }
+    function mediaOf(c) { try { return c.projectItem ? String(c.projectItem.getMediaPath()) : null; } catch (e) { return null; } }
+    function nodeOf(c) { try { return c.projectItem ? String(c.projectItem.nodeId) : null; } catch (e) { return null; } }
+    function effectNames(c) { var out = []; for (var k = 0; k < c.components.numItems; k++) out.push(c.components[k].displayName); return out; }
+    function clipInfo(c, trackName, n, fps) {
+        var r = { track: trackName, index: n, name: c.name, start: fr(c.start, fps), end: fr(c.end, fps), "in": fr(c.inPoint, fps), out: fr(c.outPoint, fps), media: mediaOf(c), nodeId: nodeOf(c) };
+        try { r.speed = c.getSpeed(); } catch (e1) { /* audio on old versions */ }
+        try { if (c.projectItem && c.projectItem.hasProxy()) r.proxy = c.projectItem.getProxyPath(); } catch (e2) { /* no proxy api */ }
+        try { if (c.disabled) r.disabled = true; } catch (e3) { /* old versions */ }
+        try { r.effects = effectNames(c); } catch (e4) { r.effects = []; }
+        return r;
+    }
+    function eachClip(s, fn) {
+        var kinds = [["V", s.videoTracks], ["A", s.audioTracks]];
+        for (var k = 0; k < kinds.length; k++) for (var t = 0; t < kinds[k][1].numTracks; t++) {
+            var tr = kinds[k][1][t];
+            for (var n = 0; n < tr.clips.numItems; n++) fn(tr.clips[n], kinds[k][0] + (t + 1), n);
+        }
+    }
+    /** The one clip matching a selector {track, start, end, name?, media?}; anything else changes nothing. */
+    function findClip(s, sel, fps) {
+        if (!sel || sel.track === undefined || sel.start === undefined || sel.end === undefined) throw new Error("clip needs track, start and end (frames) so a moved clip is never edited by mistake");
+        var tr = trackOf(s, sel.track), start = frameArg(sel.start, fps), end = frameArg(sel.end, fps), hits = [], near = [];
+        for (var n = 0; n < tr.track.clips.numItems; n++) {
+            var c = tr.track.clips[n], cs = fr(c.start, fps), ce = fr(c.end, fps);
+            if (cs < end + fps && ce > start - fps) near.push(c.name + " " + cs + "-" + ce);
+            if (cs !== start || ce !== end) continue;
+            if (sel.name !== undefined && c.name !== sel.name) continue;
+            if (sel.media !== undefined && norm(mediaOf(c)) !== norm(sel.media)) continue;
+            hits.push({ clip: c, index: n });
+        }
+        if (hits.length !== 1) {
+            throw new Error("precondition failed: " + hits.length + " clips match " + stringify(sel) + " on " + tr.name + (near.length ? " (there now: " + near.join(", ") + ")" : "") + "; nothing changed");
+        }
+        return { clip: hits[0].clip, index: hits[0].index, track: tr, fps: fps };
+    }
+    function propValue(p) {
+        var r = { name: p.displayName };
+        try {
+            r.varying = p.isTimeVarying();
+            if (r.varying) {
+                r.keys = [];
+                var ks = p.getKeys();
+                if (ks) for (var z = 0; z < ks.length; z++) r.keys.push({ seconds: ks[z].seconds, value: p.getValueAtKey(ks[z]) });
+            } else {
+                r.value = p.getValue();
+                // colour parameters come back as one big number: read them as [a, r, g, b] too
+                if (typeof r.value === "number" && r.value > 4294967295 && p.getColorValue) r.color = p.getColorValue();
+            }
+        } catch (e) { r.error = String(e); }
+        return r;
+    }
+    function effectsOf(c) {
+        var out = [];
+        for (var e = 0; e < c.components.numItems; e++) {
+            var ec = c.components[e], ps = [];
+            for (var p = 0; p < ec.properties.numItems; p++) { var q = propValue(ec.properties[p]); q.index = p; ps.push(q); }
+            out.push({ index: e, name: ec.displayName, matchName: ec.matchName, properties: ps });
+        }
+        return out;
+    }
+    /** Every clip with its edges and effect values: what an edit must not change outside its targets. */
+    function signature(s, fps) {
+        var out = {};
+        eachClip(s, function (c, track) {
+            var key = track + "@" + fr(c.start, fps) + "-" + fr(c.end, fps) + "#" + nodeOf(c);
+            var fx = [];
+            try { fx = effectsOf(c); } catch (e) { fx = ["unreadable"]; }
+            out[key] = stringify({ name: c.name, "in": fr(c.inPoint, fps), out: fr(c.outPoint, fps), speed: (function () { try { return c.getSpeed(); } catch (e2) { return null; } })(), fx: fx });
+        });
+        return out;
+    }
+    function keyOf(info) { return info.track + "@" + info.start + "-" + info.end + "#" + info.nodeId; }
+    /** The QE item for the n-th clip of a video track (QE also lists gaps). */
+    function qeClip(s, trackIndex, n, name) {
+        app.project.openSequence(s.sequenceID);
+        app.enableQE();
+        var qt = qe.project.getActiveSequence().getVideoTrackAt(trackIndex), seen = 0;
+        for (var j = 0; j < qt.numItems; j++) {
+            var x = qt.getItemAt(j);
+            if (x && x.type === "Clip") { if (seen === n) { if (x.name !== name) break; return x; } seen++; }
+        }
+        throw new Error("cannot match " + name + " in Premiere's QE track; nothing changed for it");
+    }
+    function findEffect(c, ref) {
+        var hits = [];
+        for (var k = 0; k < c.components.numItems; k++) if (k === ref || c.components[k].displayName === ref || c.components[k].matchName === ref) hits.push(k);
+        if (hits.length !== 1) throw new Error("effect " + ref + " found " + hits.length + " times on " + c.name + " (stack: " + effectNames(c).join(" > ") + "); pass its index");
+        return hits[0];
+    }
+    function findParam(comp, ref) {
+        for (var p = 0; p < comp.properties.numItems; p++) if (p === ref || comp.properties[p].displayName === ref) return comp.properties[p];
+        throw new Error("parameter " + ref + " not found in " + comp.displayName);
+    }
+    /** Project item for insert/replace: an existing item for media, else imported (AE comps by name). */
+    function itemFor(op) {
+        var item;
+        if (op.aeComp) {
+            item = findNamed(app.project.rootItem, op.aeComp.comp);
+            if (!item) {
+                if (!new File(op.aeComp.aep).exists) throw new Error("aep not found: " + op.aeComp.aep);
+                app.project.importAEComps(op.aeComp.aep, [op.aeComp.comp], binNamed(op.bin || "CatCut AE"));
+                item = findNamed(app.project.rootItem, op.aeComp.comp);
+            }
+            if (!item) throw new Error("After Effects comp did not import: " + op.aeComp.comp);
+            return item;
+        }
+        if (!op.media) throw new Error(op.op + " needs media or aeComp");
+        item = findMedia(app.project.rootItem, op.media);
+        if (!item) {
+            if (!new File(op.media).exists) throw new Error("media not found: " + op.media);
+            if (!app.project.importFiles([op.media], true, binNamed(op.bin || "CatCut"), false)) throw new Error("Premiere refused to import " + op.media);
+            item = findMedia(app.project.rootItem, op.media);
+        }
+        if (!item) throw new Error("media did not import: " + op.media);
+        return item;
+    }
+    function occupants(tr, from, to, fps) {
+        var out = [];
+        for (var n = 0; n < tr.clips.numItems; n++) { var c = tr.clips[n]; if (fr(c.start, fps) < to && fr(c.end, fps) > from) out.push(c.name + " " + fr(c.start, fps) + "-" + fr(c.end, fps)); }
+        return out;
+    }
+    /** Place item on a video track at frames [at, at+dur) from source frame "in"; returns the new clip. */
+    function place(s, tr, item, op, fps) {
+        var inF = op["in"] || 0;
+        item.setInPoint(inF / fps, 4);
+        item.setOutPoint((inF + op.dur) / fps, 4);
+        if (op.op === "insert") tr.track.insertClip(item, op.at / fps); else tr.track.overwriteClip(item, op.at / fps);
+        try { item.clearInPoint(); item.clearOutPoint(); } catch (e) { /* older versions keep the marks */ }
+        var placed = null;
+        for (var n = 0; n < tr.track.clips.numItems; n++) { var c = tr.track.clips[n]; if (nodeOf(c) === String(item.nodeId) && fr(c.start, fps) === op.at) placed = c; }
+        if (!placed) throw new Error("placement on " + tr.name + " at " + op.at + " did not happen");
+        if (fr(placed.end, fps) !== op.at + op.dur) placed.end = time(op.at + op.dur, fps);
+        // AE comps and stills bring empty audio: drop it unless the op keeps it
+        if (tr.kind === "V" && op.keepAudio !== true) {
+            for (var t = 0; t < s.audioTracks.numTracks; t++) for (var j = s.audioTracks[t].clips.numItems - 1; j >= 0; j--) {
+                var ac = s.audioTracks[t].clips[j];
+                if (nodeOf(ac) === String(item.nodeId) && fr(ac.start, fps) === op.at) ac.remove(false, false);
+            }
+        }
+        return placed;
+    }
+    function linkedAudio(s, c, fps) {
+        var out = [], node = nodeOf(c), cs = fr(c.start, fps), ce = fr(c.end, fps);
+        for (var t = 0; t < s.audioTracks.numTracks; t++) for (var j = 0; j < s.audioTracks[t].clips.numItems; j++) {
+            var ac = s.audioTracks[t].clips[j];
+            if (node && nodeOf(ac) === node && fr(ac.start, fps) === cs && fr(ac.end, fps) === ce) out.push({ clip: ac, track: "A" + (t + 1) });
+        }
+        return out;
+    }
+
+    /** One edit op. Dry run: check preconditions, say what would happen. Apply: do it and verify. */
+    function runOp(s, op, fps, apply, touched) {
+        var t, c, hit, info, before, i;
+        switch (op.op) {
+            case "remove": {
+                hit = findClip(s, op.clip, fps); c = hit.clip; info = clipInfo(c, hit.track.name, hit.index, fps);
+                var linked = hit.track.kind === "V" && op.linked !== false ? linkedAudio(s, c, fps) : [];
+                touched.push(keyOf(info));
+                for (i = 0; i < linked.length; i++) touched.push(keyOf(clipInfo(linked[i].clip, linked[i].track, 0, fps)));
+                if (apply) { c.remove(false, false); for (i = 0; i < linked.length; i++) linked[i].clip.remove(false, false); }
+                return { op: "remove", clip: info, linkedAudio: linked.length };
+            }
+            case "trim": {
+                hit = findClip(s, op.clip, fps); c = hit.clip; before = clipInfo(c, hit.track.name, hit.index, fps);
+                var ns = op.start === undefined ? before.start : frameArg(op.start, fps), ne = op.end === undefined ? before.end : frameArg(op.end, fps);
+                if (ne <= ns) throw new Error("trim leaves no frames on " + before.name);
+                var rate = before.speed || 1, nin = before["in"] + Math.round((ns - before.start) * rate);
+                if (nin < 0) throw new Error("trim reaches before the first source frame of " + before.name);
+                touched.push(keyOf(before));
+                if (apply) {
+                    if (ne !== before.end) c.end = time(ne, fps);
+                    if (ns !== before.start) { c.inPoint = time(nin, fps); c.start = time(ns, fps); }
+                    c = hit.track.track.clips[hit.index];
+                    if (fr(c.start, fps) !== ns || fr(c.end, fps) !== ne) throw new Error("trim on " + before.name + " ended at " + fr(c.start, fps) + "-" + fr(c.end, fps) + " instead of " + ns + "-" + ne);
+                    touched.push(keyOf(clipInfo(c, hit.track.name, hit.index, fps)));
+                }
+                return { op: "trim", clip: before, to: { start: ns, end: ne, "in": nin } };
+            }
+            case "move": {
+                hit = findClip(s, op.clip, fps); c = hit.clip; before = clipInfo(c, hit.track.name, hit.index, fps);
+                var to = frameArg(op.to, fps), len = before.end - before.start, others = [];
+                for (i = 0; i < hit.track.track.clips.numItems; i++) if (i !== hit.index) { var o = hit.track.track.clips[i]; if (fr(o.start, fps) < to + len && fr(o.end, fps) > to) others.push(o.name); }
+                if (others.length) throw new Error("move of " + before.name + " to " + to + " would overlap " + others.join(", ") + "; nothing changed");
+                touched.push(keyOf(before));
+                if (apply) {
+                    c.move(time(to - before.start, fps));
+                    var moved = null;
+                    for (i = 0; i < hit.track.track.clips.numItems; i++) { var m = hit.track.track.clips[i]; if (nodeOf(m) === before.nodeId && fr(m.start, fps) === to) moved = m; }
+                    if (!moved) throw new Error("move of " + before.name + " did not land at " + to);
+                    touched.push(keyOf(clipInfo(moved, hit.track.name, 0, fps)));
+                }
+                return { op: "move", clip: before, to: to };
+            }
+            case "set_speed": {
+                hit = findClip(s, op.clip, fps); c = hit.clip; before = clipInfo(c, hit.track.name, hit.index, fps);
+                if (hit.track.kind !== "V") throw new Error("set_speed works on video tracks");
+                if (!(op.rate > 0)) throw new Error("rate must be > 0 (percent)");
+                touched.push(keyOf(before));
+                if (apply) {
+                    var q = qeClip(s, hit.track.index, hit.index, before.name), settings = s.getSettings(), dur = time(before.end - before.start, fps);
+                    q.setSpeed(op.rate / 100, dur.getFormatted(settings.videoFrameRate, settings.videoDisplayFormat), false, false, false);
+                    q.setTimeInterpolationType(INTERP[op.interpolation || "optical-flow"]);
+                    c = hit.track.track.clips[hit.index];
+                    if (fr(c.start, fps) !== before.start || fr(c.end, fps) !== before.end) { c.start = time(before.start, fps); c.end = time(before.end, fps); c = hit.track.track.clips[hit.index]; }
+                    if (fr(c.start, fps) !== before.start || fr(c.end, fps) !== before.end || Math.abs(c.getSpeed() - op.rate / 100) > 0.001) throw new Error("speed on " + before.name + " did not apply cleanly");
+                    touched.push(keyOf(clipInfo(c, hit.track.name, hit.index, fps)));
+                }
+                return { op: "set_speed", clip: before, rate: op.rate, interpolation: op.interpolation || "optical-flow" };
+            }
+            case "insert":
+            case "overwrite": {
+                t = trackOf(s, op.track);
+                op.at = frameArg(op.at, fps);
+                if (!(op.dur > 0)) throw new Error(op.op + " needs dur (frames)");
+                var busy = occupants(t.track, op.at, op.at + op.dur, fps);
+                if (op.op === "overwrite" && busy.length && op.replaceExisting !== true) throw new Error("overwrite at " + op.at + " on " + t.name + " would cover " + busy.join(", ") + " (pass replaceExisting: true or remove them first); nothing changed");
+                if (op.op === "insert") throw new Error("insert ripples every later clip on " + t.name + "; use overwrite on a free range");
+                if (!apply) return { op: op.op, track: t.name, at: op.at, dur: op.dur, covers: busy, source: op.aeComp || op.media };
+                var placed = place(s, t, itemFor(op), op, fps);
+                if (op.name) placed.name = op.name;
+                touched.push(keyOf(clipInfo(placed, t.name, 0, fps)));
+                return { op: op.op, clip: clipInfo(placed, t.name, 0, fps) };
+            }
+            case "replace_media": {
+                hit = findClip(s, op.clip, fps); c = hit.clip; before = clipInfo(c, hit.track.name, hit.index, fps);
+                if (hit.track.kind !== "V") throw new Error("replace_media works on video tracks");
+                var lost = []; for (i = 2; i < before.effects.length; i++) lost.push(before.effects[i]); // 0/1 = Opacity/Motion
+                touched.push(keyOf(before));
+                if (!apply) return { op: "replace_media", clip: before, source: op.aeComp || op.media, effectsNotCarried: lost };
+                var item = itemFor(op);
+                c.remove(false, false);
+                var rep = place(s, hit.track, item, { op: "overwrite", at: before.start, dur: before.end - before.start, "in": op["in"] === undefined ? before["in"] : op["in"], keepAudio: op.keepAudio }, fps);
+                if (op.keepName !== false) rep.name = before.name;
+                touched.push(keyOf(clipInfo(rep, hit.track.name, 0, fps)));
+                return { op: "replace_media", clip: clipInfo(rep, hit.track.name, 0, fps), was: before, effectsNotCarried: lost };
+            }
+            case "relink": {
+                var it = findMedia(app.project.rootItem, op.from);
+                if (!it) throw new Error("no project item uses " + op.from);
+                if (!new File(op.to).exists) throw new Error("new media not found: " + op.to);
+                if (!it.canChangeMediaPath()) throw new Error("Premiere cannot relink " + it.name);
+                // every clip of this item changes: mark them as touched
+                eachClip(s, function (x, track) { if (norm(mediaOf(x)) === norm(op.from)) touched.push(track + "@" + fr(x.start, fps) + "-" + fr(x.end, fps) + "#" + nodeOf(x)); });
+                if (apply && !it.changeMediaPath(op.to, true)) throw new Error("changeMediaPath failed for " + it.name);
+                if (apply) eachClip(s, function (x, track) { if (nodeOf(x) === String(it.nodeId)) touched.push(track + "@" + fr(x.start, fps) + "-" + fr(x.end, fps) + "#" + nodeOf(x)); });
+                return { op: "relink", item: it.name, from: op.from, to: op.to };
+            }
+            case "rename": {
+                hit = findClip(s, op.clip, fps); before = clipInfo(hit.clip, hit.track.name, hit.index, fps);
+                touched.push(keyOf(before));
+                if (apply) hit.clip.name = op.name;
+                return { op: "rename", clip: before, name: op.name };
+            }
+            case "set_motion": {
+                hit = findClip(s, op.clip, fps); c = hit.clip; before = clipInfo(c, hit.track.name, hit.index, fps);
+                var motion = c.components[findEffect(c, "Motion")], opacity = null, setv = [];
+                try { opacity = c.components[findEffect(c, "Opacity")]; } catch (e5) { opacity = null; }
+                if (op.scale !== undefined) setv.push([findParam(motion, "Scale"), op.scale]);
+                if (op.position !== undefined) setv.push([findParam(motion, "Position"), op.position]);
+                if (op.rotation !== undefined) setv.push([findParam(motion, "Rotation"), op.rotation]);
+                if (op.opacity !== undefined) { if (!opacity) throw new Error("no Opacity on " + before.name); setv.push([findParam(opacity, "Opacity"), op.opacity]); }
+                for (i = 0; i < setv.length; i++) if (setv[i][0].isTimeVarying()) throw new Error(setv[i][0].displayName + " on " + before.name + " has keyframes; use set_effect_param with keys");
+                touched.push(keyOf(before));
+                if (apply) for (i = 0; i < setv.length; i++) setv[i][0].setValue(setv[i][1], true);
+                return { op: "set_motion", clip: before, set: { scale: op.scale, position: op.position, rotation: op.rotation, opacity: op.opacity } };
+            }
+            case "add_effect": {
+                hit = findClip(s, op.clip, fps); before = clipInfo(hit.clip, hit.track.name, hit.index, fps);
+                if (hit.track.kind !== "V") throw new Error("add_effect works on video tracks");
+                app.enableQE();
+                var fx = qe.project.getVideoEffectByName(op.effect);
+                if (!fx) throw new Error("Premiere has no video effect named " + op.effect);
+                touched.push(keyOf(before));
+                if (apply) {
+                    qeClip(s, hit.track.index, hit.index, before.name).addVideoEffect(fx);
+                    var after = effectNames(hit.track.track.clips[hit.index]);
+                    if (after.length !== before.effects.length + 1) throw new Error("effect " + op.effect + " was not added to " + before.name);
+                    return { op: "add_effect", clip: before, effects: after };
+                }
+                return { op: "add_effect", clip: before, effect: op.effect };
+            }
+            case "remove_effect": {
+                hit = findClip(s, op.clip, fps); c = hit.clip; before = clipInfo(c, hit.track.name, hit.index, fps);
+                var ei = findEffect(c, op.effect);
+                if (ei < 2) throw new Error("Motion and Opacity cannot be removed");
+                touched.push(keyOf(before));
+                if (apply) {
+                    qeClip(s, hit.track.index, hit.index, before.name).getComponentAt(ei).remove();
+                    var left = effectNames(hit.track.track.clips[hit.index]);
+                    if (left.length !== before.effects.length - 1) throw new Error("effect " + op.effect + " was not removed from " + before.name);
+                    return { op: "remove_effect", clip: before, effects: left };
+                }
+                return { op: "remove_effect", clip: before, effect: before.effects[ei] };
+            }
+            case "set_effect_param": {
+                hit = findClip(s, op.clip, fps); c = hit.clip; before = clipInfo(c, hit.track.name, hit.index, fps);
+                var prop = findParam(c.components[findEffect(c, op.effect)], op.param), old = propValue(prop);
+                if (op.keys === undefined && prop.isTimeVarying()) throw new Error(prop.displayName + " has keyframes: pass keys to replace them");
+                touched.push(keyOf(before));
+                if (apply) {
+                    if (op.color) prop.setColorValue(op.color[3] === undefined ? 255 : op.color[3], op.color[0], op.color[1], op.color[2], true);
+                    else if (op.keys) {
+                        prop.setTimeVarying(true);
+                        for (i = 0; i < op.keys.length; i++) { var kt = new Time(); kt.seconds = op.keys[i].seconds; prop.addKey(kt); prop.setValueAtKey(kt, op.keys[i].value, true); }
+                    } else prop.setValue(op.value, true);
+                }
+                return { op: "set_effect_param", clip: before, param: prop.displayName, from: old, to: op.color ? { color: op.color } : op.keys ? { keys: op.keys } : { value: op.value } };
+            }
+            default:
+                throw new Error("unknown op: " + op.op);
+        }
+    }
+
     var INTERP = { "frame-sampling": 0, "frame-blend": 1, "optical-flow": 2 };
     var actions = {
         ping: function () { return { premiere: app.version, project: project() }; },
@@ -96,6 +446,13 @@ var catcut_dispatch = (function () {
             if (!app.openDocument(a.path, true, true, true, true)) throw new Error("Premiere refused to open " + a.path);
             if (!app.project || norm(app.project.path) !== norm(a.path)) throw new Error("opened " + a.path + " but the active project is " + (app.project ? app.project.path : "none"));
             return { project: project(), opened: true };
+        },
+        closeProject: function (a) {
+            requireProject(a);
+            var was = project();
+            // (saveFirst, promptIfDirty): undo discards the edit on purpose
+            app.project.closeDocument(a.save === true, false);
+            return { closed: was };
         },
         save: function (a) {
             requireProject(a);
@@ -146,45 +503,103 @@ var catcut_dispatch = (function () {
         },
         setSpeed: function (a) {
             requireProject(a);
-            var s = findSequence(a.sequence), settings = s.getSettings(), fps = 1 / settings.videoFrameRate.seconds;
-            var ti = (a.track || 1) - 1, track = s.videoTracks[ti], report = [], i, j;
+            var s = findSequence(a.sequence), fps = seqFps(s), ti = (a.track || 1) - 1, track = s.videoTracks[ti], report = [], i;
             if (!track) throw new Error("no video track V" + (ti + 1));
-            function fr(t) { return Math.round(t.seconds * fps); }
-            function at(frame) {
-                for (var n = 0; n < track.clips.numItems; n++) { var c = track.clips[n]; if (fr(c.start) <= frame && frame < fr(c.end)) return n; }
-                return -1;
-            }
-            app.project.openSequence(s.sequenceID);
-            app.enableQE();
             for (i = 0; i < a.clips.length; i++) {
-                var want = a.clips[i], frame = want.at;
-                if (typeof frame === "string") { var tc = frame.split(/[:;]/), r = Math.round(fps); frame = ((Number(tc[0]) * 60 + Number(tc[1])) * 60 + Number(tc[2])) * r + Number(tc[3]); }
-                var n = at(frame);
+                var want = a.clips[i], frame = frameArg(want.at, fps), n = -1;
+                for (var k = 0; k < track.clips.numItems; k++) { var x = track.clips[k]; if (fr(x.start, fps) <= frame && frame < fr(x.end, fps)) n = k; }
                 if (n < 0) throw new Error("no clip on V" + (ti + 1) + " at " + want.at);
                 if (!(want.speed > 0)) throw new Error("speed must be > 0 at frame " + want.at);
-                var c = track.clips[n], before = { start: fr(c.start), end: fr(c.end), name: c.name };
-                // QE lists gaps too: the n-th clip of the track is the n-th QE item of type Clip
-                var qt = qe.project.getActiveSequence().getVideoTrackAt(ti), q = null, seen = 0;
-                for (j = 0; j < qt.numItems; j++) { var x = qt.getItemAt(j); if (x && x.type === "Clip") { if (seen === n) q = x; seen++; } }
-                if (!q || q.name !== c.name) throw new Error("cannot match " + c.name + " in Premiere's QE track; nothing changed for it");
-                var dur = new Time();
-                dur.seconds = (before.end - before.start) / fps;
-                q.setSpeed(want.speed, dur.getFormatted(settings.videoFrameRate, settings.videoDisplayFormat), false, false, false);
-                q.setTimeInterpolationType(INTERP[want.interpolation || "optical-flow"]);
+                var c = track.clips[n];
+                var r = runOp(s, { op: "set_speed", clip: { track: "V" + (ti + 1), start: fr(c.start, fps), end: fr(c.end, fps) }, rate: want.speed * 100, interpolation: want.interpolation }, fps, true, []);
                 c = track.clips[n];
-                // keep the clip where it was: QE may move its edges
-                if (fr(c.start) !== before.start || fr(c.end) !== before.end) {
-                    var t = new Time(); t.seconds = before.start / fps; c.start = t;
-                    t = new Time(); t.seconds = before.end / fps; c.end = t;
-                    c = track.clips[n];
-                }
-                var after = { start: fr(c.start), end: fr(c.end), speed: c.getSpeed() };
-                if (after.start !== before.start || after.end !== before.end || Math.abs(after.speed - want.speed) > 0.001) {
-                    throw new Error("speed on " + before.name + " did not apply cleanly (" + stringify({ before: before, after: after }) + "); not saved: press Ctrl+Z in Premiere to undo");
-                }
-                report.push({ name: before.name, at: frame, start: after.start, end: after.end, speed: after.speed, interpolation: want.interpolation || "optical-flow" });
+                report.push({ name: r.clip.name, at: frame, start: fr(c.start, fps), end: fr(c.end, fps), speed: c.getSpeed(), interpolation: r.interpolation });
             }
             return { project: project(), sequence: { name: s.name, id: s.sequenceID }, clips: report };
+        },
+        timeline: function (a) {
+            requireProject(a);
+            var s = findSequence(a.sequence), fps = seqFps(s), video = [], audio = [], settings = s.getSettings();
+            eachClip(s, function (c, track, n) { (track.charAt(0) === "V" ? video : audio).push(clipInfo(c, track, n, fps)); });
+            return {
+                project: project(), sequence: { name: s.name, id: s.sequenceID }, fps: fps,
+                width: settings.videoFrameWidth, height: settings.videoFrameHeight,
+                end: fr(s.end !== undefined ? { seconds: Number(s.end) / 254016000000 } : { seconds: 0 }, fps),
+                tracks: { video: s.videoTracks.numTracks, audio: s.audioTracks.numTracks }, video: video, audio: audio,
+            };
+        },
+        clipEffects: function (a) {
+            requireProject(a);
+            var s = findSequence(a.sequence), fps = seqFps(s), hit = findClip(s, a.clip, fps);
+            return { project: project(), sequence: { name: s.name, id: s.sequenceID }, clip: clipInfo(hit.clip, hit.track.name, hit.index, fps), effects: effectsOf(hit.clip) };
+        },
+        edit: function (a) {
+            requireProject(a);
+            var s = findSequence(a.sequence), fps = seqFps(s), ops = a.ops || [], results = [], touched = [], i;
+            // dry run: every op checked against the sequence as it is now; nothing changes
+            if (a.apply !== true) {
+                var problems = [];
+                for (i = 0; i < ops.length; i++) {
+                    try { results.push(runOp(s, ops[i], fps, false, touched)); } catch (e) { problems.push({ op: i, error: String(e.message || e) }); results.push(null); }
+                }
+                return { project: project(), sequence: { name: s.name, id: s.sequenceID }, applied: false, plan: results, problems: problems };
+            }
+            var before = signature(s, fps), failed = null;
+            for (i = 0; i < ops.length; i++) {
+                try { results.push(runOp(s, ops[i], fps, true, touched)); } catch (e2) { failed = { op: i, error: String(e2.message || e2) }; break; }
+            }
+            var after = signature(s, fps), skip = {}, changed = [], k;
+            for (i = 0; i < touched.length; i++) skip[touched[i]] = true;
+            for (k in before) if (before.hasOwnProperty(k) && !skip[k] && before[k] !== after[k]) changed.push({ clip: k, was: before[k], now: after.hasOwnProperty(k) ? after[k] : null });
+            for (k in after) if (after.hasOwnProperty(k) && !skip[k] && !before.hasOwnProperty(k)) changed.push({ clip: k, was: null, now: after[k] });
+            var saved = false;
+            if (a.save === true && !failed && !changed.length) { saveProject(); saved = true; }
+            return { project: project(), sequence: { name: s.name, id: s.sequenceID }, applied: true, results: results, failed: failed, untouchedChanged: changed, saved: saved };
+        },
+        frames: function (a) {
+            requireProject(a);
+            var s = findSequence(a.sequence), fps = seqFps(s), list = a.frames || [], out = [], i;
+            if (!list.length && a.from !== undefined) for (i = frameArg(a.from, fps); i < frameArg(a.to, fps); i += a.step || 1) list.push(i);
+            if (!list.length || list.length > 300) throw new Error("frames: 1 to 300 frames per call");
+            app.project.openSequence(s.sequenceID);
+            app.enableQE();
+            var qs = qe.project.getActiveSequence();
+            for (i = 0; i < list.length; i++) {
+                var f = frameArg(list[i], fps), base = a.dir + "/" + a.prefix + ("00000" + i).slice(-5);
+                qs.exportFramePNG(tcOf(f, fps), new File(base).fsName);
+                if (!new File(base + ".png").exists) throw new Error("Premiere wrote no frame for " + tcOf(f, fps));
+                out.push({ frame: f, tc: tcOf(f, fps), file: base + ".png" });
+            }
+            return { sequence: { name: s.name, id: s.sequenceID }, frames: out };
+        },
+        exportRange: function (a) {
+            requireProject(a);
+            var s = findSequence(a.sequence), fps = seqFps(s), from = frameArg(a.from, fps), to = frameArg(a.to, fps);
+            if (!(to > from)) throw new Error("exportRange: to must be after from");
+            if (!new File(a.preset).exists) throw new Error("preset not found: " + a.preset);
+            if (new File(a.path).exists) throw new Error("output exists: " + a.path);
+            var oldIn = Number(s.getInPoint()), oldOut = Number(s.getOutPoint()), r;
+            try { s.setInPoint(from / fps); s.setOutPoint(to / fps); r = s.exportAsMediaDirect(a.path, a.preset, 1); }
+            finally { if (oldIn >= 0) s.setInPoint(oldIn); else s.clearInPoint(); if (oldOut >= 0) s.setOutPoint(oldOut); else s.clearOutPoint(); }
+            if (!new File(a.path).exists) throw new Error("Premiere exported nothing (" + r + ")");
+            return { sequence: { name: s.name, id: s.sequenceID }, path: a.path, from: from, to: to };
+        },
+        aeRun: function (a) {
+            if (typeof BridgeTalk === "undefined") throw new Error("BridgeTalk is not available in this Premiere");
+            if (!BridgeTalk.isRunning("aftereffects")) throw new Error("After Effects is not running");
+            if (!new File(a.file).exists) throw new Error("script not found: " + a.file);
+            var body = "(function(){";
+            if (a.aep) body += "var want=new File(" + stringify(a.aep) + ");if(!app.project||!app.project.file||app.project.file.fsName.toLowerCase()!==want.fsName.toLowerCase()){if(!want.exists)return 'ERROR: aep not found';app.open(want);}";
+            body += "try{var r=$.evalFile(new File(" + stringify(a.file) + "));return String(r);}catch(e){return 'ERROR: '+e.message+' (line '+e.line+')';}})()";
+            var bt = new BridgeTalk(), reply = null, failed = null;
+            bt.target = "aftereffects"; bt.body = body;
+            bt.onResult = function (r) { reply = r.body; };
+            bt.onError = function (e) { failed = e.body; };
+            bt.send(a.timeoutSec || 120);
+            if (failed) throw new Error("After Effects: " + failed);
+            if (reply === null) throw new Error("After Effects did not answer within " + (a.timeoutSec || 120) + " s");
+            if (/^ERROR:/.test(String(reply))) throw new Error("After Effects " + reply);
+            return { reply: String(reply) };
         },
         status: function () { return { premiere: app.version, project: project(), sequences: app.project ? sequences() : [] }; },
         importXml: function (a) {
@@ -210,13 +625,29 @@ var catcut_dispatch = (function () {
             return { project: project(), sequence: { name: s.name, id: s.sequenceID }, path: a.path };
         }
     };
+    var helpers = {
+        stringify: stringify, norm: norm, project: project, findSequence: findSequence, requireProject: requireProject, saveProject: saveProject,
+        binNamed: binNamed, binAt: binAt, findMedia: findMedia, findNamed: findNamed, seqFps: seqFps, fr: fr, time: time, findClip: findClip,
+        clipInfo: clipInfo, effectsOf: effectsOf, qeClip: qeClip, runOp: runOp
+    };
+    var list = [];
+    for (var name in actions) if (actions.hasOwnProperty(name)) list.push(name);
+    actions.ping = function () { return { premiere: app.version, project: project(), actions: list }; };
     return function (job) {
         try {
-            var fn = actions[job.action];
+            var fn = actions[job.action], user = catcut_user_actions[job.action];
+            if (!fn && typeof user === "function") return stringify({ ok: true, data: user(job.args || {}, helpers) });
             if (!fn) throw new Error("unknown action: " + job.action);
             return stringify({ ok: true, data: fn(job.args || {}) });
         } catch (e) {
             return stringify({ ok: false, error: String(e && e.message ? e.message : e) });
         }
     };
+})();
+// per-job actions, kept across bridge updates
+(function () {
+    try {
+        var f = new File(new File($.fileName).parent.fsName + "/host.user.jsx");
+        if (f.exists) $.evalFile(f);
+    } catch (e) { /* no user file, or it failed: core actions still work */ }
 })();

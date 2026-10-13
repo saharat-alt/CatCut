@@ -1,5 +1,5 @@
 import type { UserAction } from '../core/types.js';
-import { type AeScriptingPref } from '../engine/housekeeping.js';
+import { type AeCacheInfo, type AeScriptingPref } from '../engine/housekeeping.js';
 import type { AppState } from './state.js';
 import { type ToolDef } from './tooldef.js';
 export interface AppReadiness {
@@ -21,6 +21,7 @@ export interface Readiness {
 }
 export interface ReadinessDeps {
     aePref?: () => Promise<AeScriptingPref>;
+    aeCache?: () => Promise<AeCacheInfo>;
     freeGb?: (path: string) => Promise<number | undefined>;
 }
 export declare function readiness(state: AppState, deps?: ReadinessDeps): Promise<Readiness>;

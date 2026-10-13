@@ -26,7 +26,10 @@
     show('v', VERSION);
     var core = require(path.join(ext, 'bridge-core.js'));
     var bridge = core.createBridge({
-      fs: fs, path: path, dir: path.join(os.tmpdir(), 'catcut-premiere-bridge'), pid: process.pid, version: VERSION,
+      // same folder CatCut uses (premiere.ts defaultQueueDir): not under TEMP, which cleanup tools empty
+      fs: fs, path: path, pid: process.pid, version: VERSION,
+      dir: process.env.CATCUT_PREMIERE_BRIDGE_DIR || (process.env.LOCALAPPDATA && /^[\x20-\x7e]+$/.test(process.env.LOCALAPPDATA)
+        ? path.join(process.env.LOCALAPPDATA, 'CatCut', 'bridge') : path.join(os.tmpdir(), 'catcut-premiere-bridge')),
       hostFile: path.join(ext, 'host.jsx'),
       evalScript: function (script) { return new Promise(function (resolve) { cep.evalScript(script, resolve); }); },
       onStatus: function (st) {

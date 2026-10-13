@@ -15,6 +15,16 @@ CatCut builds video headlessly: AE comps render with aerender, ffmpeg stitches c
 - After Premiere work, relay `closeHint`: say whether the project is saved and that Premiere may be closed. Close it with `premiere_close` only if CatCut opened it, or if the user asks (`force: true`).
 - Never take over the screen (computer use) to do what a CatCut tool does. If a CatCut tool is missing for the job, say so and ask; do not script Premiere or AE yourself.
 
+## Editing the editor's Premiere sequence in place
+- Client notes on a sequence the editor works in ("cut this shot 1 s", "swap the footage", "regrade this shot", "remove the frame") go through `premiere_edit` in **that** sequence. Never push a new sequence (`premiere_push`) for a revision.
+- Always read first with `premiere_timeline_get`, and use `premiere_clip_effects` for colour or effect values. Each op names its clip exactly as it is now: `{track, start, end, name}`.
+- Run without `apply` first and show the user the plan. Fix any `problems`, because a clip the editor moved is refused on purpose. Then run `apply: true`. Add `save: true` only when the user wants it saved.
+- If the result has `failed` or `untouchedChanged`, say so plainly and offer `premiere_undo_last`. The checkpoint was saved right before the edit.
+- AE graphics in the sequence: `premiere_place_ae_comp`. It does a dry run first and drops the comp's empty audio.
+- Check results with frames Premiere renders (`premiere_frames`) or a short `premiere_export_range`, not by guessing.
+- Per-job helpers belong in `host.user.jsx` next to the installed bridge, never in `host.jsx`. An update keeps `host.user.jsx` and replaces `host.jsx`.
+- `ae_live_run` (a script in the AE the user has open) only when the user asks for it. Otherwise AE stays headless.
+
 ## Files and disk: nothing the user cannot trace
 - **Use the original files under their original names.** Never copy, rename or re-export footage to use it (no `b46_1.mov`). Bins are named after card folders (`premiere_import_media` does this). Board shot numbers go in CatCut's `slot`, not in file names.
 - **Never export a clip to fake an edit.** Speed and slow motion: `premiere_set_speed` (native, e.g. 60% + Optical Flow) in Premiere, or `Clip.speed` with `interpolation: 'motion'` in CatCut. Colour and motion stay editable layers. If the user says "revert what you exported", put the originals back and remove the pasted files from the sequence.

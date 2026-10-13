@@ -150,12 +150,12 @@ declare const EditOpSchema: z.ZodDiscriminatedUnion<"op", [z.ZodObject<{
     frames: z.ZodNumber;
 }, "strip", z.ZodTypeAny, {
     frames: number;
-    after: string;
     op: "set_dissolve";
+    after: string;
 }, {
     frames: number;
-    after: string;
     op: "set_dissolve";
+    after: string;
 }>, z.ZodObject<{
     op: z.ZodLiteral<"set_marker">;
     id: z.ZodString;

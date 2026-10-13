@@ -71,6 +71,7 @@ function fakePremiere(projectPath: string) {
             c[i] = {
               get name() { return x.name; }, get start() { return x.start; }, set start(v: { seconds: number }) { x.start = { seconds: v.seconds }; },
               get end() { return x.end; }, set end(v: { seconds: number }) { x.end = { seconds: v.seconds }; }, getSpeed: () => x.speed,
+              inPoint: { seconds: 0 }, outPoint: { seconds: 0 }, components: { numItems: 0 }, projectItem: null,
             };
           });
           return c;

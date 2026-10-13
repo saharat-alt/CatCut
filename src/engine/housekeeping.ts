@@ -226,23 +226,30 @@ export interface DiskReport {
   warnings: string[];
 }
 
+/** AE disk cache folder and its size, without starting AE (the reshoot job grew it ~20 GB in 3 h). */
+export async function aeDiskCache(env: Record<string, string | undefined> = process.env): Promise<AeCacheInfo> {
+  const found = await findAeDiskCache(env);
+  const aeCache: AeCacheInfo = { ...found, dirs: [] };
+  if (!found.folder) return aeCache;
+  aeCache.dirs = await aeCacheDirs(found.folder);
+  if (aeCache.dirs.length) {
+    let bytes = 0;
+    for (const d of aeCache.dirs) {
+      const s = await dirSize(d);
+      bytes += s.bytes;
+      if (s.partial) aeCache.partial = true;
+    }
+    aeCache.bytes = bytes;
+  }
+  return aeCache;
+}
+
 export async function diskReport(p: Project, opts: HousekeepingOptions = {}): Promise<DiskReport> {
   const statfs = opts.statfs ?? fsStatfs;
   const warnings: string[] = [];
-  const found = await findAeDiskCache(opts.env ?? process.env);
-  const aeCache: AeCacheInfo = { ...found, dirs: [] };
-  if (found.folder) {
-    aeCache.dirs = await aeCacheDirs(found.folder);
-    if (aeCache.dirs.length) {
-      let bytes = 0;
-      for (const d of aeCache.dirs) {
-        const s = await dirSize(d);
-        bytes += s.bytes;
-        if (s.partial) aeCache.partial = true;
-      }
-      aeCache.bytes = bytes;
-    }
-  } else {
+  const aeCache = await aeDiskCache(opts.env ?? process.env);
+  const found = aeCache;
+  if (!found.folder) {
     warnings.push('หาโฟลเดอร์ disk cache ของ AE ไม่พบ / AE disk cache folder unknown');
   }
 

@@ -219,6 +219,8 @@ async function main(argv = process.argv.slice(2)) {
                 const r = await installBridge();
                 out(`installed: ${r.installedTo}`);
                 out(`PlayerDebugMode=1 (unsigned extensions allowed): ${r.debugModeKeys.join(', ')}`);
+                if (r.backup)
+                    out(`previous bridge kept at: ${r.backup}${r.keptUserActions ? ' (host.user.jsx carried over)' : ''} / เก็บ bridge เดิมไว้ที่นี่`);
                 out('Premiere does not need to be open: CatCut starts it with the project when needed (premiere_open). If Premiere is open now, `catcut ready` says whether it needs one restart.');
                 out('ติดตั้งแล้ว — ไม่ต้องเปิด Premiere เอง CatCut เปิดให้พร้อมโปรเจกต์เมื่อต้องใช้; ถ้าเปิดอยู่ตอนนี้ `catcut ready` จะบอกว่าต้องปิด–เปิดหนึ่งครั้งไหม');
                 return 0;

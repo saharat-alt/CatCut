@@ -8,7 +8,7 @@ import os from 'node:os';
 import { parse } from 'node:path';
 import type { UserAction } from '../core/types.js';
 import { ACTIONS, card, userActionText } from '../core/user-action.js';
-import { aeScriptingPref, type AeScriptingPref } from '../engine/housekeeping.js';
+import { aeDiskCache, aeScriptingPref, type AeCacheInfo, type AeScriptingPref } from '../engine/housekeeping.js';
 import { createPremiereClient, diagnosePremiere, premiereHost } from '../engine/premiere.js';
 import type { AppState } from './state.js';
 import { RELAY, tool, type ToolDef } from './tooldef.js';
@@ -32,10 +32,12 @@ export interface Readiness {
 
 export interface ReadinessDeps {
   aePref?: () => Promise<AeScriptingPref>;
+  aeCache?: () => Promise<AeCacheInfo>;
   freeGb?: (path: string) => Promise<number | undefined>;
 }
 
 const LOW_DISK_GB = 20;
+const AE_CACHE_WARN_GB = 10;
 
 async function defaultFreeGb(path: string): Promise<number | undefined> {
   try { const s = await statfs(parse(path).root || path); return (Number(s.bavail) * Number(s.bsize)) / 2 ** 30; } catch { return undefined; }
@@ -57,6 +59,13 @@ export async function readiness(state: AppState, deps: ReadinessDeps = {}): Prom
     if (!pref.prefsFile) apps.push({ app: 'after-effects', status: 'action', keepOpen: 'never', note: 'AE ยังไม่เคยเปิดในบัญชีนี้', userAction: act(ACTIONS.aeFirstRun({ detail: 'ยังไม่เคยเปิด AE' })) });
     else if (pref.allowed === false) apps.push({ app: 'after-effects', status: 'action', keepOpen: 'never', note: `Allow Scripts ปิดอยู่ (AE ${pref.aeVersion ?? '?'})`, userAction: act(ACTIONS.aeAllowScripts()) });
     else apps.push({ app: 'after-effects', status: 'ok', keepOpen: 'never', note: `พร้อม (AE ${pref.aeVersion ?? '?'}): CatCut เปิดแบบไม่มีหน้าต่างแล้วปิดเองทุกงาน ไม่ต้องเปิด AE` });
+    // the disk cache grows quietly while AE renders: show it here, before it fills the drive
+    const cache = await (deps.aeCache ?? (() => aeDiskCache()))();
+    const ae = apps[apps.length - 1]!;
+    if (cache.bytes !== undefined) {
+      const gb = Math.round((cache.bytes / 2 ** 30) * 10) / 10;
+      ae.note += ` · AE Disk Cache ${gb} GB${gb >= AE_CACHE_WARN_GB ? ' (ล้างได้ด้วย ae_purge_cache หรือ Edit > Purge > All Memory & Disk Cache)' : ''}`;
+    }
   }
 
   // Premiere: CatCut opens it when a premiere_* tool needs it

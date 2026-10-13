@@ -38,6 +38,9 @@ export interface PremiereClient {
     readonly queueDir: string;
     readonly installDir: string;
 }
+/** Where bridges before 0.3 kept the queue (cleanup tools empty TEMP, which dropped the bridge). */
+export declare function legacyQueueDir(): string;
+/** %LOCALAPPDATA%\CatCut\bridge (same rule as the bridge's index.html); TEMP only when that path is not ASCII. */
 export declare function defaultQueueDir(): string;
 export declare function cepExtensionsDir(): string;
 export declare function createPremiereClient(opts?: {
@@ -60,7 +63,7 @@ export interface PremiereHost {
 }
 export declare function premiereHost(spawn?: SpawnFn): PremiereHost;
 export interface PremiereDiagnosis {
-    /** connected, current bridge, nothing in the way */
+    /** connected and nothing in the way (an older bridge still counts: it works with fewer actions) */
     ready: boolean;
     status: PremiereBridgeStatus;
     running: boolean;
@@ -69,8 +72,10 @@ export interface PremiereDiagnosis {
         installed?: string;
         loaded?: string;
     };
-    /** what the person must do, when anything */
+    /** what the person must do, when anything (with ready: true it is advice, not a blocker) */
     userAction?: UserAction;
+    /** an older bridge: the newer premiere_* tools answer with the update card */
+    limited?: boolean;
     /** one line for the agent */
     note: string;
 }
@@ -101,7 +106,13 @@ export declare function bridgeSourceDir(): string;
 export interface InstallResult {
     installedTo: string;
     debugModeKeys: string[];
+    /** the previous bridge folder, copied before it was replaced (may hold per-job edits) */
+    backup?: string;
+    /** host.user.jsx carried over into the new install */
+    keptUserActions: boolean;
 }
+/** Where replaced bridges are kept (outside the CEP folder: Premiere must not load them). */
+export declare function bridgeBackupRoot(): string;
 /**
  * Copies the extension into the user's CEP folder (replacing an older CatCut bridge only) and sets
  * PlayerDebugMode=1 for the CEP runtimes, which lets Premiere load an unsigned extension.
@@ -111,6 +122,7 @@ export declare function installBridge(opts?: {
     spawn?: SpawnFn;
     source?: string;
     extensionsDir?: string;
+    backupRoot?: string;
 }): Promise<InstallResult>;
 /** Removes the extension folder (PlayerDebugMode stays: other unsigned extensions may need it). */
 export declare function uninstallBridge(opts?: {

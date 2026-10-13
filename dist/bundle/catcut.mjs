@@ -4523,11 +4523,11 @@ var require_codegen = __commonJS({
         const rhs = this.rhs === void 0 ? "" : ` = ${this.rhs}`;
         return `${varKind} ${this.name}${rhs};` + _n;
       }
-      optimizeNames(names, constants10) {
+      optimizeNames(names, constants11) {
         if (!names[this.name.str])
           return;
         if (this.rhs)
-          this.rhs = optimizeExpr(this.rhs, names, constants10);
+          this.rhs = optimizeExpr(this.rhs, names, constants11);
         return this;
       }
       get names() {
@@ -4544,10 +4544,10 @@ var require_codegen = __commonJS({
       render({ _n }) {
         return `${this.lhs} = ${this.rhs};` + _n;
       }
-      optimizeNames(names, constants10) {
+      optimizeNames(names, constants11) {
         if (this.lhs instanceof code_1.Name && !names[this.lhs.str] && !this.sideEffects)
           return;
-        this.rhs = optimizeExpr(this.rhs, names, constants10);
+        this.rhs = optimizeExpr(this.rhs, names, constants11);
         return this;
       }
       get names() {
@@ -4608,8 +4608,8 @@ var require_codegen = __commonJS({
       optimizeNodes() {
         return `${this.code}` ? this : void 0;
       }
-      optimizeNames(names, constants10) {
-        this.code = optimizeExpr(this.code, names, constants10);
+      optimizeNames(names, constants11) {
+        this.code = optimizeExpr(this.code, names, constants11);
         return this;
       }
       get names() {
@@ -4638,12 +4638,12 @@ var require_codegen = __commonJS({
         }
         return nodes.length > 0 ? this : void 0;
       }
-      optimizeNames(names, constants10) {
+      optimizeNames(names, constants11) {
         const { nodes } = this;
         let i2 = nodes.length;
         while (i2--) {
           const n2 = nodes[i2];
-          if (n2.optimizeNames(names, constants10))
+          if (n2.optimizeNames(names, constants11))
             continue;
           subtractNames(names, n2.names);
           nodes.splice(i2, 1);
@@ -4696,12 +4696,12 @@ var require_codegen = __commonJS({
           return void 0;
         return this;
       }
-      optimizeNames(names, constants10) {
+      optimizeNames(names, constants11) {
         var _a;
-        this.else = (_a = this.else) === null || _a === void 0 ? void 0 : _a.optimizeNames(names, constants10);
-        if (!(super.optimizeNames(names, constants10) || this.else))
+        this.else = (_a = this.else) === null || _a === void 0 ? void 0 : _a.optimizeNames(names, constants11);
+        if (!(super.optimizeNames(names, constants11) || this.else))
           return;
-        this.condition = optimizeExpr(this.condition, names, constants10);
+        this.condition = optimizeExpr(this.condition, names, constants11);
         return this;
       }
       get names() {
@@ -4724,10 +4724,10 @@ var require_codegen = __commonJS({
       render(opts) {
         return `for(${this.iteration})` + super.render(opts);
       }
-      optimizeNames(names, constants10) {
-        if (!super.optimizeNames(names, constants10))
+      optimizeNames(names, constants11) {
+        if (!super.optimizeNames(names, constants11))
           return;
-        this.iteration = optimizeExpr(this.iteration, names, constants10);
+        this.iteration = optimizeExpr(this.iteration, names, constants11);
         return this;
       }
       get names() {
@@ -4763,10 +4763,10 @@ var require_codegen = __commonJS({
       render(opts) {
         return `for(${this.varKind} ${this.name} ${this.loop} ${this.iterable})` + super.render(opts);
       }
-      optimizeNames(names, constants10) {
-        if (!super.optimizeNames(names, constants10))
+      optimizeNames(names, constants11) {
+        if (!super.optimizeNames(names, constants11))
           return;
-        this.iterable = optimizeExpr(this.iterable, names, constants10);
+        this.iterable = optimizeExpr(this.iterable, names, constants11);
         return this;
       }
       get names() {
@@ -4808,11 +4808,11 @@ var require_codegen = __commonJS({
         (_b = this.finally) === null || _b === void 0 ? void 0 : _b.optimizeNodes();
         return this;
       }
-      optimizeNames(names, constants10) {
+      optimizeNames(names, constants11) {
         var _a, _b;
-        super.optimizeNames(names, constants10);
-        (_a = this.catch) === null || _a === void 0 ? void 0 : _a.optimizeNames(names, constants10);
-        (_b = this.finally) === null || _b === void 0 ? void 0 : _b.optimizeNames(names, constants10);
+        super.optimizeNames(names, constants11);
+        (_a = this.catch) === null || _a === void 0 ? void 0 : _a.optimizeNames(names, constants11);
+        (_b = this.finally) === null || _b === void 0 ? void 0 : _b.optimizeNames(names, constants11);
         return this;
       }
       get names() {
@@ -5113,7 +5113,7 @@ var require_codegen = __commonJS({
     function addExprNames(names, from) {
       return from instanceof code_1._CodeOrName ? addNames(names, from.names) : names;
     }
-    function optimizeExpr(expr, names, constants10) {
+    function optimizeExpr(expr, names, constants11) {
       if (expr instanceof code_1.Name)
         return replaceName(expr);
       if (!canOptimize(expr))
@@ -5128,14 +5128,14 @@ var require_codegen = __commonJS({
         return items;
       }, []));
       function replaceName(n2) {
-        const c3 = constants10[n2.str];
+        const c3 = constants11[n2.str];
         if (c3 === void 0 || names[n2.str] !== 1)
           return n2;
         delete names[n2.str];
         return c3;
       }
       function canOptimize(e) {
-        return e instanceof code_1._Code && e._items.some((c3) => c3 instanceof code_1.Name && names[c3.str] === 1 && constants10[c3.str] !== void 0);
+        return e instanceof code_1._Code && e._items.some((c3) => c3 instanceof code_1.Name && names[c3.str] === 1 && constants11[c3.str] !== void 0);
       }
     }
     function subtractNames(names, from) {
@@ -7097,7 +7097,7 @@ var require_compile = __commonJS({
       const schOrFunc = root.refs[ref];
       if (schOrFunc)
         return schOrFunc;
-      let _sch = resolve13.call(this, root, ref);
+      let _sch = resolve14.call(this, root, ref);
       if (_sch === void 0) {
         const schema = (_a = root.localRefs) === null || _a === void 0 ? void 0 : _a[ref];
         const { schemaId } = this.opts;
@@ -7124,7 +7124,7 @@ var require_compile = __commonJS({
     function sameSchemaEnv(s1, s2) {
       return s1.schema === s2.schema && s1.root === s2.root && s1.baseId === s2.baseId;
     }
-    function resolve13(root, ref) {
+    function resolve14(root, ref) {
       let sch;
       while (typeof (sch = this.refs[ref]) == "string")
         ref = sch;
@@ -7954,7 +7954,7 @@ var require_fast_uri = __commonJS({
       }
       return uri;
     }
-    function resolve13(baseURI, relativeURI, options) {
+    function resolve14(baseURI, relativeURI, options) {
       const schemelessOptions = options ? Object.assign({ scheme: "null" }, options) : { scheme: "null" };
       const {
         parsed: baseParsed,
@@ -8323,7 +8323,7 @@ var require_fast_uri = __commonJS({
     var fastUri = {
       SCHEMES,
       normalize,
-      resolve: resolve13,
+      resolve: resolve14,
       resolveComponent,
       equal,
       serialize: serialize3,
@@ -9057,12 +9057,12 @@ var require_ref = __commonJS({
       function callSyncRef() {
         cxt.result((0, code_1.callValidateCode)(cxt, v, passCxt), () => addEvaluatedFrom(v), () => addErrorsFrom(v));
       }
-      function addErrorsFrom(source) {
-        const errs = (0, codegen_1._)`${source}.errors`;
+      function addErrorsFrom(source2) {
+        const errs = (0, codegen_1._)`${source2}.errors`;
         gen.assign(names_1.default.vErrors, (0, codegen_1._)`${names_1.default.vErrors} === null ? ${errs} : ${names_1.default.vErrors}.concat(${errs})`);
         gen.assign(names_1.default.errors, (0, codegen_1._)`${names_1.default.vErrors}.length`);
       }
-      function addEvaluatedFrom(source) {
+      function addEvaluatedFrom(source2) {
         var _a;
         if (!it.opts.unevaluated)
           return;
@@ -9073,7 +9073,7 @@ var require_ref = __commonJS({
               it.props = util_1.mergeEvaluated.props(gen, schEvaluated.props, it.props);
             }
           } else {
-            const props = gen.var("props", (0, codegen_1._)`${source}.evaluated.props`);
+            const props = gen.var("props", (0, codegen_1._)`${source2}.evaluated.props`);
             it.props = util_1.mergeEvaluated.props(gen, props, it.props, codegen_1.Name);
           }
         }
@@ -9083,7 +9083,7 @@ var require_ref = __commonJS({
               it.items = util_1.mergeEvaluated.items(gen, schEvaluated.items, it.items);
             }
           } else {
-            const items = gen.var("items", (0, codegen_1._)`${source}.evaluated.items`);
+            const items = gen.var("items", (0, codegen_1._)`${source2}.evaluated.items`);
             it.items = util_1.mergeEvaluated.items(gen, items, it.items, codegen_1.Name);
           }
         }
@@ -12320,15 +12320,15 @@ var require_windows = __commonJS({
       }
       return false;
     }
-    function checkStat(stat10, path12, options) {
-      if (!stat10.isSymbolicLink() && !stat10.isFile()) {
+    function checkStat(stat11, path12, options) {
+      if (!stat11.isSymbolicLink() && !stat11.isFile()) {
         return false;
       }
       return checkPathExt(path12, options);
     }
     function isexe(path12, options, cb) {
-      fs.stat(path12, function(er, stat10) {
-        cb(er, er ? false : checkStat(stat10, path12, options));
+      fs.stat(path12, function(er, stat11) {
+        cb(er, er ? false : checkStat(stat11, path12, options));
       });
     }
     function sync(path12, options) {
@@ -12344,20 +12344,20 @@ var require_mode = __commonJS({
     isexe.sync = sync;
     var fs = __require("fs");
     function isexe(path12, options, cb) {
-      fs.stat(path12, function(er, stat10) {
-        cb(er, er ? false : checkStat(stat10, options));
+      fs.stat(path12, function(er, stat11) {
+        cb(er, er ? false : checkStat(stat11, options));
       });
     }
     function sync(path12, options) {
       return checkStat(fs.statSync(path12), options);
     }
-    function checkStat(stat10, options) {
-      return stat10.isFile() && checkMode(stat10, options);
+    function checkStat(stat11, options) {
+      return stat11.isFile() && checkMode(stat11, options);
     }
-    function checkMode(stat10, options) {
-      var mod = stat10.mode;
-      var uid = stat10.uid;
-      var gid = stat10.gid;
+    function checkMode(stat11, options) {
+      var mod = stat11.mode;
+      var uid = stat11.uid;
+      var gid = stat11.gid;
       var myUid = options.uid !== void 0 ? options.uid : process.getuid && process.getuid();
       var myGid = options.gid !== void 0 ? options.gid : process.getgid && process.getgid();
       var u2 = parseInt("100", 8);
@@ -12391,12 +12391,12 @@ var require_isexe = __commonJS({
         if (typeof Promise !== "function") {
           throw new TypeError("callback not provided");
         }
-        return new Promise(function(resolve13, reject) {
+        return new Promise(function(resolve14, reject) {
           isexe(path12, options || {}, function(er, is) {
             if (er) {
               reject(er);
             } else {
-              resolve13(is);
+              resolve14(is);
             }
           });
         });
@@ -12462,27 +12462,27 @@ var require_which = __commonJS({
         opt = {};
       const { pathEnv, pathExt, pathExtExe } = getPathInfo(cmd, opt);
       const found = [];
-      const step = (i2) => new Promise((resolve13, reject) => {
+      const step = (i2) => new Promise((resolve14, reject) => {
         if (i2 === pathEnv.length)
-          return opt.all && found.length ? resolve13(found) : reject(getNotFoundError(cmd));
+          return opt.all && found.length ? resolve14(found) : reject(getNotFoundError(cmd));
         const ppRaw = pathEnv[i2];
         const pathPart = /^".*"$/.test(ppRaw) ? ppRaw.slice(1, -1) : ppRaw;
         const pCmd = path12.join(pathPart, cmd);
         const p = !pathPart && /^\.[\\\/]/.test(cmd) ? cmd.slice(0, 2) + pCmd : pCmd;
-        resolve13(subStep(p, i2, 0));
+        resolve14(subStep(p, i2, 0));
       });
-      const subStep = (p, i2, ii) => new Promise((resolve13, reject) => {
+      const subStep = (p, i2, ii) => new Promise((resolve14, reject) => {
         if (ii === pathExt.length)
-          return resolve13(step(i2 + 1));
+          return resolve14(step(i2 + 1));
         const ext = pathExt[ii];
         isexe(p + ext, { pathExt: pathExtExe }, (er, is) => {
           if (!er && is) {
             if (opt.all)
               found.push(p + ext);
             else
-              return resolve13(p + ext);
+              return resolve14(p + ext);
           }
-          return resolve13(subStep(p, i2, ii + 1));
+          return resolve14(subStep(p, i2, ii + 1));
         });
       });
       return cb ? step(0).then((res) => cb(null, res), cb) : step(0);
@@ -13562,8 +13562,8 @@ var init_deferred = __esm({
   "node_modules/execa/lib/utils/deferred.js"() {
     createDeferred = () => {
       const methods = {};
-      const promise = new Promise((resolve13, reject) => {
-        Object.assign(methods, { resolve: resolve13, reject });
+      const promise = new Promise((resolve14, reject) => {
+        Object.assign(methods, { resolve: resolve14, reject });
       });
       return Object.assign(promise, methods);
     };
@@ -13585,11 +13585,11 @@ var init_fd_options = __esm({
       }
       return destinationStream;
     };
-    getFromStream = (source, from = "stdout") => {
+    getFromStream = (source2, from = "stdout") => {
       const isWritable = false;
-      const { options, fileDescriptors } = SUBPROCESS_OPTIONS.get(source);
+      const { options, fileDescriptors } = SUBPROCESS_OPTIONS.get(source2);
       const fdNumber = getFdNumber(fileDescriptors, from, isWritable);
-      const sourceStream = fdNumber === "all" ? source.all : source.stdio[fdNumber];
+      const sourceStream = fdNumber === "all" ? source2.all : source2.stdio[fdNumber];
       if (sourceStream === null || sourceStream === void 0) {
         throw new TypeError(getInvalidStdioOptionMessage(fdNumber, from, options, isWritable));
       }
@@ -17618,17 +17618,17 @@ var pipeStreams, onSourceFinish, endDestinationStream, onDestinationFinish, abor
 var init_pipeline = __esm({
   "node_modules/execa/lib/io/pipeline.js"() {
     init_standard_stream();
-    pipeStreams = (source, destination) => {
-      source.pipe(destination);
-      onSourceFinish(source, destination);
-      onDestinationFinish(source, destination);
+    pipeStreams = (source2, destination) => {
+      source2.pipe(destination);
+      onSourceFinish(source2, destination);
+      onDestinationFinish(source2, destination);
     };
-    onSourceFinish = async (source, destination) => {
-      if (isStandardStream(source) || isStandardStream(destination)) {
+    onSourceFinish = async (source2, destination) => {
+      if (isStandardStream(source2) || isStandardStream(destination)) {
         return;
       }
       try {
-        await finished3(source, { cleanup: true, readable: true, writable: false });
+        await finished3(source2, { cleanup: true, readable: true, writable: false });
       } catch {
       }
       endDestinationStream(destination);
@@ -17638,19 +17638,19 @@ var init_pipeline = __esm({
         destination.end();
       }
     };
-    onDestinationFinish = async (source, destination) => {
-      if (isStandardStream(source) || isStandardStream(destination)) {
+    onDestinationFinish = async (source2, destination) => {
+      if (isStandardStream(source2) || isStandardStream(destination)) {
         return;
       }
       try {
         await finished3(destination, { cleanup: true, readable: false, writable: true });
       } catch {
       }
-      abortSourceStream(source);
+      abortSourceStream(source2);
     };
-    abortSourceStream = (source) => {
-      if (source.readable) {
-        source.destroy();
+    abortSourceStream = (source2) => {
+      if (source2.readable) {
+        source2.destroy();
       }
     };
   }
@@ -18014,7 +18014,7 @@ var init_pipe_arguments = __esm({
     init_duration();
     init_fd_options();
     init_file_url();
-    normalizePipeArguments = ({ source, sourcePromise, boundOptions, createNested }, ...pipeArguments) => {
+    normalizePipeArguments = ({ source: source2, sourcePromise, boundOptions, createNested }, ...pipeArguments) => {
       const startTime = getStartTime();
       const {
         destination,
@@ -18023,8 +18023,8 @@ var init_pipe_arguments = __esm({
         from,
         unpipeSignal
       } = getDestinationStream(boundOptions, createNested, pipeArguments);
-      const { sourceStream, sourceError } = getSourceStream(source, from);
-      const { options: sourceOptions, fileDescriptors } = SUBPROCESS_OPTIONS.get(source);
+      const { sourceStream, sourceError } = getSourceStream(source2, from);
+      const { options: sourceOptions, fileDescriptors } = SUBPROCESS_OPTIONS.get(source2);
       return {
         sourcePromise,
         sourceStream,
@@ -18077,9 +18077,9 @@ var init_pipe_arguments = __esm({
       throw new TypeError(`The first argument must be a template string, an options object, or an Execa subprocess: ${firstArgument}`);
     };
     mapDestinationArguments = ({ options }) => ({ options: { ...options, stdin: "pipe", piped: true } });
-    getSourceStream = (source, from) => {
+    getSourceStream = (source2, from) => {
       try {
-        const sourceStream = getFromStream(source, from);
+        const sourceStream = getFromStream(source2, from);
         return { sourceStream };
       } catch (error2) {
         return { sourceError: error2 };
@@ -18861,11 +18861,11 @@ var init_concurrent = __esm({
       const promises = weakMap.get(stream);
       const promise = createDeferred();
       promises.push(promise);
-      const resolve13 = promise.resolve.bind(promise);
-      return { resolve: resolve13, promises };
+      const resolve14 = promise.resolve.bind(promise);
+      return { resolve: resolve14, promises };
     };
-    waitForConcurrentStreams = async ({ resolve: resolve13, promises }, subprocess) => {
-      resolve13();
+    waitForConcurrentStreams = async ({ resolve: resolve14, promises }, subprocess) => {
+      resolve14();
       const [isSubprocessExit] = await Promise.race([
         Promise.allSettled([true, subprocess]),
         Promise.all([false, ...promises])
@@ -28427,23 +28427,28 @@ async function dirSize(root, opts = {}) {
   }
   return { bytes, files, partial: false };
 }
+async function aeDiskCache(env = process.env) {
+  const found = await findAeDiskCache(env);
+  const aeCache = { ...found, dirs: [] };
+  if (!found.folder) return aeCache;
+  aeCache.dirs = await aeCacheDirs(found.folder);
+  if (aeCache.dirs.length) {
+    let bytes = 0;
+    for (const d of aeCache.dirs) {
+      const s = await dirSize(d);
+      bytes += s.bytes;
+      if (s.partial) aeCache.partial = true;
+    }
+    aeCache.bytes = bytes;
+  }
+  return aeCache;
+}
 async function diskReport(p, opts = {}) {
   const statfs3 = opts.statfs ?? fsStatfs;
   const warnings = [];
-  const found = await findAeDiskCache(opts.env ?? process.env);
-  const aeCache = { ...found, dirs: [] };
-  if (found.folder) {
-    aeCache.dirs = await aeCacheDirs(found.folder);
-    if (aeCache.dirs.length) {
-      let bytes = 0;
-      for (const d of aeCache.dirs) {
-        const s = await dirSize(d);
-        bytes += s.bytes;
-        if (s.partial) aeCache.partial = true;
-      }
-      aeCache.bytes = bytes;
-    }
-  } else {
+  const aeCache = await aeDiskCache(opts.env ?? process.env);
+  const found = aeCache;
+  if (!found.folder) {
     warnings.push("\u0E2B\u0E32\u0E42\u0E1F\u0E25\u0E40\u0E14\u0E2D\u0E23\u0E4C disk cache \u0E02\u0E2D\u0E07 AE \u0E44\u0E21\u0E48\u0E1E\u0E1A / AE disk cache folder unknown");
   }
   const roots = /* @__PURE__ */ new Map();
@@ -29481,18 +29486,18 @@ $.evalFile(new File(${JSON.stringify(runner)}));
     return out2;
   }
   async function edit(req) {
-    const source = resolve2(req.aep);
-    const savedTo = req.saveAs ? resolve2(req.saveAs) : source;
-    if (req.saveAs && savedTo.toLowerCase() === source.toLowerCase()) throw new Error("saveAs must differ from the source; omit it for an in-place edit with backup");
+    const source2 = resolve2(req.aep);
+    const savedTo = req.saveAs ? resolve2(req.saveAs) : source2;
+    if (req.saveAs && savedTo.toLowerCase() === source2.toLowerCase()) throw new Error("saveAs must differ from the source; omit it for an in-place edit with backup");
     if (req.saveAs && existsSync7(savedTo)) throw new Error(`refusing to overwrite ${savedTo}`);
-    const before = await hashFile(source);
-    const working = join4(dirname3(source), `.editmcp-${randomUUID()}${extname3(source) || ".aep"}`);
-    await copyFile3(source, working, constants6.COPYFILE_EXCL);
+    const before = await hashFile(source2);
+    const working = join4(dirname3(source2), `.editmcp-${randomUUID()}${extname3(source2) || ".aep"}`);
+    await copyFile3(source2, working, constants6.COPYFILE_EXCL);
     try {
       const result = await run6("edit", { aep: working, comp: req.comp, ops: req.ops });
       const { hash: fingerprint } = await fingerprintSnapshot(result.data.snapshot);
       const changed = "source .aep changed during edit; original preserved, retry against the new version";
-      if (await hashFile(source) !== before) throw new Error(changed);
+      if (await hashFile(source2) !== before) throw new Error(changed);
       const log = result.log ?? [];
       let aeGuiRunning = false;
       let warning;
@@ -29502,20 +29507,20 @@ $.evalFile(new File(${JSON.stringify(runner)}));
         const gui = guiWindows(await listProcesses().catch(() => []));
         if (gui.length) {
           aeGuiRunning = true;
-          const name = basename3(source).toLowerCase();
+          const name = basename3(source2).toLowerCase();
           const showing = gui.some((p) => p.title.toLowerCase().includes(name));
           warning = `After Effects GUI is running${showing ? " with this project open" : ""} (PID ${gui.map((p) => p.pid).join(", ")}): saving there will overwrite this edit. Close it without saving and reopen, or use saveAs to write a new .aep. / After Effects \u0E40\u0E1B\u0E34\u0E14\u0E2D\u0E22\u0E39\u0E48 \u0E16\u0E49\u0E32\u0E01\u0E14 save \u0E43\u0E19\u0E42\u0E1B\u0E23\u0E41\u0E01\u0E23\u0E21 \u0E01\u0E32\u0E23\u0E41\u0E01\u0E49\u0E44\u0E02\u0E19\u0E35\u0E49\u0E08\u0E30\u0E2B\u0E32\u0E22 \u0E43\u0E2B\u0E49\u0E1B\u0E34\u0E14\u0E41\u0E25\u0E49\u0E27\u0E40\u0E1B\u0E34\u0E14\u0E43\u0E2B\u0E21\u0E48 \u0E2B\u0E23\u0E37\u0E2D\u0E43\u0E0A\u0E49 saveAs`;
           log.push(`WARNING: ${warning}`);
         }
-        const backup = uniqueOutputPath(join4(dirname3(source), `${basename3(source, extname3(source))}_backup_${Date.now()}.aep`));
-        await copyFile3(source, backup, constants6.COPYFILE_EXCL);
+        const backup = uniqueOutputPath(join4(dirname3(source2), `${basename3(source2, extname3(source2))}_backup_${Date.now()}.aep`));
+        await copyFile3(source2, backup, constants6.COPYFILE_EXCL);
         log.push(`backup: ${backup}`);
-        if (await hashFile(source) !== before) {
+        if (await hashFile(source2) !== before) {
           await rm3(backup, { force: true });
           throw new Error(changed);
         }
-        await rename4(working, source);
-        timings.delete(source.toLowerCase());
+        await rename4(working, source2);
+        timings.delete(source2.toLowerCase());
       }
       return { ok: true, savedTo, fingerprint, log, aeGuiRunning, ...warning ? { warning } : {} };
     } finally {
@@ -29897,7 +29902,7 @@ var init_jobs = __esm({
         const e = this.entries.get(id);
         if (!e) return Promise.reject(new Error(`unknown job: ${id}`));
         if (FINAL.has(e.info.status)) return Promise.resolve(snapshot(e.info));
-        return new Promise((resolve13) => e.waiters.push(resolve13));
+        return new Promise((resolve14) => e.waiters.push(resolve14));
       }
       pump() {
         while (this.running < this.maxConcurrent && this.queue.length > 0) {
@@ -30092,33 +30097,33 @@ ${await readFile5(runnerPath, "utf8")}`, "utf8");
     }
   }
   async function edit(req) {
-    const source = resolve3(req.aep);
-    const savedTo = req.saveAs ? resolve3(req.saveAs) : source;
+    const source2 = resolve3(req.aep);
+    const savedTo = req.saveAs ? resolve3(req.saveAs) : source2;
     if (req.saveAs && !isEcProject(savedTo)) throw new Error("saveAs must be a .ecproj path");
-    if (req.saveAs && savedTo.toLowerCase() === source.toLowerCase()) throw new Error("saveAs must differ from the source; omit it for an in-place edit with backup");
+    if (req.saveAs && savedTo.toLowerCase() === source2.toLowerCase()) throw new Error("saveAs must differ from the source; omit it for an in-place edit with backup");
     if (req.saveAs && existsSync8(savedTo)) throw new Error(`refusing to overwrite ${savedTo}`);
-    const before = await hashFile(source);
-    const working = join5(dirname4(source), `.catcut-${randomUUID2()}.ecproj`);
-    await copyFile4(source, working, constants7.COPYFILE_EXCL);
+    const before = await hashFile(source2);
+    const working = join5(dirname4(source2), `.catcut-${randomUUID2()}.ecproj`);
+    await copyFile4(source2, working, constants7.COPYFILE_EXCL);
     try {
       const res = await runner({ action: "edit", comp: req.comp, ops: req.ops }, { open: working, save: true });
       const j = await readProject(working);
       const fingerprint = await fingerprintComp(j, findComp(j, req.comp));
       const changed = "source .ecproj changed during edit; original preserved, retry against the new version";
-      if (await hashFile(source) !== before) throw new Error(changed);
+      if (await hashFile(source2) !== before) throw new Error(changed);
       const log = res.log ?? [];
       if (req.saveAs) {
         await copyFile4(working, savedTo, constants7.COPYFILE_EXCL);
       } else {
         log.push("note: an EffectCraft window with this project open would overwrite this edit on its next save / \u0E16\u0E49\u0E32\u0E40\u0E1B\u0E34\u0E14\u0E42\u0E1B\u0E23\u0E40\u0E08\u0E01\u0E15\u0E4C\u0E19\u0E35\u0E49\u0E43\u0E19 EffectCraft \u0E2D\u0E22\u0E39\u0E48 \u0E43\u0E2B\u0E49\u0E1B\u0E34\u0E14\u0E42\u0E14\u0E22\u0E44\u0E21\u0E48 save \u0E41\u0E25\u0E49\u0E27\u0E40\u0E1B\u0E34\u0E14\u0E43\u0E2B\u0E21\u0E48");
-        const backup = uniqueOutputPath(join5(dirname4(source), `${basename4(source, extname4(source))}_backup_${Date.now()}.ecproj`));
-        await copyFile4(source, backup, constants7.COPYFILE_EXCL);
+        const backup = uniqueOutputPath(join5(dirname4(source2), `${basename4(source2, extname4(source2))}_backup_${Date.now()}.ecproj`));
+        await copyFile4(source2, backup, constants7.COPYFILE_EXCL);
         log.push(`backup: ${backup}`);
-        if (await hashFile(source) !== before) {
+        if (await hashFile(source2) !== before) {
           await rm4(backup, { force: true });
           throw new Error(changed);
         }
-        await rename5(working, source);
+        await rename5(working, source2);
       }
       return { ok: true, savedTo, fingerprint, log };
     } finally {
@@ -30967,19 +30972,19 @@ async function openReview(p, v) {
   });
   server.requestTimeout = 1e4;
   server.headersTimeout = 1e4;
-  await new Promise((resolve13, reject) => {
+  await new Promise((resolve14, reject) => {
     server.once("error", reject);
-    server.listen(0, "127.0.0.1", resolve13);
+    server.listen(0, "127.0.0.1", resolve14);
   });
   const address = server.address();
   if (!address || typeof address === "string") throw new Error("No review port");
   origin = `http://127.0.0.1:${address.port}`;
-  return { url: origin + prefix, close: () => new Promise((resolve13, reject) => {
+  return { url: origin + prefix, close: () => new Promise((resolve14, reject) => {
     if (!server.listening) {
-      resolve13();
+      resolve14();
       return;
     }
-    server.close((error2) => error2 ? reject(error2) : resolve13());
+    server.close((error2) => error2 ? reject(error2) : resolve14());
     server.closeAllConnections();
   }) };
 }
@@ -31053,7 +31058,7 @@ function parseBoardTime(input, fps) {
   if (/^\d+(?:\.\d+)?$/.test(s)) return Math.round(parseFloat(s) * fps);
   return void 0;
 }
-function normalizeBoard(input, fps, source) {
+function normalizeBoard(input, fps, source2) {
   const errors = [];
   const pick2 = (frames3, str, what) => {
     if (str === void 0 || str.trim() === "") return frames3;
@@ -31080,7 +31085,7 @@ function normalizeBoard(input, fps, source) {
     if (s.status) out2.status = s.status;
     return out2;
   });
-  const board = { source: input.source ?? source, importedAt: input.importedAt ?? (/* @__PURE__ */ new Date()).toISOString(), slots };
+  const board = { source: input.source ?? source2, importedAt: input.importedAt ?? (/* @__PURE__ */ new Date()).toISOString(), slots };
   const target = pick2(input.targetFrames, input.target, "target");
   if (target !== void 0) board.targetFrames = target;
   if (input.chapters?.length) {
@@ -31330,7 +31335,7 @@ function parseSlotText(text2, fps) {
   if (notes && notes !== "|") out2.notes = notes;
   return out2;
 }
-function draftBoardFromPdfText(pages, fps, source) {
+function draftBoardFromPdfText(pages, fps, source2) {
   const detections = [];
   const warnings = [];
   const slots = [];
@@ -31399,7 +31404,7 @@ function draftBoardFromPdfText(pages, fps, source) {
   });
   if (!slots.length) warnings.push("\u0E44\u0E21\u0E48\u0E1E\u0E1A\u0E41\u0E16\u0E27 slot \u0E43\u0E19\u0E02\u0E49\u0E2D\u0E04\u0E27\u0E32\u0E21 PDF \u2014 \u0E43\u0E2B\u0E49 Claude \u0E14\u0E39 PDF \u0E14\u0E49\u0E27\u0E22\u0E15\u0E32 \u0E41\u0E25\u0E49\u0E27\u0E2A\u0E48\u0E07\u0E1A\u0E2D\u0E23\u0E4C\u0E14\u0E17\u0E35\u0E48\u0E16\u0E39\u0E01\u0E15\u0E49\u0E2D\u0E07\u0E14\u0E49\u0E27\u0E22 board_set / no slot rows detected");
   else warnings.push(`\u0E23\u0E48\u0E32\u0E07\u0E08\u0E32\u0E01\u0E02\u0E49\u0E2D\u0E04\u0E27\u0E32\u0E21 PDF \u0E41\u0E1A\u0E1A heuristic (${slots.length} slot) \u2014 Claude \u0E15\u0E49\u0E2D\u0E07\u0E40\u0E17\u0E35\u0E22\u0E1A\u0E01\u0E31\u0E1A\u0E20\u0E32\u0E1E PDF \u0E41\u0E25\u0E49\u0E27\u0E41\u0E01\u0E49\u0E14\u0E49\u0E27\u0E22 board_set / heuristic draft: verify against the PDF visually`);
-  const board = { source, importedAt: (/* @__PURE__ */ new Date()).toISOString(), slots };
+  const board = { source: source2, importedAt: (/* @__PURE__ */ new Date()).toISOString(), slots };
   if (target !== void 0) board.targetFrames = target;
   if (chapters.length) board.chapters = chapters;
   return { board, detections, warnings };
@@ -32407,13 +32412,13 @@ var init_tools_board = __esm({
         handler: async (a2, state) => {
           const p = requireProject(state);
           const prev = await loadBoard(p);
-          const source = a2.board.source ?? prev?.source ?? "board_set";
-          const n2 = normalizeBoard(a2.board, p.meta.fps, source);
+          const source2 = a2.board.source ?? prev?.source ?? "board_set";
+          const n2 = normalizeBoard(a2.board, p.meta.fps, source2);
           if (!n2.board) throw new ToolError("\u0E1A\u0E2D\u0E23\u0E4C\u0E14\u0E44\u0E21\u0E48\u0E16\u0E39\u0E01\u0E15\u0E49\u0E2D\u0E07 \u0E44\u0E21\u0E48\u0E44\u0E14\u0E49\u0E1A\u0E31\u0E19\u0E17\u0E36\u0E01 / invalid board, not stored", { errors: n2.errors });
           const check2 = checkBoard(n2.board, p.meta.fps);
           if (check2.length) n2.board.warnings = [...n2.board.warnings ?? [], ...warningText(check2)];
           const prevFile = await readBoardFile(p);
-          const sha = a2.sourceSha256 ?? (prevFile && samePath3(prevFile.board.source, source) ? prevFile.sourceSha256 : void 0);
+          const sha = a2.sourceSha256 ?? (prevFile && samePath3(prevFile.board.source, source2) ? prevFile.sourceSha256 : void 0);
           const saved = await storeBoard(state, p, n2.board, "board_set", sha ? { sha256: sha } : void 0);
           return { ok: true, ...saved, board: boardSummary(n2.board, p.meta.fps), check: warningText(check2), checkDetail: check2 };
         }
@@ -35589,12 +35594,14 @@ var init_tools_review2 = __esm({
 var premiere_exports = {};
 __export(premiere_exports, {
   BRIDGE_ID: () => BRIDGE_ID,
+  bridgeBackupRoot: () => bridgeBackupRoot,
   bridgeSourceDir: () => bridgeSourceDir,
   cepExtensionsDir: () => cepExtensionsDir,
   createPremiereClient: () => createPremiereClient,
   defaultQueueDir: () => defaultQueueDir,
   diagnosePremiere: () => diagnosePremiere,
   installBridge: () => installBridge,
+  legacyQueueDir: () => legacyQueueDir,
   openPremiere: () => openPremiere,
   premiereHost: () => premiereHost,
   stagePath: () => stagePath,
@@ -35604,30 +35611,47 @@ import { spawn as nodeSpawn } from "node:child_process";
 import { existsSync as existsSync19 } from "node:fs";
 import { cp, mkdir as mkdir17, readFile as readFile12, rename as rename11, rm as rm9, unlink as unlink3, writeFile as writeFile13 } from "node:fs/promises";
 import os8 from "node:os";
-import { join as join17, resolve as resolve9 } from "node:path";
+import { dirname as dirname8, join as join17, resolve as resolve9 } from "node:path";
 import { randomUUID as randomUUID4 } from "node:crypto";
 import { fileURLToPath as fileURLToPath5 } from "node:url";
+function legacyQueueDir() {
+  return join17(os8.tmpdir(), "catcut-premiere-bridge");
+}
 function defaultQueueDir() {
-  return process.env["CATCUT_PREMIERE_BRIDGE_DIR"] ?? join17(os8.tmpdir(), "catcut-premiere-bridge");
+  const env = process.env["CATCUT_PREMIERE_BRIDGE_DIR"];
+  if (env) return env;
+  const local = process.env["LOCALAPPDATA"];
+  return local && isAscii(local) ? join17(local, "CatCut", "bridge") : legacyQueueDir();
 }
 function cepExtensionsDir() {
   return join17(process.env["APPDATA"] ?? join17(os8.homedir(), "AppData", "Roaming"), "Adobe", "CEP", "extensions");
 }
 function createPremiereClient(opts = {}) {
-  const queueDir = opts.queueDir ?? defaultQueueDir();
+  const dirs = opts.queueDir ? [opts.queueDir] : [.../* @__PURE__ */ new Set([defaultQueueDir(), legacyQueueDir()])];
+  let queueDir = dirs[0];
   const staleMs = opts.staleMs ?? 1e4;
   const pollMs = opts.pollMs ?? 100;
   const installDir = opts.installDir ?? join17(cepExtensionsDir(), BRIDGE_ID);
   let chain = Promise.resolve();
-  async function status() {
-    const base = { installed: existsSync19(join17(installDir, "CSXS", "manifest.xml")), installDir, connected: false, queueDir };
-    let hb;
+  async function beatIn(dir) {
     try {
-      hb = JSON.parse((await readFile12(join17(queueDir, "bridge.json"), "utf8")).replace(/^﻿/, ""));
+      const hb = JSON.parse((await readFile12(join17(dir, "bridge.json"), "utf8")).replace(/^﻿/, ""));
+      return hb && typeof hb.ts === "number" ? hb : void 0;
     } catch {
-      return base;
+      return void 0;
     }
-    if (!hb || typeof hb.ts !== "number") return base;
+  }
+  async function status() {
+    let hb;
+    for (const d of dirs) {
+      const b = await beatIn(d);
+      if (b && (!hb || (b.ts ?? 0) > (hb.ts ?? 0))) {
+        hb = b;
+        queueDir = d;
+      }
+    }
+    const base = { installed: existsSync19(join17(installDir, "CSXS", "manifest.xml")), installDir, connected: false, queueDir };
+    if (!hb) return base;
     const age = Date.now() - hb.ts;
     return {
       ...base,
@@ -35651,6 +35675,7 @@ function createPremiereClient(opts = {}) {
     const id = `${Date.now().toString(36).padStart(9, "0")}-${randomUUID4().slice(0, 8)}`;
     const req = join17(queueDir, `${id}.req.json`);
     const res = join17(queueDir, `${id}.res.json`);
+    await mkdir17(queueDir, { recursive: true });
     await writeFile13(`${req}.tmp`, JSON.stringify({ id, action, args, deadline: Date.now() + timeoutMs }), "utf8");
     await rename11(`${req}.tmp`, req);
     const until = Date.now() + timeoutMs;
@@ -35663,6 +35688,9 @@ function createPremiereClient(opts = {}) {
       if (raw !== void 0) {
         await unlink3(res).catch(() => void 0);
         const r = JSON.parse(raw.replace(/^﻿/, ""));
+        if (r.ok !== true && /^unknown action: /.test(r.error ?? "")) {
+          throw new UserActionError(`Premiere: ${r.error} (bridge ${st.bridge ?? "old"})`, ACTIONS.bridgeUpdate({ installed: st.bridge ?? "\u0E40\u0E01\u0E48\u0E32", wanted: `\u0E43\u0E2B\u0E21\u0E48\u0E01\u0E27\u0E48\u0E32 (\u0E15\u0E49\u0E2D\u0E07\u0E43\u0E0A\u0E49\u0E04\u0E33\u0E2A\u0E31\u0E48\u0E07 ${action})` }));
+        }
         if (r.ok !== true) throw new Error(`Premiere: ${r.error ?? "request failed"}`);
         return r.data;
       }
@@ -35678,7 +35706,9 @@ function createPremiereClient(opts = {}) {
     }
   }
   return {
-    queueDir,
+    get queueDir() {
+      return queueDir;
+    },
     installDir,
     status,
     // one request at a time from this process
@@ -35733,21 +35763,24 @@ async function diagnosePremiere(client2, host2, opts = {}) {
   const running = status.connected || (await host2.running()).length > 0;
   const out2 = (o2) => ({ ready: false, status, running, versions, ...o2 });
   if (!opts.premiereExe && !running) return out2({ userAction: ACTIONS.premiereNotFound(), note: "Premiere Pro not found" });
-  if (!status.installed) return out2({ userAction: ACTIONS.bridgeNotInstalled(), note: "bridge not installed" });
+  if (!status.installed && !status.connected) return out2({ userAction: ACTIONS.bridgeNotInstalled(), note: "bridge not installed" });
+  let advice;
   if (versions.catcut && versions.installed !== versions.catcut) {
-    return out2({ userAction: ACTIONS.bridgeUpdate({ installed: versions.installed ?? "\u0E40\u0E01\u0E48\u0E32", wanted: versions.catcut }), note: `installed bridge ${versions.installed ?? "?"} is older than CatCut's ${versions.catcut}` });
+    advice = { userAction: ACTIONS.bridgeUpdate({ installed: versions.installed ?? "\u0E40\u0E01\u0E48\u0E32", wanted: versions.catcut }), note: `installed bridge ${versions.installed ?? "?"} is older than CatCut's ${versions.catcut}` };
+  } else if (status.connected && versions.installed && status.bridge !== versions.installed) {
+    advice = { userAction: ACTIONS.bridgeOutdated({ running: status.bridge ?? "\u0E40\u0E01\u0E48\u0E32", wanted: versions.installed }), note: `Premiere runs bridge ${status.bridge ?? "?"}, installed ${versions.installed}` };
   }
-  const missing = await host2.debugModeMissing();
-  if (missing.length) return out2({ userAction: ACTIONS.bridgeNotInstalled(), note: `PlayerDebugMode not set: ${missing.join(", ")}` });
   if (status.connected) {
-    if (versions.installed && status.bridge !== versions.installed) {
-      return out2({ userAction: ACTIONS.bridgeOutdated({ running: status.bridge ?? "\u0E40\u0E01\u0E48\u0E32", wanted: versions.installed }), note: `Premiere runs bridge ${status.bridge ?? "?"}, installed ${versions.installed}` });
-    }
     if (status.busy && status.busy.seconds * 1e3 >= DIALOG_AFTER_MS) {
       return out2({ userAction: ACTIONS.premiereDialog({ action: status.busy.action, seconds: status.busy.seconds }), note: `Premiere busy with ${status.busy.action} for ${status.busy.seconds} s` });
     }
-    return out2({ ready: true, note: `connected: Premiere ${status.premiere ?? "?"}, project ${status.project?.name ?? "none"}` });
+    const where = `Premiere ${status.premiere ?? "?"}, project ${status.project?.name ?? "none"}`;
+    if (advice) return out2({ ready: true, limited: true, userAction: advice.userAction, note: `connected (${where}); ${advice.note}: newer premiere_* tools need the update` });
+    return out2({ ready: true, note: `connected: ${where}` });
   }
+  if (advice) return out2(advice);
+  const missing = await host2.debugModeMissing();
+  if (missing.length) return out2({ userAction: ACTIONS.bridgeNotInstalled(), note: `PlayerDebugMode not set: ${missing.join(", ")}` });
   if (running) return out2({ userAction: ACTIONS.bridgeNotStarted(), note: "Premiere runs but the bridge does not answer" });
   return out2({ note: "Premiere is closed (fine: premiere_open starts it with the project)" });
 }
@@ -35760,7 +35793,7 @@ async function openPremiere(client2, host2, opts) {
   let d = await diagnosePremiere(client2, host2, { ...opts.premiereExe ? { premiereExe: opts.premiereExe } : {}, ...opts.sourceDir ? { sourceDir: opts.sourceDir } : {} });
   let launched = false;
   let pid;
-  if (!d.ready && d.userAction && d.userAction.code !== "bridge-not-started") throw new UserActionError(d.note, d.userAction);
+  if (!d.ready && d.userAction && !["bridge-not-started", "bridge-update", "bridge-outdated"].includes(d.userAction.code)) throw new UserActionError(d.note, d.userAction);
   if (!d.status.connected) {
     if (!d.running) {
       if (!opts.premiereExe) throw new UserActionError("Premiere Pro not found", ACTIONS.premiereNotFound());
@@ -35793,14 +35826,27 @@ async function openPremiere(client2, host2, opts) {
 function bridgeSourceDir() {
   return fileURLToPath5(new URL("../../premiere/catcut-bridge", import.meta.url));
 }
+function bridgeBackupRoot() {
+  return join17(process.env["LOCALAPPDATA"] ?? join17(os8.homedir(), "AppData", "Local"), "CatCut", "bridge-backups");
+}
 async function installBridge(opts = {}) {
   const spawn2 = opts.spawn ?? execa;
-  const source = opts.source ?? bridgeSourceDir();
-  if (!existsSync19(join17(source, "CSXS", "manifest.xml"))) throw new Error(`bridge sources not found: ${source}`);
+  const source2 = opts.source ?? bridgeSourceDir();
+  if (!existsSync19(join17(source2, "CSXS", "manifest.xml"))) throw new Error(`bridge sources not found: ${source2}`);
   const dest = join17(opts.extensionsDir ?? cepExtensionsDir(), BRIDGE_ID);
+  let backup;
+  let userFile;
+  if (existsSync19(dest)) {
+    const stamp = (/* @__PURE__ */ new Date()).toISOString().replace(/[:.]/g, "-");
+    backup = join17(opts.backupRoot ?? bridgeBackupRoot(), `${BRIDGE_ID}-${stamp}`);
+    await mkdir17(dirname8(backup), { recursive: true });
+    await cp(dest, backup, { recursive: true, errorOnExist: true, force: false });
+    if (existsSync19(join17(dest, "host.user.jsx"))) userFile = join17(backup, "host.user.jsx");
+  }
   await rm9(dest, { recursive: true, force: true });
   await mkdir17(dest, { recursive: true });
-  await cp(source, dest, { recursive: true });
+  await cp(source2, dest, { recursive: true });
+  if (userFile) await cp(userFile, join17(dest, "host.user.jsx"));
   const keys = [];
   for (const v of CSXS_VERSIONS) {
     const key = `HKCU\\Software\\Adobe\\CSXS.${v}`;
@@ -35808,7 +35854,7 @@ async function installBridge(opts = {}) {
     if (r.exitCode !== 0) throw new Error(`could not set ${key}\\PlayerDebugMode: ${String(r.stderr ?? "").trim()}`);
     keys.push(key);
   }
-  return { installedTo: dest, debugModeKeys: keys };
+  return { installedTo: dest, debugModeKeys: keys, ...backup ? { backup } : {}, keptUserActions: !!userFile };
 }
 async function uninstallBridge(opts = {}) {
   const dest = join17(opts.extensionsDir ?? cepExtensionsDir(), BRIDGE_ID);
@@ -35833,7 +35879,7 @@ var init_premiere = __esm({
 // src/mcp/tools-premiere.ts
 import { constants as constants9 } from "node:fs";
 import { copyFile as copyFile6, mkdir as mkdir18, readdir as readdir8, rm as rm10, stat as stat9 } from "node:fs/promises";
-import { basename as basename12, dirname as dirname8, extname as extname11, join as join18, relative as relative4, resolve as resolve10, sep as sep3 } from "node:path";
+import { basename as basename12, dirname as dirname9, extname as extname11, join as join18, relative as relative4, resolve as resolve10, sep as sep3 } from "node:path";
 function client(state) {
   state.premiere ??= createPremiereClient();
   return state.premiere;
@@ -35886,8 +35932,8 @@ async function walk2(dir, out2) {
   }
 }
 function binFor(file, root) {
-  if (!root) return basename12(dirname8(file));
-  const parts = relative4(root, dirname8(file)).split(sep3).filter((p) => p && p !== "." && !CARD_DIRS.test(p));
+  if (!root) return basename12(dirname9(file));
+  const parts = relative4(root, dirname9(file)).split(sep3).filter((p) => p && p !== "." && !CARD_DIRS.test(p));
   return [basename12(root), ...parts.slice(0, 1)].join("/");
 }
 var same2, slug2, MEDIA, CARD_DIRS, isProxyName, PREMIERE_TOOLS;
@@ -36159,6 +36205,12 @@ async function readiness(state, deps = {}) {
     if (!pref.prefsFile) apps.push({ app: "after-effects", status: "action", keepOpen: "never", note: "AE \u0E22\u0E31\u0E07\u0E44\u0E21\u0E48\u0E40\u0E04\u0E22\u0E40\u0E1B\u0E34\u0E14\u0E43\u0E19\u0E1A\u0E31\u0E0D\u0E0A\u0E35\u0E19\u0E35\u0E49", userAction: act(ACTIONS.aeFirstRun({ detail: "\u0E22\u0E31\u0E07\u0E44\u0E21\u0E48\u0E40\u0E04\u0E22\u0E40\u0E1B\u0E34\u0E14 AE" })) });
     else if (pref.allowed === false) apps.push({ app: "after-effects", status: "action", keepOpen: "never", note: `Allow Scripts \u0E1B\u0E34\u0E14\u0E2D\u0E22\u0E39\u0E48 (AE ${pref.aeVersion ?? "?"})`, userAction: act(ACTIONS.aeAllowScripts()) });
     else apps.push({ app: "after-effects", status: "ok", keepOpen: "never", note: `\u0E1E\u0E23\u0E49\u0E2D\u0E21 (AE ${pref.aeVersion ?? "?"}): CatCut \u0E40\u0E1B\u0E34\u0E14\u0E41\u0E1A\u0E1A\u0E44\u0E21\u0E48\u0E21\u0E35\u0E2B\u0E19\u0E49\u0E32\u0E15\u0E48\u0E32\u0E07\u0E41\u0E25\u0E49\u0E27\u0E1B\u0E34\u0E14\u0E40\u0E2D\u0E07\u0E17\u0E38\u0E01\u0E07\u0E32\u0E19 \u0E44\u0E21\u0E48\u0E15\u0E49\u0E2D\u0E07\u0E40\u0E1B\u0E34\u0E14 AE` });
+    const cache = await (deps.aeCache ?? (() => aeDiskCache()))();
+    const ae = apps[apps.length - 1];
+    if (cache.bytes !== void 0) {
+      const gb = Math.round(cache.bytes / 2 ** 30 * 10) / 10;
+      ae.note += ` \xB7 AE Disk Cache ${gb} GB${gb >= AE_CACHE_WARN_GB ? " (\u0E25\u0E49\u0E32\u0E07\u0E44\u0E14\u0E49\u0E14\u0E49\u0E27\u0E22 ae_purge_cache \u0E2B\u0E23\u0E37\u0E2D Edit > Purge > All Memory & Disk Cache)" : ""}`;
+    }
   }
   state.premiere ??= createPremiereClient();
   state.premiereHost ??= premiereHost();
@@ -36187,7 +36239,7 @@ async function readiness(state, deps = {}) {
   ].join("\n");
   return { ready: todo.length === 0, apps, say };
 }
-var LOW_DISK_GB, READY_TOOLS;
+var LOW_DISK_GB, AE_CACHE_WARN_GB, READY_TOOLS;
 var init_tools_ready = __esm({
   "src/mcp/tools-ready.ts"() {
     "use strict";
@@ -36196,6 +36248,7 @@ var init_tools_ready = __esm({
     init_premiere();
     init_tooldef();
     LOW_DISK_GB = 20;
+    AE_CACHE_WARN_GB = 10;
     READY_TOOLS = [
       tool({
         name: "ready_check",
@@ -36204,6 +36257,305 @@ var init_tools_ready = __esm({
         handler: async (_a, state) => {
           const r = await readiness(state);
           return { ...r, relay: RELAY.replace("userAction.say", "`say`") };
+        }
+      })
+    ];
+  }
+});
+
+// src/mcp/tools-premiere-edit.ts
+import { createHash as createHash3 } from "node:crypto";
+import { constants as constants10, existsSync as existsSync20 } from "node:fs";
+import { copyFile as copyFile7, mkdir as mkdir19, readdir as readdir9, rename as rename12, rm as rm11, stat as stat10 } from "node:fs/promises";
+import os10 from "node:os";
+import { basename as basename13, dirname as dirname10, join as join19, resolve as resolve11 } from "node:path";
+function backupDir(projectPath) {
+  const root = join19(process.env["LOCALAPPDATA"] ?? join19(os10.homedir(), "AppData", "Local"), "CatCut", "premiere-backups");
+  const id = createHash3("sha1").update(resolve11(projectPath).toLowerCase()).digest("hex").slice(0, 8);
+  return join19(root, `${basename13(projectPath, ".prproj").replace(/[^\w.-]+/g, "_")}-${id}`);
+}
+async function checkpoint(state, project2, timeoutMs) {
+  await client(state).call("save", { expectProject: project2.path }, { timeoutMs });
+  const dir = backupDir(project2.path);
+  await mkdir19(dir, { recursive: true });
+  const file = uniqueOutputPath(join19(dir, `${stampNow()}.prproj`));
+  await copyFile7(project2.path, file, constants10.COPYFILE_EXCL);
+  return file;
+}
+async function latestCheckpoint(projectPath) {
+  const dir = backupDir(projectPath);
+  const files = (await readdir9(dir).catch(() => [])).filter((f) => /^\d{4}-.*\.prproj$/.test(f) && !f.includes("before-undo") && !f.includes(".used.")).sort();
+  return files.length ? join19(dir, files[files.length - 1]) : void 0;
+}
+async function defaultPreset(premiereExe) {
+  if (!premiereExe) return void 0;
+  const want = /^Match Source - Adaptive High Bitrate\.epr$/i;
+  const stack = [dirname10(premiereExe)];
+  for (let budget = 4e3; stack.length && budget > 0; budget--) {
+    const d = stack.pop();
+    for (const e of await readdir9(d, { withFileTypes: true }).catch(() => [])) {
+      if (e.isDirectory()) stack.push(join19(d, e.name));
+      else if (want.test(e.name)) return join19(d, e.name);
+    }
+  }
+  return void 0;
+}
+function outDirFor(state, kind, seq) {
+  const base = state.project ? join19(state.project.dir, "review", kind) : join19(process.env["LOCALAPPDATA"] ?? os10.tmpdir(), "CatCut", kind);
+  return join19(base, `${seq.replace(/[<>:"/\\|?*\u0000-\u001f]/g, "_")}-${stampNow()}`);
+}
+var frameOrTc, clipSel, source, OP, seqArg, projectArg, timeoutArg, stampNow, PREMIERE_EDIT_TOOLS;
+var init_tools_premiere_edit = __esm({
+  "src/mcp/tools-premiere-edit.ts"() {
+    "use strict";
+    init_zod();
+    init_aerender();
+    init_premiere();
+    init_tools_premiere();
+    init_tooldef();
+    frameOrTc = external_exports.union([external_exports.number().int().min(0), external_exports.string().regex(/^\d{1,2}:\d{2}:\d{2}[:;]\d{2}$/)]);
+    clipSel = external_exports.object({
+      track: external_exports.string().regex(/^[VAva]\d+$/).describe("V1, V2 \u2026 or A1 \u2026"),
+      start: frameOrTc.describe("timeline start the clip has now (frame or HH:MM:SS:FF)"),
+      end: frameOrTc.describe("timeline end (exclusive) the clip has now"),
+      name: external_exports.string().optional().describe("clip name as Premiere shows it (recommended)"),
+      media: external_exports.string().optional().describe("media file path (alternative to name)")
+    }).describe("which clip: it must be exactly here now, or nothing changes");
+    source = {
+      media: external_exports.string().optional().describe('a media file (imported into bin "CatCut" when the project lacks it)'),
+      aeComp: external_exports.object({ aep: external_exports.string(), comp: external_exports.string() }).optional().describe('an After Effects comp (Dynamic Link import into bin "CatCut AE")'),
+      in: external_exports.number().int().min(0).optional().describe("source in, frames at sequence fps"),
+      keepAudio: external_exports.boolean().optional().describe("keep the linked audio (default: dropped for comps and stills)")
+    };
+    OP = external_exports.discriminatedUnion("op", [
+      external_exports.object({ op: external_exports.literal("remove"), clip: clipSel, linked: external_exports.boolean().optional().describe("also remove its linked audio (default true)") }),
+      external_exports.object({ op: external_exports.literal("trim"), clip: clipSel, start: frameOrTc.optional(), end: frameOrTc.optional() }),
+      external_exports.object({ op: external_exports.literal("move"), clip: clipSel, to: frameOrTc }),
+      external_exports.object({ op: external_exports.literal("set_speed"), clip: clipSel, rate: external_exports.number().positive().describe("percent, e.g. 60"), interpolation: external_exports.enum(["optical-flow", "frame-blend", "frame-sampling"]).optional() }),
+      external_exports.object({ op: external_exports.literal("overwrite"), track: external_exports.string().regex(/^[Vv]\d+$/), at: frameOrTc, dur: external_exports.number().int().min(1), name: external_exports.string().optional(), replaceExisting: external_exports.boolean().optional(), ...source }),
+      external_exports.object({ op: external_exports.literal("replace_media"), clip: clipSel, keepName: external_exports.boolean().optional(), ...source }),
+      external_exports.object({ op: external_exports.literal("relink"), from: external_exports.string(), to: external_exports.string() }),
+      external_exports.object({ op: external_exports.literal("rename"), clip: clipSel, name: external_exports.string().min(1) }),
+      external_exports.object({
+        op: external_exports.literal("set_motion"),
+        clip: clipSel,
+        scale: external_exports.number().optional(),
+        rotation: external_exports.number().optional(),
+        opacity: external_exports.number().min(0).max(100).optional(),
+        position: external_exports.tuple([external_exports.number(), external_exports.number()]).optional().describe("normalized 0\u20131 (0.5,0.5 = centre)")
+      }),
+      external_exports.object({ op: external_exports.literal("add_effect"), clip: clipSel, effect: external_exports.string().describe('Premiere effect name, e.g. "Lumetri Color"') }),
+      external_exports.object({ op: external_exports.literal("remove_effect"), clip: clipSel, effect: external_exports.union([external_exports.string(), external_exports.number().int().min(2)]) }),
+      external_exports.object({
+        op: external_exports.literal("set_effect_param"),
+        clip: clipSel,
+        effect: external_exports.union([external_exports.string(), external_exports.number().int().min(0)]),
+        param: external_exports.union([external_exports.string(), external_exports.number().int().min(0)]),
+        value: external_exports.unknown().optional(),
+        color: external_exports.tuple([external_exports.number(), external_exports.number(), external_exports.number()]).or(external_exports.tuple([external_exports.number(), external_exports.number(), external_exports.number(), external_exports.number()])).optional().describe("[r,g,b(,a)] 0\u2013255"),
+        keys: external_exports.array(external_exports.object({ seconds: external_exports.number(), value: external_exports.unknown() })).optional().describe("keyframes in the times premiere_clip_effects reports")
+      })
+    ]);
+    seqArg = external_exports.string().optional().describe("sequence name or id (default: the active one)");
+    projectArg = external_exports.string().describe("full path of the .prproj (opened when needed) or the open project name");
+    timeoutArg = external_exports.number().int().min(10).max(3600).optional().describe("seconds to wait for Premiere (default 180)");
+    stampNow = () => (/* @__PURE__ */ new Date()).toISOString().replace(/[:.]/g, "-");
+    PREMIERE_EDIT_TOOLS = [
+      tool({
+        name: "premiere_timeline_get",
+        description: "\u0E2D\u0E48\u0E32\u0E19 sequence \u0E43\u0E19 Premiere (\u0E44\u0E21\u0E48\u0E41\u0E01\u0E49\u0E2D\u0E30\u0E44\u0E23): \u0E17\u0E38\u0E01\u0E04\u0E25\u0E34\u0E1B\u0E17\u0E38\u0E01\u0E41\u0E17\u0E23\u0E47\u0E01 track/start/end/in/out \u0E40\u0E1B\u0E47\u0E19\u0E40\u0E1F\u0E23\u0E21, \u0E44\u0E1F\u0E25\u0E4C, nodeId, speed, proxy, \u0E23\u0E32\u0E22\u0E0A\u0E37\u0E48\u0E2D\u0E40\u0E2D\u0E1F\u0E40\u0E1F\u0E01\u0E15\u0E4C \u2014 \u0E43\u0E0A\u0E49\u0E04\u0E48\u0E32\u0E08\u0E32\u0E01\u0E17\u0E35\u0E48\u0E19\u0E35\u0E48\u0E23\u0E30\u0E1A\u0E38\u0E04\u0E25\u0E34\u0E1B\u0E43\u0E19 premiere_edit \xB7 Read a Premiere sequence (frames)",
+        input: { project: projectArg, sequence: seqArg, timeoutSec: timeoutArg },
+        handler: async (a2, state) => {
+          const { project: project2 } = await ensureProject(state, a2.project);
+          return client(state).call("timeline", { expectProject: project2.path, sequence: a2.sequence }, { timeoutMs: (a2.timeoutSec ?? 180) * 1e3 });
+        }
+      }),
+      tool({
+        name: "premiere_clip_effects",
+        description: "\u0E2D\u0E48\u0E32\u0E19\u0E40\u0E2D\u0E1F\u0E40\u0E1F\u0E01\u0E15\u0E4C\u0E02\u0E2D\u0E07\u0E04\u0E25\u0E34\u0E1B\u0E40\u0E14\u0E35\u0E22\u0E27\u0E41\u0E1A\u0E1A\u0E25\u0E30\u0E40\u0E2D\u0E35\u0E22\u0E14: \u0E04\u0E48\u0E32\u0E1E\u0E32\u0E23\u0E32\u0E21\u0E34\u0E40\u0E15\u0E2D\u0E23\u0E4C\u0E17\u0E38\u0E01\u0E15\u0E31\u0E27 \u0E04\u0E35\u0E22\u0E4C\u0E40\u0E1F\u0E23\u0E21 \u0E41\u0E25\u0E30\u0E2A\u0E35 [a,r,g,b] \xB7 Every effect parameter, keyframe and colour of one clip",
+        input: { project: projectArg, sequence: seqArg, clip: clipSel, timeoutSec: timeoutArg },
+        handler: async (a2, state) => {
+          const { project: project2 } = await ensureProject(state, a2.project);
+          return client(state).call("clipEffects", { expectProject: project2.path, sequence: a2.sequence, clip: a2.clip }, { timeoutMs: (a2.timeoutSec ?? 180) * 1e3 });
+        }
+      }),
+      tool({
+        name: "premiere_edit",
+        description: "\u0E41\u0E01\u0E49\u0E04\u0E25\u0E34\u0E1B\u0E43\u0E19 sequence \u0E40\u0E14\u0E34\u0E21\u0E02\u0E2D\u0E07 editor (\u0E44\u0E21\u0E48\u0E2A\u0E23\u0E49\u0E32\u0E07 sequence \u0E43\u0E2B\u0E21\u0E48): remove, trim, move, set_speed, overwrite (\u0E44\u0E1F\u0E25\u0E4C\u0E2B\u0E23\u0E37\u0E2D AE comp), replace_media, relink, rename, set_motion, add/remove_effect, set_effect_param. \u0E17\u0E38\u0E01 op \u0E23\u0E30\u0E1A\u0E38\u0E04\u0E25\u0E34\u0E1B\u0E14\u0E49\u0E27\u0E22 track+start+end(+name) \u0E15\u0E32\u0E21\u0E17\u0E35\u0E48\u0E40\u0E1B\u0E47\u0E19\u0E2D\u0E22\u0E39\u0E48\u0E15\u0E2D\u0E19\u0E19\u0E35\u0E49 (\u0E14\u0E39 premiere_timeline_get) \u0E16\u0E49\u0E32\u0E04\u0E25\u0E34\u0E1B\u0E02\u0E22\u0E31\u0E1A\u0E44\u0E1B\u0E41\u0E25\u0E49\u0E27\u0E08\u0E30\u0E44\u0E21\u0E48\u0E41\u0E01\u0E49\u0E2D\u0E30\u0E44\u0E23\u0E40\u0E25\u0E22. \u0E04\u0E48\u0E32\u0E40\u0E23\u0E34\u0E48\u0E21\u0E15\u0E49\u0E19 dry run; apply: true \u0E08\u0E30 Save \u0E2A\u0E16\u0E32\u0E19\u0E30\u0E1B\u0E31\u0E08\u0E08\u0E38\u0E1A\u0E31\u0E19\u0E40\u0E1B\u0E47\u0E19\u0E08\u0E38\u0E14\u0E22\u0E49\u0E2D\u0E19\u0E01\u0E25\u0E31\u0E1A\u0E01\u0E48\u0E2D\u0E19 \u0E41\u0E25\u0E49\u0E27\u0E41\u0E01\u0E49 \u0E41\u0E25\u0E49\u0E27\u0E15\u0E23\u0E27\u0E08\u0E27\u0E48\u0E32\u0E04\u0E25\u0E34\u0E1B\u0E2D\u0E37\u0E48\u0E19\u0E44\u0E21\u0E48\u0E40\u0E1B\u0E25\u0E35\u0E48\u0E22\u0E19; Save \u0E1C\u0E25\u0E41\u0E01\u0E49\u0E40\u0E21\u0E37\u0E48\u0E2D save: true; \u0E22\u0E49\u0E2D\u0E19\u0E14\u0E49\u0E27\u0E22 premiere_undo_last. Ops run in order: a later op names its clip where the earlier ops left it. \xB7 Edit the editor's sequence in place, guarded.",
+        input: {
+          project: projectArg,
+          sequence: seqArg,
+          ops: external_exports.array(OP).min(1).max(200),
+          apply: external_exports.boolean().optional().describe("default false = dry run (plan + problems)"),
+          save: external_exports.boolean().optional().describe("save the edit when it applied cleanly (default false)"),
+          timeoutSec: timeoutArg
+        },
+        handler: async (a2, state) => {
+          const { project: project2 } = await ensureProject(state, a2.project);
+          const c3 = client(state);
+          const timeoutMs = (a2.timeoutSec ?? 180) * 1e3;
+          const ops = a2.ops;
+          const args = { expectProject: project2.path, sequence: a2.sequence, ops };
+          if (a2.apply !== true) {
+            const r2 = await c3.call("edit", { ...args, apply: false }, { timeoutMs });
+            return { ...r2, ok: r2.problems.length === 0, dryRun: true, hint: r2.problems.length ? "\u0E41\u0E01\u0E49 op \u0E17\u0E35\u0E48\u0E21\u0E35\u0E1B\u0E31\u0E0D\u0E2B\u0E32\u0E01\u0E48\u0E2D\u0E19 (\u0E14\u0E39 problems) / fix the problems first" : "\u0E15\u0E23\u0E27\u0E08\u0E41\u0E1C\u0E19\u0E41\u0E25\u0E49\u0E27\u0E40\u0E23\u0E35\u0E22\u0E01\u0E0B\u0E49\u0E33\u0E14\u0E49\u0E27\u0E22 apply: true / review, then apply: true" };
+          }
+          const backup = await checkpoint(state, project2, timeoutMs);
+          const r = await c3.call("edit", { ...args, apply: true, save: a2.save === true }, { timeoutMs });
+          const clean = !r.failed && r.untouchedChanged.length === 0;
+          return {
+            ...r,
+            ok: clean,
+            backup,
+            ...clean ? {} : { warning: r.failed ? `op ${r.failed.op} \u0E25\u0E49\u0E21: ${r.failed.error} \u2014 op \u0E01\u0E48\u0E2D\u0E19\u0E2B\u0E19\u0E49\u0E32\u0E16\u0E39\u0E01\u0E43\u0E0A\u0E49\u0E44\u0E1B\u0E41\u0E25\u0E49\u0E27 \u0E44\u0E21\u0E48\u0E44\u0E14\u0E49 Save / op failed; earlier ops applied, not saved` : "\u0E04\u0E25\u0E34\u0E1B\u0E17\u0E35\u0E48\u0E44\u0E21\u0E48\u0E44\u0E14\u0E49\u0E2A\u0E31\u0E48\u0E07\u0E40\u0E1B\u0E25\u0E35\u0E48\u0E22\u0E19\u0E44\u0E1B \u2014 \u0E44\u0E21\u0E48\u0E44\u0E14\u0E49 Save / clips outside the ops changed; not saved", undo: "premiere_undo_last \u0E04\u0E37\u0E19\u0E2A\u0E16\u0E32\u0E19\u0E30\u0E01\u0E48\u0E2D\u0E19\u0E41\u0E01\u0E49\u0E17\u0E31\u0E49\u0E07\u0E2B\u0E21\u0E14 / restores the checkpoint" },
+            closeHint: closeHint(state, r.saved)
+          };
+        }
+      }),
+      tool({
+        name: "premiere_undo_last",
+        description: "\u0E22\u0E49\u0E2D\u0E19\u0E01\u0E32\u0E23\u0E41\u0E01\u0E49\u0E04\u0E23\u0E31\u0E49\u0E07\u0E25\u0E48\u0E32\u0E2A\u0E38\u0E14\u0E02\u0E2D\u0E07 premiere_edit: \u0E1B\u0E34\u0E14\u0E42\u0E1B\u0E23\u0E40\u0E08\u0E01\u0E15\u0E4C\u0E42\u0E14\u0E22\u0E44\u0E21\u0E48 Save, \u0E04\u0E37\u0E19\u0E44\u0E1F\u0E25\u0E4C .prproj \u0E08\u0E32\u0E01\u0E08\u0E38\u0E14\u0E22\u0E49\u0E2D\u0E19\u0E01\u0E25\u0E31\u0E1A, \u0E40\u0E1B\u0E34\u0E14\u0E43\u0E2B\u0E21\u0E48 (\u0E2A\u0E33\u0E40\u0E19\u0E32\u0E09\u0E1A\u0E31\u0E1A\u0E01\u0E48\u0E2D\u0E19\u0E22\u0E49\u0E2D\u0E19\u0E40\u0E01\u0E47\u0E1A\u0E44\u0E27\u0E49\u0E14\u0E49\u0E27\u0E22) \xB7 Restore the last premiere_edit checkpoint",
+        input: { project: external_exports.string().describe("full path of the .prproj"), timeoutSec: timeoutArg },
+        handler: async (a2, state) => {
+          const target = resolve11(a2.project);
+          const backup = await latestCheckpoint(target);
+          if (!backup) throw new ToolError("\u0E22\u0E31\u0E07\u0E44\u0E21\u0E48\u0E21\u0E35\u0E08\u0E38\u0E14\u0E22\u0E49\u0E2D\u0E19\u0E01\u0E25\u0E31\u0E1A\u0E02\u0E2D\u0E07\u0E42\u0E1B\u0E23\u0E40\u0E08\u0E01\u0E15\u0E4C\u0E19\u0E35\u0E49 / no checkpoint for this project", { project: target });
+          const { project: project2 } = await ensureProject(state, target);
+          const c3 = client(state);
+          const timeoutMs = (a2.timeoutSec ?? 180) * 1e3;
+          await c3.call("closeProject", { expectProject: project2.path, save: false }, { timeoutMs });
+          const before = uniqueOutputPath(join19(dirname10(backup), `${stampNow()}-before-undo.prproj`));
+          await copyFile7(target, before, constants10.COPYFILE_EXCL);
+          await copyFile7(backup, target);
+          await rename12(backup, backup.replace(/\.prproj$/, ".used.prproj"));
+          const r = await c3.call("openProject", { path: target }, { timeoutMs });
+          return { ok: true, restoredFrom: backup, keptCurrentAs: before, project: r.project, closeHint: closeHint(state, true) };
+        }
+      }),
+      tool({
+        name: "premiere_place_ae_comp",
+        description: "\u0E27\u0E32\u0E07 comp \u0E02\u0E2D\u0E07 After Effects \u0E25\u0E07 sequence \u0E40\u0E14\u0E34\u0E21 (Dynamic Link) \u0E17\u0E35\u0E48 track/at/dur \u0E41\u0E25\u0E30\u0E25\u0E1A\u0E40\u0E2A\u0E35\u0E22\u0E07\u0E40\u0E1B\u0E25\u0E48\u0E32\u0E17\u0E35\u0E48\u0E15\u0E34\u0E14\u0E21\u0E32 \u2014 \u0E17\u0E32\u0E07\u0E25\u0E31\u0E14\u0E02\u0E2D\u0E07 premiere_edit overwrite \xB7 Place an AE comp in the sequence (dry run unless apply)",
+        input: {
+          project: projectArg,
+          sequence: seqArg,
+          aep: external_exports.string(),
+          comp: external_exports.string(),
+          track: external_exports.string().regex(/^[Vv]\d+$/),
+          at: frameOrTc,
+          dur: external_exports.number().int().min(1),
+          replaceExisting: external_exports.boolean().optional(),
+          apply: external_exports.boolean().optional(),
+          save: external_exports.boolean().optional(),
+          timeoutSec: timeoutArg
+        },
+        handler: async (a2, state) => {
+          const { callTool: callTool2, toolResultData: toolResultData2 } = await Promise.resolve().then(() => (init_tools2(), tools_exports));
+          const r = await callTool2(state, "premiere_edit", {
+            project: a2.project,
+            sequence: a2.sequence,
+            apply: a2.apply,
+            save: a2.save,
+            timeoutSec: a2.timeoutSec,
+            ops: [{ op: "overwrite", track: a2.track, at: a2.at, dur: a2.dur, aeComp: { aep: resolve11(a2.aep), comp: a2.comp }, replaceExisting: a2.replaceExisting }]
+          });
+          const data = toolResultData2(r);
+          if (r.isError) throw new ToolError(String(data["error"] ?? "premiere_edit failed"), data);
+          return data;
+        }
+      }),
+      tool({
+        name: "premiere_frames",
+        description: "\u0E14\u0E36\u0E07\u0E40\u0E1F\u0E23\u0E21\u0E08\u0E32\u0E01 sequence \u0E43\u0E19 Premiere \u0E08\u0E23\u0E34\u0E07\u0E40\u0E1B\u0E47\u0E19 PNG (\u0E15\u0E23\u0E27\u0E08\u0E2A\u0E35/\u0E01\u0E23\u0E2D\u0E1A/\u0E02\u0E49\u0E2D\u0E04\u0E27\u0E32\u0E21\u0E15\u0E32\u0E21\u0E17\u0E35\u0E48 editor \u0E40\u0E2B\u0E47\u0E19) \u0E44\u0E21\u0E48\u0E40\u0E01\u0E34\u0E19 300 \u0E40\u0E1F\u0E23\u0E21\u0E15\u0E48\u0E2D\u0E04\u0E23\u0E31\u0E49\u0E07 \u0E25\u0E07\u0E42\u0E1F\u0E25\u0E40\u0E14\u0E2D\u0E23\u0E4C\u0E43\u0E2B\u0E21\u0E48\u0E43\u0E19 review/premiere-frames \xB7 PNG frames rendered by Premiere",
+        input: {
+          project: projectArg,
+          sequence: seqArg,
+          frames: external_exports.array(frameOrTc).max(300).optional(),
+          from: frameOrTc.optional(),
+          to: frameOrTc.optional(),
+          step: external_exports.number().int().min(1).optional(),
+          timeoutSec: timeoutArg
+        },
+        handler: async (a2, state) => {
+          if (!a2.frames?.length && a2.from === void 0) throw new ToolError("\u0E23\u0E30\u0E1A\u0E38 frames \u0E2B\u0E23\u0E37\u0E2D from/to / pass frames or from + to");
+          const { project: project2 } = await ensureProject(state, a2.project);
+          const c3 = client(state);
+          const stage = (await stagePath(c3, "")).replace(/[\\/][^\\/]*$/, (m) => `${m}-frames`);
+          await mkdir19(stage, { recursive: true });
+          try {
+            const r = await c3.call("frames", {
+              expectProject: project2.path,
+              sequence: a2.sequence,
+              dir: stage.replace(/\\/g, "/"),
+              prefix: "f",
+              frames: a2.frames,
+              from: a2.from,
+              to: a2.to,
+              step: a2.step
+            }, { timeoutMs: (a2.timeoutSec ?? 300) * 1e3 });
+            const dir = outDirFor(state, "premiere-frames", r.sequence.name);
+            await mkdir19(dir, { recursive: true });
+            const frames3 = [];
+            for (const f of r.frames) {
+              const dest = join19(dir, `${String(f.frame).padStart(6, "0")}_${f.tc.replace(/:/g, "-")}.png`);
+              await copyFile7(f.file, dest, constants10.COPYFILE_EXCL);
+              frames3.push({ ...f, file: dest });
+            }
+            return { ok: true, sequence: r.sequence, dir, frames: frames3 };
+          } finally {
+            await rm11(stage, { recursive: true, force: true });
+          }
+        }
+      }),
+      tool({
+        name: "premiere_export_range",
+        description: "export \u0E0A\u0E48\u0E27\u0E07\u0E2A\u0E31\u0E49\u0E19\u0E08\u0E32\u0E01 sequence \u0E43\u0E19 Premiere (\u0E04\u0E48\u0E32\u0E40\u0E23\u0E34\u0E48\u0E21\u0E15\u0E49\u0E19 preset H.264 Match Source \u0E02\u0E2D\u0E07 Premiere) \u0E44\u0E27\u0E49\u0E40\u0E0A\u0E47\u0E01\u0E01\u0E48\u0E2D\u0E19 export \u0E40\u0E15\u0E47\u0E21; \u0E44\u0E21\u0E48\u0E40\u0E02\u0E35\u0E22\u0E19\u0E17\u0E31\u0E1A \xB7 Export a short range from Premiere for checking",
+        input: {
+          project: projectArg,
+          sequence: seqArg,
+          from: frameOrTc,
+          to: frameOrTc,
+          preset: external_exports.string().optional().describe(`.epr preset (default: Premiere's "Match Source - Adaptive High Bitrate")`),
+          out: external_exports.string().optional().describe("output file (default: review/premiere-exports/\u2026mp4)"),
+          timeoutSec: timeoutArg
+        },
+        handler: async (a2, state) => {
+          const preset = a2.preset ? resolve11(a2.preset) : await defaultPreset(state.env.tools.premiereExe);
+          if (!preset || !existsSync20(preset)) throw new ToolError('\u0E44\u0E21\u0E48\u0E1E\u0E1A preset \u2014 \u0E2A\u0E48\u0E07 preset: "<\u0E44\u0E1F\u0E25\u0E4C .epr>" / no export preset found');
+          const { project: project2 } = await ensureProject(state, a2.project);
+          const c3 = client(state);
+          const staged = await stagePath(c3, ".mp4");
+          try {
+            const r = await c3.call("exportRange", {
+              expectProject: project2.path,
+              sequence: a2.sequence,
+              from: a2.from,
+              to: a2.to,
+              preset,
+              path: staged
+            }, { timeoutMs: (a2.timeoutSec ?? 900) * 1e3 });
+            const dest = a2.out ? uniqueOutputPath(resolve11(a2.out)) : uniqueOutputPath(join19(outDirFor(state, "premiere-exports", r.sequence.name), `${r.from}-${r.to}.mp4`));
+            await mkdir19(dirname10(dest), { recursive: true });
+            await copyFile7(staged, dest, constants10.COPYFILE_EXCL);
+            return { ok: true, sequence: r.sequence, from: r.from, to: r.to, path: dest, bytes: (await stat10(dest)).size, preset };
+          } finally {
+            await rm11(staged, { force: true });
+          }
+        }
+      }),
+      tool({
+        name: "ae_live_run",
+        description: "\u0E17\u0E32\u0E07\u0E2A\u0E33\u0E23\u0E2D\u0E07: \u0E23\u0E31\u0E19\u0E2A\u0E04\u0E23\u0E34\u0E1B\u0E15\u0E4C JSX \u0E43\u0E19 After Effects \u0E17\u0E35\u0E48\u0E1C\u0E39\u0E49\u0E43\u0E0A\u0E49\u0E40\u0E1B\u0E34\u0E14\u0E2D\u0E22\u0E39\u0E48 (\u0E1C\u0E48\u0E32\u0E19 Premiere/BridgeTalk) \u0E41\u0E25\u0E30\u0E40\u0E1B\u0E34\u0E14 .aep \u0E17\u0E35\u0E48\u0E23\u0E30\u0E1A\u0E38\u0E43\u0E2B\u0E49\u0E16\u0E49\u0E32\u0E22\u0E31\u0E07\u0E44\u0E21\u0E48\u0E44\u0E14\u0E49\u0E40\u0E1B\u0E34\u0E14. \u0E43\u0E0A\u0E49\u0E40\u0E09\u0E1E\u0E32\u0E30\u0E40\u0E21\u0E37\u0E48\u0E2D\u0E1C\u0E39\u0E49\u0E43\u0E0A\u0E49\u0E2A\u0E31\u0E48\u0E07\u0E43\u0E2B\u0E49\u0E43\u0E0A\u0E49 AE \u0E17\u0E35\u0E48\u0E40\u0E1B\u0E34\u0E14\u0E2D\u0E22\u0E39\u0E48 \u2014 \u0E1B\u0E01\u0E15\u0E34\u0E43\u0E0A\u0E49 ae_create/ae_edit \u0E41\u0E1A\u0E1A\u0E44\u0E21\u0E48\u0E21\u0E35\u0E2B\u0E19\u0E49\u0E32\u0E15\u0E48\u0E32\u0E07 \xB7 Run a JSX in the open After Effects (only when the user asked)",
+        input: {
+          jsxPath: external_exports.string(),
+          aep: external_exports.string().optional().describe("project AE must have open (opened when it is not)"),
+          userAsked: external_exports.literal(true).describe("true only when the user asked to use the open After Effects"),
+          timeoutSec: external_exports.number().int().min(10).max(3600).optional().describe("default 120")
+        },
+        handler: async (a2, state) => {
+          const st = await client(state).status();
+          if (!st.connected) throw new ToolError("ae_live_run \u0E2A\u0E48\u0E07\u0E1C\u0E48\u0E32\u0E19 Premiere: \u0E40\u0E1B\u0E34\u0E14 Premiere \u0E01\u0E48\u0E2D\u0E19 (premiere_open) / needs the Premiere bridge");
+          const t = a2.timeoutSec ?? 120;
+          return client(state).call("aeRun", { file: resolve11(a2.jsxPath), ...a2.aep ? { aep: resolve11(a2.aep) } : {}, timeoutSec: t }, { timeoutMs: (t + 30) * 1e3 });
         }
       })
     ];
@@ -36223,7 +36575,8 @@ var init_tools_extra = __esm({
     init_tools_review2();
     init_tools_premiere();
     init_tools_ready();
-    EXTRA_TOOLS = [...READY_TOOLS, ...BOARD_TOOLS, ...MEDIA_TOOLS, ...AE_TOOLS, ...RULES_TOOLS, ...EDIT_TOOLS, ...REVIEW2_TOOLS, ...PREMIERE_TOOLS];
+    init_tools_premiere_edit();
+    EXTRA_TOOLS = [...READY_TOOLS, ...BOARD_TOOLS, ...MEDIA_TOOLS, ...AE_TOOLS, ...RULES_TOOLS, ...EDIT_TOOLS, ...REVIEW2_TOOLS, ...PREMIERE_TOOLS, ...PREMIERE_EDIT_TOOLS];
   }
 });
 
@@ -36238,10 +36591,10 @@ __export(tools_exports, {
   toolResultData: () => toolResultData,
   uniquePath: () => uniquePath3
 });
-import { existsSync as existsSync20 } from "node:fs";
-import { mkdir as mkdir19, readdir as readdir9, readFile as readFile13, rename as rename12, writeFile as writeFile14 } from "node:fs/promises";
-import os10 from "node:os";
-import { basename as basename13, dirname as dirname9, extname as extname12, isAbsolute as isAbsolute2, join as join19, relative as relative5, resolve as resolve11 } from "node:path";
+import { existsSync as existsSync21 } from "node:fs";
+import { mkdir as mkdir20, readdir as readdir10, readFile as readFile13, rename as rename13, writeFile as writeFile14 } from "node:fs/promises";
+import os11 from "node:os";
+import { basename as basename14, dirname as dirname11, extname as extname12, isAbsolute as isAbsolute2, join as join20, relative as relative5, resolve as resolve12 } from "node:path";
 async function runTool(t, args, state) {
   try {
     if (MUTATING.has(t.name) || t.mutating) {
@@ -36281,17 +36634,17 @@ function toolResultData(r) {
   return JSON.parse(text2);
 }
 function samePath6(a2, b) {
-  const x = resolve11(a2);
-  const y = resolve11(b);
+  const x = resolve12(a2);
+  const y = resolve12(b);
   return WIN ? x.toLowerCase() === y.toLowerCase() : x === y;
 }
 function uniquePath3(p) {
-  if (!existsSync20(p)) return p;
+  if (!existsSync21(p)) return p;
   const ext = extname12(p);
   const base = ext ? p.slice(0, -ext.length) : p;
   for (let i2 = 2; ; i2++) {
     const c3 = `${base}_${i2}${ext}`;
-    if (!existsSync20(c3)) return c3;
+    if (!existsSync21(c3)) return c3;
   }
 }
 function fileSafe(name) {
@@ -36305,14 +36658,14 @@ function asciiSlug(s) {
   return `${slug3 || "comp"}_${h2.toString(16)}`;
 }
 function isInside(child2, parent) {
-  const rel = relative5(resolve11(parent), resolve11(child2));
+  const rel = relative5(resolve12(parent), resolve12(child2));
   return rel === "" || !rel.startsWith("..") && !isAbsolute2(rel);
 }
 function assertWritable(target, what) {
   if (isProtected(target)) throw new ToolError(`\u0E2B\u0E49\u0E32\u0E21\u0E40\u0E02\u0E35\u0E22\u0E19\u0E43\u0E19\u0E42\u0E1F\u0E25\u0E40\u0E14\u0E2D\u0E23\u0E4C\u0E17\u0E35\u0E48\u0E1B\u0E49\u0E2D\u0E07\u0E01\u0E31\u0E19\u0E44\u0E27\u0E49 / refusing to write ${what} inside a protected path`, { path: target });
 }
 function assertConfined(state, target, aep, what) {
-  const roots = [dirname9(aep), ...state.project ? [state.project.dir] : []];
+  const roots = [dirname11(aep), ...state.project ? [state.project.dir] : []];
   if (!roots.some((r) => isInside(target, r))) {
     throw new ToolError(`${what} \u0E15\u0E49\u0E2D\u0E07\u0E2D\u0E22\u0E39\u0E48\u0E43\u0E19\u0E42\u0E1F\u0E25\u0E40\u0E14\u0E2D\u0E23\u0E4C\u0E42\u0E1B\u0E23\u0E40\u0E08\u0E01\u0E15\u0E4C\u0E2B\u0E23\u0E37\u0E2D\u0E42\u0E1F\u0E25\u0E40\u0E14\u0E2D\u0E23\u0E4C\u0E02\u0E2D\u0E07 .aep / ${what} must be inside the project folder or next to the .aep`, { path: target, allowed: roots });
   }
@@ -36362,10 +36715,10 @@ async function forgetRenders(state, p, ids, ctx) {
     const a2 = p.assets[id];
     if (!a2 || !isAeComp(a2)) continue;
     const old = a2.render?.path;
-    if (old && existsSync20(old)) {
+    if (old && existsSync21(old)) {
       const ext = extname12(old);
       const aside = uniquePath3(`${old.slice(0, old.length - ext.length)}_forced${ext}`);
-      await rename12(old, aside);
+      await rename13(old, aside);
       moved[id] = aside;
       ctx.log(`${id}: previous render kept as ${aside}`);
     }
@@ -36375,14 +36728,14 @@ async function forgetRenders(state, p, ids, ctx) {
   return moved;
 }
 async function backupTimeline4(p, reason) {
-  const dir = join19(p.dir, "history");
-  await mkdir19(dir, { recursive: true });
+  const dir = join20(p.dir, "history");
+  await mkdir20(dir, { recursive: true });
   const now = (/* @__PURE__ */ new Date()).toISOString();
   const stamp = now.replace(/[:.]/g, "-");
   const body2 = `${JSON.stringify({ savedAt: now, reason, timeline: p.timeline }, null, 2)}
 `;
   for (let n2 = 1; ; n2++) {
-    const file = join19(dir, `timeline-${stamp}-${n2}.json`);
+    const file = join20(dir, `timeline-${stamp}-${n2}.json`);
     try {
       await writeFile14(file, body2, { encoding: "utf8", flag: "wx" });
       return file;
@@ -36392,8 +36745,8 @@ async function backupTimeline4(p, reason) {
   }
 }
 async function listBackups(p) {
-  const dir = join19(p.dir, "history");
-  const names = existsSync20(dir) ? (await readdir9(dir)).filter((n2) => BACKUP_RE.test(n2)) : [];
+  const dir = join20(p.dir, "history");
+  const names = existsSync21(dir) ? (await readdir10(dir)).filter((n2) => BACKUP_RE.test(n2)) : [];
   const key = (n2) => {
     const m = BACKUP_RE.exec(n2);
     return [m[1], Number(m[2])];
@@ -36405,7 +36758,7 @@ async function listBackups(p) {
   });
   return Promise.all(names.map(async (name) => {
     try {
-      const d = JSON.parse(await readFile13(join19(dir, name), "utf8"));
+      const d = JSON.parse(await readFile13(join20(dir, name), "utf8"));
       const video = d.timeline?.video ?? [];
       return { name, savedAt: d.savedAt, reason: d.reason, clips: video.length, frames: video.reduce((s, c3) => s + (c3.dur > 0 ? c3.dur : 0), 0) };
     } catch {
@@ -36470,10 +36823,10 @@ function startReviewJob(state, id, open3, wait = true) {
   const running = activeJob2(state, PROJECT_JOBS2);
   if (running) throw new ToolError(`wait for ${running.name} before creating a review`, { jobId: running.id });
   const snapshot2 = versionPlan(p, v);
-  if (!open3 || !v.reviewProxy || !existsSync20(v.reviewProxy)) requireFfmpeg(state);
+  if (!open3 || !v.reviewProxy || !existsSync21(v.reviewProxy)) requireFfmpeg(state);
   const job = state.jobs.start(open3 ? "review_open" : "preview", async (ctx) => {
     v.reviewPlan ??= structuredClone(snapshot2);
-    if (!open3 || !v.reviewProxy || !existsSync20(v.reviewProxy)) {
+    if (!open3 || !v.reviewProxy || !existsSync21(v.reviewProxy)) {
       ctx.log("creating review proxy");
       v.reviewProxy = await state.assembler.reviewProxy(p, v.id, { signal: ctx.signal });
     }
@@ -36799,11 +37152,11 @@ var init_tools2 = __esm({
           targets: external_exports.array(external_exports.string()).optional().describe("delivery target ids (see delivery_presets)")
         },
         handler: async (a2, state) => {
-          const dir = resolve11(a2.dir);
+          const dir = resolve12(a2.dir);
           assertWritable(dir, "project_new.dir");
           const unknown2 = (a2.targets ?? []).filter((t) => !PRESETS[t]);
           if (unknown2.length) throw new ToolError(`\u0E44\u0E21\u0E48\u0E23\u0E39\u0E49\u0E08\u0E31\u0E01 target / unknown delivery targets: ${unknown2.join(", ")}`, { known: Object.keys(PRESETS) });
-          if (existsSync20(join19(dir, "project.json"))) throw new ToolError("\u0E21\u0E35\u0E42\u0E1B\u0E23\u0E40\u0E08\u0E01\u0E15\u0E4C\u0E2D\u0E22\u0E39\u0E48\u0E41\u0E25\u0E49\u0E27 \u0E43\u0E0A\u0E49 project_open / project already exists, use project_open", { dir });
+          if (existsSync21(join20(dir, "project.json"))) throw new ToolError("\u0E21\u0E35\u0E42\u0E1B\u0E23\u0E40\u0E08\u0E01\u0E15\u0E4C\u0E2D\u0E22\u0E39\u0E48\u0E41\u0E25\u0E49\u0E27 \u0E43\u0E0A\u0E49 project_open / project already exists, use project_open", { dir });
           const p = await state.api.project.createProject(dir, { name: a2.name, fps: a2.fps, width: a2.width, height: a2.height });
           if (a2.targets?.length) {
             p.delivery.targets = [...new Set(a2.targets)];
@@ -36836,8 +37189,8 @@ var init_tools2 = __esm({
         description: "\u0E40\u0E1B\u0E34\u0E14\u0E42\u0E1B\u0E23\u0E40\u0E08\u0E01\u0E15\u0E4C\u0E17\u0E35\u0E48\u0E21\u0E35\u0E2D\u0E22\u0E39\u0E48 \xB7 Open an existing project folder",
         input: { dir: external_exports.string() },
         handler: async (a2, state) => {
-          assertWritable(resolve11(a2.dir), "project (opened for editing)");
-          const p = await state.api.project.loadProject(resolve11(a2.dir));
+          assertWritable(resolve12(a2.dir), "project (opened for editing)");
+          const p = await state.api.project.loadProject(resolve12(a2.dir));
           state.project = p;
           return { ok: true, ...projectStatus(state, p) };
         }
@@ -36863,13 +37216,13 @@ var init_tools2 = __esm({
           let asset;
           if (a2.aep) {
             if (!a2.comp) throw new ToolError("\u0E15\u0E49\u0E2D\u0E07\u0E23\u0E30\u0E1A\u0E38 comp \u0E04\u0E39\u0E48\u0E01\u0E31\u0E1A aep / comp is required with aep");
-            const aep = resolve11(a2.aep);
-            if (!existsSync20(aep)) throw new ToolError(`\u0E44\u0E21\u0E48\u0E1E\u0E1A\u0E44\u0E1F\u0E25\u0E4C / file not found: ${aep}`);
+            const aep = resolve12(a2.aep);
+            if (!existsSync21(aep)) throw new ToolError(`\u0E44\u0E21\u0E48\u0E1E\u0E1A\u0E44\u0E1F\u0E25\u0E4C / file not found: ${aep}`);
             asset = state.api.project.addAeComp(p, aep, a2.comp, a2.id);
           } else if (a2.path) {
             requireFfmpeg(state);
-            const path12 = resolve11(a2.path);
-            if (!existsSync20(path12)) throw new ToolError(`\u0E44\u0E21\u0E48\u0E1E\u0E1A\u0E44\u0E1F\u0E25\u0E4C / file not found: ${path12}`);
+            const path12 = resolve12(a2.path);
+            if (!existsSync21(path12)) throw new ToolError(`\u0E44\u0E21\u0E48\u0E1E\u0E1A\u0E44\u0E1F\u0E25\u0E4C / file not found: ${path12}`);
             asset = await state.api.project.addFileAsset(p, path12, { id: a2.id, kind: a2.kind, probe: state.api.probe });
           } else {
             throw new ToolError("\u0E15\u0E49\u0E2D\u0E07\u0E23\u0E30\u0E1A\u0E38 path \u0E2B\u0E23\u0E37\u0E2D aep+comp / give path, or aep + comp");
@@ -36949,7 +37302,7 @@ var init_tools2 = __esm({
         description: "\u0E23\u0E32\u0E22\u0E0A\u0E37\u0E48\u0E2D comp \u0E43\u0E19 .aep \u0E2B\u0E23\u0E37\u0E2D .ecproj (job \u2014 \u0E16\u0E49\u0E32\u0E04\u0E34\u0E27\u0E27\u0E48\u0E32\u0E07\u0E23\u0E2D\u0E1C\u0E25\u0E44\u0E21\u0E48\u0E40\u0E01\u0E34\u0E19 ~20 \u0E27\u0E34) \xB7 List comps in an .aep / .ecproj (job; waits up to ~20 s when idle)",
         input: { aep: external_exports.string(), wait: external_exports.boolean().optional().describe("wait up to ~20 s for the result (default: only when no other job is queued)") },
         handler: async (a2, state) => {
-          const aep = resolve11(a2.aep);
+          const aep = resolve12(a2.aep);
           return runAeJob2(state, "ae_list_comps", a2.wait, async () => ({ comps: await state.ae.listComps(aep) }));
         }
       }),
@@ -36958,7 +37311,7 @@ var init_tools2 = __esm({
         description: "\u0E14\u0E39 layer \u0E02\u0E2D\u0E07 comp (\u0E0A\u0E19\u0E34\u0E14, in/out, \u0E02\u0E49\u0E2D\u0E04\u0E27\u0E32\u0E21, effects, \u0E02\u0E2D\u0E1A\u0E40\u0E02\u0E15; job) \xB7 Inspect a comp's layers (job)",
         input: { aep: external_exports.string(), comp: external_exports.string(), atFrame: frames2.min(0).optional(), wait: external_exports.boolean().optional() },
         handler: async (a2, state) => {
-          const aep = resolve11(a2.aep);
+          const aep = resolve12(a2.aep);
           return runAeJob2(state, "ae_inspect_comp", a2.wait, async () => {
             const detail = await state.ae.inspectComp(aep, a2.comp, a2.atFrame);
             return { ...detail, ...isOpaque(detail, a2.comp) ? opaqueHint(state, aep, a2.comp) : {} };
@@ -36976,8 +37329,8 @@ var init_tools2 = __esm({
           wait: external_exports.boolean().optional()
         },
         handler: async (a2, state) => {
-          const aep = resolve11(a2.aep);
-          const saveAs = a2.saveAs ? resolve11(a2.saveAs) : void 0;
+          const aep = resolve12(a2.aep);
+          const saveAs = a2.saveAs ? resolve12(a2.saveAs) : void 0;
           if (saveAs && extname12(saveAs).toLowerCase() !== extname12(aep).toLowerCase()) throw new ToolError(`saveAs \u0E15\u0E49\u0E2D\u0E07\u0E40\u0E1B\u0E47\u0E19\u0E44\u0E1F\u0E25\u0E4C\u0E0A\u0E19\u0E34\u0E14\u0E40\u0E14\u0E35\u0E22\u0E27\u0E01\u0E31\u0E1A\u0E15\u0E49\u0E19\u0E09\u0E1A\u0E31\u0E1A (${extname12(aep)}) / saveAs must have the source's extension`);
           if (saveAs) assertConfined(state, saveAs, aep, "saveAs");
           else assertWritable(aep, "the .aep (in-place edit)");
@@ -37016,20 +37369,20 @@ var init_tools2 = __esm({
         handler: async (a2, state) => {
           if (!state.ae.create) throw new ToolError("AE backend cannot create projects");
           if (!a2.jsx === !a2.jsxPath) throw new ToolError("\u0E23\u0E30\u0E1A\u0E38 jsx \u0E2B\u0E23\u0E37\u0E2D jsxPath \u0E2D\u0E22\u0E48\u0E32\u0E07\u0E43\u0E14\u0E2D\u0E22\u0E48\u0E32\u0E07\u0E2B\u0E19\u0E36\u0E48\u0E07 / give exactly one of jsx or jsxPath");
-          const jsxPath = a2.jsxPath ? resolve11(a2.jsxPath) : void 0;
-          if (jsxPath && !existsSync20(jsxPath)) throw new ToolError(`\u0E44\u0E21\u0E48\u0E1E\u0E1A\u0E44\u0E1F\u0E25\u0E4C / file not found: ${jsxPath}`);
+          const jsxPath = a2.jsxPath ? resolve12(a2.jsxPath) : void 0;
+          if (jsxPath && !existsSync21(jsxPath)) throw new ToolError(`\u0E44\u0E21\u0E48\u0E1E\u0E1A\u0E44\u0E1F\u0E25\u0E4C / file not found: ${jsxPath}`);
           if (!jsxPath || a2.asset) requireProject(state);
-          const saveAs = resolve11(a2.saveAs);
+          const saveAs = resolve12(a2.saveAs);
           const ext = extname12(saveAs).toLowerCase();
           if (ext !== ".aep" && ext !== ".ecproj") throw new ToolError("saveAs \u0E15\u0E49\u0E2D\u0E07\u0E40\u0E1B\u0E47\u0E19 .aep \u0E2B\u0E23\u0E37\u0E2D .ecproj / saveAs must end in .aep or .ecproj");
           if (ext === ".ecproj" && !state.env.tools.effectcraftCli) throw new ToolError("\u0E44\u0E21\u0E48\u0E1E\u0E1A EffectCraft / effectcraft-cli not found (install EffectCraft or set EDITMCP_EFFECTCRAFT_DIR)");
-          if (existsSync20(saveAs)) throw new ToolError(`\u0E21\u0E35\u0E44\u0E1F\u0E25\u0E4C\u0E19\u0E35\u0E49\u0E41\u0E25\u0E49\u0E27 \u0E43\u0E0A\u0E49\u0E0A\u0E37\u0E48\u0E2D\u0E43\u0E2B\u0E21\u0E48 / refusing to overwrite: ${saveAs}`);
-          assertConfined(state, saveAs, jsxPath ?? join19(state.project.dir, "x"), "saveAs");
+          if (existsSync21(saveAs)) throw new ToolError(`\u0E21\u0E35\u0E44\u0E1F\u0E25\u0E4C\u0E19\u0E35\u0E49\u0E41\u0E25\u0E49\u0E27 \u0E43\u0E0A\u0E49\u0E0A\u0E37\u0E48\u0E2D\u0E43\u0E2B\u0E21\u0E48 / refusing to overwrite: ${saveAs}`);
+          assertConfined(state, saveAs, jsxPath ?? join20(state.project.dir, "x"), "saveAs");
           const existing = a2.asset?.id ? state.project.assets[a2.asset.id] : void 0;
           if (existing && existing.kind !== "aecomp") throw new ToolError(`asset id already in use by a ${existing.kind} file: ${a2.asset.id}`);
           const jsx = a2.jsx ?? await readFile13(jsxPath, "utf8");
           return runAeJob2(state, "ae_create", a2.wait, async () => {
-            const res = await state.ae.create({ jsx, saveAs, ...jsxPath ? { scriptDir: dirname9(jsxPath) } : {} });
+            const res = await state.ae.create({ jsx, saveAs, ...jsxPath ? { scriptDir: dirname11(jsxPath) } : {} });
             let asset;
             const p = state.project;
             if (p && a2.asset) {
@@ -37061,15 +37414,15 @@ var init_tools2 = __esm({
           wait: external_exports.boolean().optional()
         },
         handler: async (a2, state) => {
-          const aep = resolve11(a2.aep);
-          let out2 = a2.out ? resolve11(a2.out) : "";
+          const aep = resolve12(a2.aep);
+          let out2 = a2.out ? resolve12(a2.out) : "";
           if (out2) {
             assertConfined(state, out2, aep, "out");
-            await mkdir19(dirname9(out2), { recursive: true });
+            await mkdir20(dirname11(out2), { recursive: true });
           } else {
-            const dir = state.project ? state.api.project.projectPaths(state.project).review : join19(os10.tmpdir(), "editmcp");
-            await mkdir19(dir, { recursive: true });
-            out2 = join19(dir, `preview_${asciiSlug(a2.comp)}_${a2.frame}.png`);
+            const dir = state.project ? state.api.project.projectPaths(state.project).review : join20(os11.tmpdir(), "editmcp");
+            await mkdir20(dir, { recursive: true });
+            out2 = join20(dir, `preview_${asciiSlug(a2.comp)}_${a2.frame}.png`);
           }
           return runAeJob2(state, "ae_preview_frame", a2.wait, async () => {
             const png = await state.ae.previewFrame(aep, a2.comp, a2.frame, uniquePath3(out2));
@@ -37270,9 +37623,9 @@ var init_tools2 = __esm({
           const sequenceName = a2.sequenceName ?? `${p.meta.name}_${version3}`;
           const target = a2.target ?? "premiere";
           const xml = state.api.xmeml.writeXmeml(p, { sequenceName, flavor: target });
-          const dir = join19(state.api.project.projectPaths(p).out, version3);
-          await mkdir19(dir, { recursive: true });
-          const path12 = uniquePath3(join19(dir, `${fileSafe(p.meta.name)}${target === "premiere" ? "" : `_${target}`}.xml`));
+          const dir = join20(state.api.project.projectPaths(p).out, version3);
+          await mkdir20(dir, { recursive: true });
+          const path12 = uniquePath3(join20(dir, `${fileSafe(p.meta.name)}${target === "premiere" ? "" : `_${target}`}.xml`));
           await writeFile14(path12, xml, { encoding: "utf8", flag: "wx" });
           const warnings = xmemlExportWarnings(p);
           return {
@@ -37297,8 +37650,8 @@ var init_tools2 = __esm({
         },
         handler: async (a2, state) => {
           const p = requireProject(state);
-          const path12 = resolve11(a2.path);
-          if (!existsSync20(path12)) throw new ToolError(`\u0E44\u0E21\u0E48\u0E1E\u0E1A\u0E44\u0E1F\u0E25\u0E4C / file not found: ${path12}`);
+          const path12 = resolve12(a2.path);
+          if (!existsSync21(path12)) throw new ToolError(`\u0E44\u0E21\u0E48\u0E1E\u0E1A\u0E44\u0E1F\u0E25\u0E4C / file not found: ${path12}`);
           const r = state.api.xmeml.readXmeml(await readFile13(path12, "utf8"), p);
           const warnings = [...r.warnings ?? []];
           if (r.fps !== p.meta.fps) warnings.push(`fps \u0E43\u0E19 XML = ${r.fps} \u0E41\u0E15\u0E48\u0E42\u0E1B\u0E23\u0E40\u0E08\u0E01\u0E15\u0E4C = ${p.meta.fps}`);
@@ -37306,7 +37659,7 @@ var init_tools2 = __esm({
           const diff = diffTimelines(p.timeline, r.timeline);
           const summary = summarizeDiff(diff, p.meta.fps);
           const { errors } = validateCandidate(state, p, r.timeline);
-          const report2 = { file: basename13(path12), summary, diff, warnings, unresolvedPaths: r.unresolvedPaths };
+          const report2 = { file: basename14(path12), summary, diff, warnings, unresolvedPaths: r.unresolvedPaths };
           if (!a2.apply) {
             return {
               ok: true,
@@ -37319,7 +37672,7 @@ var init_tools2 = __esm({
             };
           }
           if (errors.length) throw new ToolError("\u0E44\u0E17\u0E21\u0E4C\u0E44\u0E25\u0E19\u0E4C\u0E08\u0E32\u0E01 XML \u0E44\u0E21\u0E48\u0E1C\u0E48\u0E32\u0E19\u0E01\u0E32\u0E23\u0E15\u0E23\u0E27\u0E08\u0E2A\u0E2D\u0E1A \u0E44\u0E21\u0E48\u0E44\u0E14\u0E49\u0E1A\u0E31\u0E19\u0E17\u0E36\u0E01 / imported timeline invalid, not applied", { errors, ...report2 });
-          const backup = await backupTimeline4(p, `before import_premiere_xml ${basename13(path12)}`);
+          const backup = await backupTimeline4(p, `before import_premiere_xml ${basename14(path12)}`);
           await commitOrThrow(state, p, r.timeline, "timeline");
           return { ok: true, applied: true, backup, ...report2, timeline: timelineSummary(state, p), hint: "\u0E22\u0E49\u0E2D\u0E19\u0E01\u0E25\u0E31\u0E1A\u0E44\u0E14\u0E49\u0E14\u0E49\u0E27\u0E22 timeline_restore / undo with timeline_restore" };
         }
@@ -37331,9 +37684,9 @@ var init_tools2 = __esm({
         handler: async (a2, state) => {
           const p = requireProject(state);
           if (!a2.backup) return { backups: await listBackups(p), hint: 'timeline_restore {backup: "<name>"} \u0E40\u0E1E\u0E37\u0E48\u0E2D\u0E22\u0E49\u0E2D\u0E19\u0E01\u0E25\u0E31\u0E1A / pass a name to restore' };
-          if (basename13(a2.backup) !== a2.backup || !BACKUP_RE.test(a2.backup)) throw new ToolError(`\u0E0A\u0E37\u0E48\u0E2D\u0E44\u0E1F\u0E25\u0E4C\u0E2A\u0E33\u0E23\u0E2D\u0E07\u0E44\u0E21\u0E48\u0E16\u0E39\u0E01\u0E15\u0E49\u0E2D\u0E07 / not a timeline backup name: ${a2.backup}`);
-          const file = join19(p.dir, "history", a2.backup);
-          if (!existsSync20(file)) throw new ToolError(`\u0E44\u0E21\u0E48\u0E1E\u0E1A\u0E44\u0E1F\u0E25\u0E4C\u0E2A\u0E33\u0E23\u0E2D\u0E07 / backup not found: ${a2.backup}`, { backups: (await listBackups(p)).map((b) => b.name) });
+          if (basename14(a2.backup) !== a2.backup || !BACKUP_RE.test(a2.backup)) throw new ToolError(`\u0E0A\u0E37\u0E48\u0E2D\u0E44\u0E1F\u0E25\u0E4C\u0E2A\u0E33\u0E23\u0E2D\u0E07\u0E44\u0E21\u0E48\u0E16\u0E39\u0E01\u0E15\u0E49\u0E2D\u0E07 / not a timeline backup name: ${a2.backup}`);
+          const file = join20(p.dir, "history", a2.backup);
+          if (!existsSync21(file)) throw new ToolError(`\u0E44\u0E21\u0E48\u0E1E\u0E1A\u0E44\u0E1F\u0E25\u0E4C\u0E2A\u0E33\u0E23\u0E2D\u0E07 / backup not found: ${a2.backup}`, { backups: (await listBackups(p)).map((b) => b.name) });
           let next;
           try {
             next = JSON.parse(await readFile13(file, "utf8")).timeline;
@@ -37355,7 +37708,7 @@ var init_tools2 = __esm({
         input: {},
         handler: async (_a, state) => {
           const env = state.env;
-          const freeRamGb = os10.freemem() / 2 ** 30;
+          const freeRamGb = os11.freemem() / 2 ** 30;
           let aeVersion = "unknown (not launched)";
           if (process.env["EDITMCP_ALLOW_AE"] === "1" && env.tools.afterfx) {
             try {
@@ -37401,7 +37754,7 @@ var init_tools2 = __esm({
 import { parseArgs } from "node:util";
 
 // src/mcp/server.ts
-import { resolve as resolve12 } from "node:path";
+import { resolve as resolve13 } from "node:path";
 import { fileURLToPath as fileURLToPath6 } from "node:url";
 
 // node_modules/zod/v4/core/core.js
@@ -37558,10 +37911,10 @@ function cached(getter) {
 function nullish(input) {
   return input === null || input === void 0;
 }
-function cleanRegex(source) {
-  const start = source.startsWith("^") ? 1 : 0;
-  const end = source.endsWith("$") ? source.length - 1 : source.length;
-  return source.slice(start, end);
+function cleanRegex(source2) {
+  const start = source2.startsWith("^") ? 1 : 0;
+  const end = source2.endsWith("$") ? source2.length - 1 : source2.length;
+  return source2.slice(start, end);
 }
 function floatSafeRemainder2(val, step) {
   const valDecCount = (val.toString().split(".")[1] || "").length;
@@ -44153,13 +44506,13 @@ function escapeLiteralCheckValue(literal2, refs) {
   return refs.patternStrategy === "escape" ? escapeNonAlphaNumeric(literal2) : literal2;
 }
 var ALPHA_NUMERIC = new Set("ABCDEFGHIJKLMNOPQRSTUVXYZabcdefghijklmnopqrstuvxyz0123456789");
-function escapeNonAlphaNumeric(source) {
+function escapeNonAlphaNumeric(source2) {
   let result = "";
-  for (let i2 = 0; i2 < source.length; i2++) {
-    if (!ALPHA_NUMERIC.has(source[i2])) {
+  for (let i2 = 0; i2 < source2.length; i2++) {
+    if (!ALPHA_NUMERIC.has(source2[i2])) {
       result += "\\";
     }
-    result += source[i2];
+    result += source2[i2];
   }
   return result;
 }
@@ -44229,60 +44582,60 @@ function stringifyRegExpWithFlags(regex, refs) {
     s: regex.flags.includes("s")
     // `.` matches newlines
   };
-  const source = flags.i ? regex.source.toLowerCase() : regex.source;
+  const source2 = flags.i ? regex.source.toLowerCase() : regex.source;
   let pattern = "";
   let isEscaped = false;
   let inCharGroup = false;
   let inCharRange = false;
-  for (let i2 = 0; i2 < source.length; i2++) {
+  for (let i2 = 0; i2 < source2.length; i2++) {
     if (isEscaped) {
-      pattern += source[i2];
+      pattern += source2[i2];
       isEscaped = false;
       continue;
     }
     if (flags.i) {
       if (inCharGroup) {
-        if (source[i2].match(/[a-z]/)) {
+        if (source2[i2].match(/[a-z]/)) {
           if (inCharRange) {
-            pattern += source[i2];
-            pattern += `${source[i2 - 2]}-${source[i2]}`.toUpperCase();
+            pattern += source2[i2];
+            pattern += `${source2[i2 - 2]}-${source2[i2]}`.toUpperCase();
             inCharRange = false;
-          } else if (source[i2 + 1] === "-" && source[i2 + 2]?.match(/[a-z]/)) {
-            pattern += source[i2];
+          } else if (source2[i2 + 1] === "-" && source2[i2 + 2]?.match(/[a-z]/)) {
+            pattern += source2[i2];
             inCharRange = true;
           } else {
-            pattern += `${source[i2]}${source[i2].toUpperCase()}`;
+            pattern += `${source2[i2]}${source2[i2].toUpperCase()}`;
           }
           continue;
         }
-      } else if (source[i2].match(/[a-z]/)) {
-        pattern += `[${source[i2]}${source[i2].toUpperCase()}]`;
+      } else if (source2[i2].match(/[a-z]/)) {
+        pattern += `[${source2[i2]}${source2[i2].toUpperCase()}]`;
         continue;
       }
     }
     if (flags.m) {
-      if (source[i2] === "^") {
+      if (source2[i2] === "^") {
         pattern += `(^|(?<=[\r
 ]))`;
         continue;
-      } else if (source[i2] === "$") {
+      } else if (source2[i2] === "$") {
         pattern += `($|(?=[\r
 ]))`;
         continue;
       }
     }
-    if (flags.s && source[i2] === ".") {
-      pattern += inCharGroup ? `${source[i2]}\r
-` : `[${source[i2]}\r
+    if (flags.s && source2[i2] === ".") {
+      pattern += inCharGroup ? `${source2[i2]}\r
+` : `[${source2[i2]}\r
 ]`;
       continue;
     }
-    pattern += source[i2];
-    if (source[i2] === "\\") {
+    pattern += source2[i2];
+    if (source2[i2] === "\\") {
       isEscaped = true;
-    } else if (inCharGroup && source[i2] === "]") {
+    } else if (inCharGroup && source2[i2] === "]") {
       inCharGroup = false;
-    } else if (!inCharGroup && source[i2] === "[") {
+    } else if (!inCharGroup && source2[i2] === "[") {
       inCharGroup = true;
     }
   }
@@ -45492,7 +45845,7 @@ var Protocol = class {
           return;
         }
         const pollInterval = task2.pollInterval ?? this._options?.defaultTaskPollInterval ?? 1e3;
-        await new Promise((resolve13) => setTimeout(resolve13, pollInterval));
+        await new Promise((resolve14) => setTimeout(resolve14, pollInterval));
         options?.signal?.throwIfAborted();
       }
     } catch (error2) {
@@ -45509,7 +45862,7 @@ var Protocol = class {
    */
   request(request, resultSchema, options) {
     const { relatedRequestId, resumptionToken, onresumptiontoken, task, relatedTask } = options ?? {};
-    return new Promise((resolve13, reject) => {
+    return new Promise((resolve14, reject) => {
       const earlyReject = (error2) => {
         reject(error2);
       };
@@ -45587,7 +45940,7 @@ var Protocol = class {
           if (!parseResult.success) {
             reject(parseResult.error);
           } else {
-            resolve13(parseResult.data);
+            resolve14(parseResult.data);
           }
         } catch (error2) {
           reject(error2);
@@ -45849,12 +46202,12 @@ var Protocol = class {
       }
     } catch {
     }
-    return new Promise((resolve13, reject) => {
+    return new Promise((resolve14, reject) => {
       if (signal.aborted) {
         reject(new McpError(ErrorCode.InvalidRequest, "Request cancelled"));
         return;
       }
-      const timeoutId = setTimeout(resolve13, interval);
+      const timeoutId = setTimeout(resolve14, interval);
       signal.addEventListener("abort", () => {
         clearTimeout(timeoutId);
         reject(new McpError(ErrorCode.InvalidRequest, "Request cancelled"));
@@ -46986,7 +47339,7 @@ var McpServer = class {
     let task = createTaskResult.task;
     const pollInterval = task.pollInterval ?? 5e3;
     while (task.status !== "completed" && task.status !== "failed" && task.status !== "cancelled") {
-      await new Promise((resolve13) => setTimeout(resolve13, pollInterval));
+      await new Promise((resolve14) => setTimeout(resolve14, pollInterval));
       const updatedTask = await extra.taskStore.getTask(taskId);
       if (!updatedTask) {
         throw new McpError(ErrorCode.InternalError, `Task ${taskId} not found during polling`);
@@ -47650,12 +48003,12 @@ var StdioServerTransport = class {
     this.onclose?.();
   }
   send(message) {
-    return new Promise((resolve13) => {
+    return new Promise((resolve14) => {
       const json3 = serializeMessage(message);
       if (this._stdout.write(json3)) {
-        resolve13();
+        resolve14();
       } else {
-        this._stdout.once("drain", resolve13);
+        this._stdout.once("drain", resolve14);
       }
     });
   }
@@ -47710,8 +48063,8 @@ function isMain(metaUrl) {
   const entry = process.argv[1];
   if (!entry) return false;
   try {
-    const a2 = resolve12(fileURLToPath6(metaUrl));
-    const b = resolve12(entry);
+    const a2 = resolve13(fileURLToPath6(metaUrl));
+    const b = resolve13(entry);
     return process.platform === "win32" ? a2.toLowerCase() === b.toLowerCase() : a2 === b;
   } catch {
     return false;
@@ -47925,6 +48278,7 @@ async function main(argv = process.argv.slice(2)) {
         const r = await installBridge2();
         out(`installed: ${r.installedTo}`);
         out(`PlayerDebugMode=1 (unsigned extensions allowed): ${r.debugModeKeys.join(", ")}`);
+        if (r.backup) out(`previous bridge kept at: ${r.backup}${r.keptUserActions ? " (host.user.jsx carried over)" : ""} / \u0E40\u0E01\u0E47\u0E1A bridge \u0E40\u0E14\u0E34\u0E21\u0E44\u0E27\u0E49\u0E17\u0E35\u0E48\u0E19\u0E35\u0E48`);
         out("Premiere does not need to be open: CatCut starts it with the project when needed (premiere_open). If Premiere is open now, `catcut ready` says whether it needs one restart.");
         out("\u0E15\u0E34\u0E14\u0E15\u0E31\u0E49\u0E07\u0E41\u0E25\u0E49\u0E27 \u2014 \u0E44\u0E21\u0E48\u0E15\u0E49\u0E2D\u0E07\u0E40\u0E1B\u0E34\u0E14 Premiere \u0E40\u0E2D\u0E07 CatCut \u0E40\u0E1B\u0E34\u0E14\u0E43\u0E2B\u0E49\u0E1E\u0E23\u0E49\u0E2D\u0E21\u0E42\u0E1B\u0E23\u0E40\u0E08\u0E01\u0E15\u0E4C\u0E40\u0E21\u0E37\u0E48\u0E2D\u0E15\u0E49\u0E2D\u0E07\u0E43\u0E0A\u0E49; \u0E16\u0E49\u0E32\u0E40\u0E1B\u0E34\u0E14\u0E2D\u0E22\u0E39\u0E48\u0E15\u0E2D\u0E19\u0E19\u0E35\u0E49 `catcut ready` \u0E08\u0E30\u0E1A\u0E2D\u0E01\u0E27\u0E48\u0E32\u0E15\u0E49\u0E2D\u0E07\u0E1B\u0E34\u0E14\u2013\u0E40\u0E1B\u0E34\u0E14\u0E2B\u0E19\u0E36\u0E48\u0E07\u0E04\u0E23\u0E31\u0E49\u0E07\u0E44\u0E2B\u0E21");
         return 0;

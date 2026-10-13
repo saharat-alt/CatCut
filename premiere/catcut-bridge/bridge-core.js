@@ -25,7 +25,12 @@ function createBridge(o) {
 
   function write(file, obj) {
     var tmp = file + '.' + pid + '.tmp';
-    fs.writeFileSync(tmp, JSON.stringify(obj), 'utf8');
+    // cleanup tools empty temp folders: recreate the queue instead of going silent
+    try { fs.writeFileSync(tmp, JSON.stringify(obj), 'utf8'); } catch (e0) {
+      if (!e0 || e0.code !== 'ENOENT') throw e0;
+      fs.mkdirSync(dir, { recursive: true });
+      fs.writeFileSync(tmp, JSON.stringify(obj), 'utf8');
+    }
     // Windows refuses the rename while CatCut is reading the target: retry briefly
     for (var i = 0; ; i++) {
       try { fs.renameSync(tmp, file); return; } catch (e) {
@@ -51,9 +56,13 @@ function createBridge(o) {
     return !!(hb && hb.pid !== pid && now() - hb.ts < STALE_MS && alive(hb.pid));
   }
 
+  /** Changes when host.jsx or host.user.jsx (next to it) changes; null without a host file. */
   function hostMtime() {
     if (!o.hostFile) return null;
-    try { return fs.statSync(o.hostFile).mtimeMs; } catch (e) { return null; }
+    var stamp;
+    try { stamp = String(fs.statSync(o.hostFile).mtimeMs); } catch (e) { return null; }
+    try { stamp += '/' + fs.statSync(path.join(path.dirname(o.hostFile), 'host.user.jsx')).mtimeMs; } catch (e2) { /* no user file */ }
+    return stamp;
   }
 
   // ExtendScript gets the job as an object literal; U+2028/9 would end the line in ES3.
@@ -108,7 +117,10 @@ function createBridge(o) {
   function tick() {
     if (!state.serving || state.busy || state.pinging) return Promise.resolve(false);
     var names;
-    try { names = fs.readdirSync(dir); } catch (e) { return Promise.resolve(false); }
+    try { names = fs.readdirSync(dir); } catch (e) {
+      try { fs.mkdirSync(dir, { recursive: true }); } catch (e2) { /* next tick */ }
+      return Promise.resolve(false);
+    }
     var reqs = names.filter(function (n) { return /^[A-Za-z0-9_-]+\.req\.json$/.test(n); }).sort();
     if (!reqs.length) return Promise.resolve(false);
     var id = reqs[0].replace(/\.req\.json$/, '');

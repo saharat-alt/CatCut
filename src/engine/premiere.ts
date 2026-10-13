@@ -14,7 +14,7 @@ import { execa } from 'execa';
 import { existsSync } from 'node:fs';
 import { cp, mkdir, readFile, rename, rm, unlink, writeFile } from 'node:fs/promises';
 import os from 'node:os';
-import { join, resolve } from 'node:path';
+import { dirname, join, resolve } from 'node:path';
 import { randomUUID } from 'node:crypto';
 import { fileURLToPath } from 'node:url';
 import type { UserAction } from '../core/types.js';
@@ -54,8 +54,17 @@ export interface PremiereClient {
   readonly installDir: string;
 }
 
+/** Where bridges before 0.3 kept the queue (cleanup tools empty TEMP, which dropped the bridge). */
+export function legacyQueueDir(): string {
+  return join(os.tmpdir(), 'catcut-premiere-bridge');
+}
+
+/** %LOCALAPPDATA%\CatCut\bridge (same rule as the bridge's index.html); TEMP only when that path is not ASCII. */
 export function defaultQueueDir(): string {
-  return process.env['CATCUT_PREMIERE_BRIDGE_DIR'] ?? join(os.tmpdir(), 'catcut-premiere-bridge');
+  const env = process.env['CATCUT_PREMIERE_BRIDGE_DIR'];
+  if (env) return env;
+  const local = process.env['LOCALAPPDATA'];
+  return local && isAscii(local) ? join(local, 'CatCut', 'bridge') : legacyQueueDir();
 }
 
 export function cepExtensionsDir(): string {
@@ -63,18 +72,32 @@ export function cepExtensionsDir(): string {
 }
 
 export function createPremiereClient(opts: { queueDir?: string; staleMs?: number; pollMs?: number; installDir?: string } = {}): PremiereClient {
-  const queueDir = opts.queueDir ?? defaultQueueDir();
+  // an explicit folder is the only one; by default an older bridge still answering in TEMP is used too
+  const dirs = opts.queueDir ? [opts.queueDir] : [...new Set([defaultQueueDir(), legacyQueueDir()])];
+  let queueDir = dirs[0]!;
   const staleMs = opts.staleMs ?? 10_000;
   const pollMs = opts.pollMs ?? 100;
   const installDir = opts.installDir ?? join(cepExtensionsDir(), BRIDGE_ID);
   let chain: Promise<unknown> = Promise.resolve();
 
+  type Beat = { protocol?: number; bridge?: string; premiere?: string; project?: PremiereProjectRef | null; busy?: { action?: string; since?: number } | null; ts?: number };
+  async function beatIn(dir: string): Promise<Beat | undefined> {
+    try {
+      const hb = JSON.parse((await readFile(join(dir, 'bridge.json'), 'utf8')).replace(/^﻿/, '')) as Beat;
+      return hb && typeof hb.ts === 'number' ? hb : undefined;
+    } catch { return undefined; }
+  }
+
   async function status(): Promise<PremiereBridgeStatus> {
+    // the freshest heartbeat decides which folder this client talks to
+    let hb: Beat | undefined;
+    for (const d of dirs) {
+      const b = await beatIn(d);
+      if (b && (!hb || (b.ts ?? 0) > (hb.ts ?? 0))) { hb = b; queueDir = d; }
+    }
     const base: PremiereBridgeStatus = { installed: existsSync(join(installDir, 'CSXS', 'manifest.xml')), installDir, connected: false, queueDir };
-    let hb: { protocol?: number; bridge?: string; premiere?: string; project?: PremiereProjectRef | null; busy?: { action?: string; since?: number } | null; ts?: number } | undefined;
-    try { hb = JSON.parse((await readFile(join(queueDir, 'bridge.json'), 'utf8')).replace(/^﻿/, '')) as typeof hb; } catch { return base; }
-    if (!hb || typeof hb.ts !== 'number') return base;
-    const age = Date.now() - hb.ts;
+    if (!hb) return base;
+    const age = Date.now() - hb.ts!;
     return {
       ...base, connected: age < staleMs && hb.protocol === PROTOCOL, heartbeatAgeMs: Math.max(0, age),
       ...(hb.premiere ? { premiere: hb.premiere } : {}), ...(hb.bridge ? { bridge: hb.bridge } : {}), project: hb.project ?? null,
@@ -95,6 +118,7 @@ export function createPremiereClient(opts: { queueDir?: string; staleMs?: number
     const id = `${Date.now().toString(36).padStart(9, '0')}-${randomUUID().slice(0, 8)}`;
     const req = join(queueDir, `${id}.req.json`);
     const res = join(queueDir, `${id}.res.json`);
+    await mkdir(queueDir, { recursive: true });
     await writeFile(`${req}.tmp`, JSON.stringify({ id, action, args, deadline: Date.now() + timeoutMs }), 'utf8');
     await rename(`${req}.tmp`, req);
     const until = Date.now() + timeoutMs;
@@ -104,6 +128,10 @@ export function createPremiereClient(opts: { queueDir?: string; staleMs?: number
       if (raw !== undefined) {
         await unlink(res).catch(() => undefined);
         const r = JSON.parse(raw.replace(/^﻿/, '')) as { ok?: boolean; data?: T; error?: string };
+        // an older bridge without this action: keep working, say exactly what needs the update
+        if (r.ok !== true && /^unknown action: /.test(r.error ?? '')) {
+          throw new UserActionError(`Premiere: ${r.error} (bridge ${st.bridge ?? 'old'})`, ACTIONS.bridgeUpdate({ installed: st.bridge ?? 'เก่า', wanted: `ใหม่กว่า (ต้องใช้คำสั่ง ${action})` }));
+        }
         if (r.ok !== true) throw new Error(`Premiere: ${r.error ?? 'request failed'}`);
         return r.data as T;
       }
@@ -123,7 +151,7 @@ export function createPremiereClient(opts: { queueDir?: string; staleMs?: number
   }
 
   return {
-    queueDir,
+    get queueDir() { return queueDir; },
     installDir,
     status,
     // one request at a time from this process
@@ -186,13 +214,15 @@ async function packageVersion(dir: string): Promise<string | undefined> {
 }
 
 export interface PremiereDiagnosis {
-  /** connected, current bridge, nothing in the way */
+  /** connected and nothing in the way (an older bridge still counts: it works with fewer actions) */
   ready: boolean;
   status: PremiereBridgeStatus;
   running: boolean;
   versions: { catcut?: string; installed?: string; loaded?: string };
-  /** what the person must do, when anything */
+  /** what the person must do, when anything (with ready: true it is advice, not a blocker) */
   userAction?: UserAction;
+  /** an older bridge: the newer premiere_* tools answer with the update card */
+  limited?: boolean;
   /** one line for the agent */
   note: string;
 }
@@ -203,21 +233,25 @@ export async function diagnosePremiere(client: PremiereClient, host: PremiereHos
   const running = status.connected || (await host.running()).length > 0;
   const out = (o: Partial<PremiereDiagnosis> & { note: string }): PremiereDiagnosis => ({ ready: false, status, running, versions, ...o });
   if (!opts.premiereExe && !running) return out({ userAction: ACTIONS.premiereNotFound(), note: 'Premiere Pro not found' });
-  if (!status.installed) return out({ userAction: ACTIONS.bridgeNotInstalled(), note: 'bridge not installed' });
+  if (!status.installed && !status.connected) return out({ userAction: ACTIONS.bridgeNotInstalled(), note: 'bridge not installed' });
+  // an old install or an old bridge in memory: keep working, advise the update
+  let advice: { userAction: UserAction; note: string } | undefined;
   if (versions.catcut && versions.installed !== versions.catcut) {
-    return out({ userAction: ACTIONS.bridgeUpdate({ installed: versions.installed ?? 'เก่า', wanted: versions.catcut }), note: `installed bridge ${versions.installed ?? '?'} is older than CatCut's ${versions.catcut}` });
+    advice = { userAction: ACTIONS.bridgeUpdate({ installed: versions.installed ?? 'เก่า', wanted: versions.catcut }), note: `installed bridge ${versions.installed ?? '?'} is older than CatCut's ${versions.catcut}` };
+  } else if (status.connected && versions.installed && status.bridge !== versions.installed) {
+    advice = { userAction: ACTIONS.bridgeOutdated({ running: status.bridge ?? 'เก่า', wanted: versions.installed }), note: `Premiere runs bridge ${status.bridge ?? '?'}, installed ${versions.installed}` };
   }
-  const missing = await host.debugModeMissing();
-  if (missing.length) return out({ userAction: ACTIONS.bridgeNotInstalled(), note: `PlayerDebugMode not set: ${missing.join(', ')}` });
   if (status.connected) {
-    if (versions.installed && status.bridge !== versions.installed) {
-      return out({ userAction: ACTIONS.bridgeOutdated({ running: status.bridge ?? 'เก่า', wanted: versions.installed }), note: `Premiere runs bridge ${status.bridge ?? '?'}, installed ${versions.installed}` });
-    }
     if (status.busy && status.busy.seconds * 1000 >= DIALOG_AFTER_MS) {
       return out({ userAction: ACTIONS.premiereDialog({ action: status.busy.action, seconds: status.busy.seconds }), note: `Premiere busy with ${status.busy.action} for ${status.busy.seconds} s` });
     }
-    return out({ ready: true, note: `connected: Premiere ${status.premiere ?? '?'}, project ${status.project?.name ?? 'none'}` });
+    const where = `Premiere ${status.premiere ?? '?'}, project ${status.project?.name ?? 'none'}`;
+    if (advice) return out({ ready: true, limited: true, userAction: advice.userAction, note: `connected (${where}); ${advice.note}: newer premiere_* tools need the update` });
+    return out({ ready: true, note: `connected: ${where}` });
   }
+  if (advice) return out(advice);
+  const missing = await host.debugModeMissing();
+  if (missing.length) return out({ userAction: ACTIONS.bridgeNotInstalled(), note: `PlayerDebugMode not set: ${missing.join(', ')}` });
   if (running) return out({ userAction: ACTIONS.bridgeNotStarted(), note: 'Premiere runs but the bridge does not answer' });
   return out({ note: 'Premiere is closed (fine: premiere_open starts it with the project)' });
 }
@@ -250,7 +284,7 @@ export async function openPremiere(client: PremiereClient, host: PremiereHost, o
   let d = await diagnosePremiere(client, host, { ...(opts.premiereExe ? { premiereExe: opts.premiereExe } : {}), ...(opts.sourceDir ? { sourceDir: opts.sourceDir } : {}) });
   let launched = false;
   let pid: number | undefined;
-  if (!d.ready && d.userAction && d.userAction.code !== 'bridge-not-started') throw new UserActionError(d.note, d.userAction);
+  if (!d.ready && d.userAction && !['bridge-not-started', 'bridge-update', 'bridge-outdated'].includes(d.userAction.code)) throw new UserActionError(d.note, d.userAction);
   if (!d.status.connected) {
     if (!d.running) {
       if (!opts.premiereExe) throw new UserActionError('Premiere Pro not found', ACTIONS.premiereNotFound());
@@ -293,21 +327,44 @@ export function bridgeSourceDir(): string {
 /** CEP runtimes Premiere 2020 → 2026 load (CSXS.9 … CSXS.12). */
 const CSXS_VERSIONS = [9, 10, 11, 12];
 
-export interface InstallResult { installedTo: string; debugModeKeys: string[] }
+export interface InstallResult {
+  installedTo: string;
+  debugModeKeys: string[];
+  /** the previous bridge folder, copied before it was replaced (may hold per-job edits) */
+  backup?: string;
+  /** host.user.jsx carried over into the new install */
+  keptUserActions: boolean;
+}
+
+/** Where replaced bridges are kept (outside the CEP folder: Premiere must not load them). */
+export function bridgeBackupRoot(): string {
+  return join(process.env['LOCALAPPDATA'] ?? join(os.homedir(), 'AppData', 'Local'), 'CatCut', 'bridge-backups');
+}
 
 /**
  * Copies the extension into the user's CEP folder (replacing an older CatCut bridge only) and sets
  * PlayerDebugMode=1 for the CEP runtimes, which lets Premiere load an unsigned extension.
  * A running Premiere picks up host.jsx changes by itself; bridge-core/index changes need one restart.
  */
-export async function installBridge(opts: { spawn?: SpawnFn; source?: string; extensionsDir?: string } = {}): Promise<InstallResult> {
+export async function installBridge(opts: { spawn?: SpawnFn; source?: string; extensionsDir?: string; backupRoot?: string } = {}): Promise<InstallResult> {
   const spawn = opts.spawn ?? execa;
   const source = opts.source ?? bridgeSourceDir();
   if (!existsSync(join(source, 'CSXS', 'manifest.xml'))) throw new Error(`bridge sources not found: ${source}`);
   const dest = join(opts.extensionsDir ?? cepExtensionsDir(), BRIDGE_ID);
+  let backup: string | undefined;
+  let userFile: string | undefined;
+  if (existsSync(dest)) {
+    // a bridge someone edited in place must not vanish: keep a full copy, carry host.user.jsx over
+    const stamp = new Date().toISOString().replace(/[:.]/g, '-');
+    backup = join(opts.backupRoot ?? bridgeBackupRoot(), `${BRIDGE_ID}-${stamp}`);
+    await mkdir(dirname(backup), { recursive: true });
+    await cp(dest, backup, { recursive: true, errorOnExist: true, force: false });
+    if (existsSync(join(dest, 'host.user.jsx'))) userFile = join(backup, 'host.user.jsx');
+  }
   await rm(dest, { recursive: true, force: true });
   await mkdir(dest, { recursive: true });
   await cp(source, dest, { recursive: true });
+  if (userFile) await cp(userFile, join(dest, 'host.user.jsx'));
   const keys: string[] = [];
   for (const v of CSXS_VERSIONS) {
     const key = `HKCU\\Software\\Adobe\\CSXS.${v}`;
@@ -315,7 +372,7 @@ export async function installBridge(opts: { spawn?: SpawnFn; source?: string; ex
     if (r.exitCode !== 0) throw new Error(`could not set ${key}\\PlayerDebugMode: ${String(r.stderr ?? '').trim()}`);
     keys.push(key);
   }
-  return { installedTo: dest, debugModeKeys: keys };
+  return { installedTo: dest, debugModeKeys: keys, ...(backup ? { backup } : {}), keptUserActions: !!userFile };
 }
 
 /** Removes the extension folder (PlayerDebugMode stays: other unsigned extensions may need it). */

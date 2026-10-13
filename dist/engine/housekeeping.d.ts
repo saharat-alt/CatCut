@@ -72,6 +72,8 @@ export interface DiskReport {
     keptVersions: string[];
     warnings: string[];
 }
+/** AE disk cache folder and its size, without starting AE (the reshoot job grew it ~20 GB in 3 h). */
+export declare function aeDiskCache(env?: Record<string, string | undefined>): Promise<AeCacheInfo>;
 export declare function diskReport(p: Project, opts?: HousekeepingOptions): Promise<DiskReport>;
 /**
  * Free-space gate for a build: error when the project drive would have < 5 GB left after writing

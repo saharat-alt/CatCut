@@ -1,5 +1,14 @@
 # CatCut (EDITMCP) implementation status
 
+## อัปเดต 2026-10-13: แก้ sequence เดิมใน Premiere (CATCUT_FEATURE_REQUEST.md จากงาน Thai Agri)
+
+- อ่าน: `premiere_timeline_get` (ทุกคลิปทุกแทร็กเป็นเฟรม), `premiere_clip_effects` (พารามิเตอร์ คีย์เฟรม สี)
+- แก้: `premiere_edit {ops[]}` remove (+ เสียงที่ลิงก์), trim, move, set_speed, overwrite (ไฟล์/AE comp, ลบเสียงเปล่า), replace_media, relink, rename, set_motion, add/remove_effect, set_effect_param — ระบุคลิปด้วย track+start+end(+name) ถ้าไม่ตรงไม่แก้; dry run เป็นค่าเริ่มต้น; apply = Save จุดย้อนกลับ + สำเนา .prproj ที่ `%LOCALAPPDATA%\CatCut\premiere-backups` → แก้ → ตรวจ signature คลิปอื่น; Save ผลเมื่อ `save: true`; `premiere_undo_last`
+- `premiere_place_ae_comp`, `premiere_frames`, `premiere_export_range` (ค่าเริ่มต้น preset "Match Source - Adaptive High Bitrate" ของ Premiere), `ae_live_run` (เฉพาะเมื่อผู้ใช้สั่ง, ผ่าน BridgeTalk)
+- bridge 0.3.0: คิวย้ายไป `%LOCALAPPDATA%\CatCut\bridge` (สร้างใหม่เองถ้าถูกลบ), ยังคุยกับ bridge เก่าใน TEMP ได้; bridge เก่าไม่บล็อก — คำสั่งที่ไม่มีตอบการ์ดอัปเดต; `host.user.jsx` สำหรับคำสั่งเฉพาะงาน (โหลดใหม่เองเมื่อแก้, อยู่รอดหลังติดตั้งทับ); ติดตั้งทับจะสำรอง bridge เดิมไว้ที่ `%LOCALAPPDATA%\CatCut\bridge-backups`; timeout ตั้งได้ (`timeoutSec`)
+- `ready_check` แสดงขนาด AE Disk Cache (ระหว่างงานนี้ C: เต็มจาก `Temp\Adobe` ~30 GB)
+- `npm test`: 34 files ผ่าน (1 skipped) — ทุกอย่างทดสอบกับ Premiere จำลอง; **ยังไม่ได้ลองกับ Premiere จริง**: `closeDocument`, `importAEComps`, `TrackItem.move`, การตั้ง `start/end/inPoint`, QE `addVideoEffect`/`getComponentAt().remove()`, `exportFramePNG`, `exportAsMediaDirect`, BridgeTalk
+
 ## อัปเดต 2026-10-12: ง่ายขึ้น ไม่ต้องเปิดโปรแกรมค้าง (DESIGN ข้อ 14, จากงาน Thai Agri Foods reshoot)
 
 - `ready_check` / `catcut ready`: การ์ดต่อโปรแกรม (ffmpeg, After Effects, Premiere + bridge, ดิสก์) ตรวจโดยไม่เปิด Adobe — ทดลองบนเครื่องนี้แล้ว: เจอ AE 26.5 พร้อม, bridge ที่ติดตั้งเป็นรุ่นเก่า (ของ Codex), C: เหลือน้อย

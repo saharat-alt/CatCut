@@ -19,7 +19,7 @@ import { card } from '../core/user-action.js';
 import { requireProject, type AppState } from './state.js';
 import { needsUser, RELAY, tool, ToolError, type ToolDef } from './tooldef.js';
 
-function client(state: AppState): PremiereClient {
+export function client(state: AppState): PremiereClient {
   state.premiere ??= createPremiereClient();
   return state.premiere;
 }
@@ -44,7 +44,7 @@ function assertProject(open: PremiereProjectRef | null | undefined, wanted: stri
  * A full .prproj path is opened when needed (Premiere started or the project opened); a bare name
  * must already be the active project.
  */
-async function ensureProject(state: AppState, wanted: string): Promise<{ project: PremiereProjectRef; launched: boolean }> {
+export async function ensureProject(state: AppState, wanted: string): Promise<{ project: PremiereProjectRef; launched: boolean }> {
   const c = client(state);
   if (/[\\/]/.test(wanted) && /\.prproj$/i.test(wanted.trim())) {
     const now = await c.status();
@@ -63,7 +63,7 @@ async function ensureProject(state: AppState, wanted: string): Promise<{ project
 }
 
 /** Told after every Premiere tool: is it saved, may Premiere be closed. */
-function closeHint(state: AppState, saved: boolean): string {
+export function closeHint(state: AppState, saved: boolean): string {
   const ours = !!state.premiereLaunched;
   if (!saved) return 'ยังไม่ได้ Save ใน Premiere: ถ้าจะปิด ให้ premiere_save ก่อน (หรือ premiere_close ซึ่ง Save ให้) / not saved yet';
   return ours
