@@ -19980,8 +19980,7 @@ function mergeVersions(live, base, ours, theirs, conflicts) {
   if (inserted) arr.sort((x, y) => versionNo(x["id"]) - versionNo(y["id"]));
 }
 function protectedPaths() {
-  const extra = (process.env["EDITMCP_PROTECTED_PATHS"] ?? "").split(";").map((s) => s.trim()).filter(Boolean);
-  return [...BUILTIN_PROTECTED, ...extra];
+  return (process.env["EDITMCP_PROTECTED_PATHS"] ?? "").split(";").map((s) => s.trim()).filter(Boolean);
 }
 function pathKey2(p) {
   const r = path6.resolve(p).replace(/[\\/]+$/, "");
@@ -20523,7 +20522,7 @@ function nextVersionId(p) {
     if (!p.versions.some((v) => v.id === id) && !existsSync2(path6.join(p.dir, "out", id))) return id;
   }
 }
-var PROJECT_FILE, ProjectConflictError, ProjectLockedError, bases, isObj, same, BUILTIN_PROTECTED, LOCK_FILE, LOCK_TIMEOUT_MS, LOCK_STALE_MS, saveQueues, AUDIO_EXT, STILL_EXT, isFrames, SLOT_EPS;
+var PROJECT_FILE, ProjectConflictError, ProjectLockedError, bases, isObj, same, LOCK_FILE, LOCK_TIMEOUT_MS, LOCK_STALE_MS, saveQueues, AUDIO_EXT, STILL_EXT, isFrames, SLOT_EPS;
 var init_project = __esm({
   "src/core/project.ts"() {
     "use strict";
@@ -20551,7 +20550,6 @@ var init_project = __esm({
     bases = /* @__PURE__ */ new WeakMap();
     isObj = (v) => !!v && typeof v === "object" && !Array.isArray(v);
     same = (a2, b) => hashJson(a2) === hashJson(b);
-    BUILTIN_PROTECTED = ["D:\\261009_STB50Y_THAI-WORLD_CSR"];
     LOCK_FILE = "project.lock";
     LOCK_TIMEOUT_MS = 15e3;
     LOCK_STALE_MS = 2 * 6e4;
@@ -28225,24 +28223,28 @@ var init_user_action = __esm({
       bridgeNotStarted: () => ({
         code: "bridge-not-started",
         app: "premiere",
-        title: "\u0E40\u0E1B\u0E34\u0E14 panel CatCut Bridge \u0E43\u0E19 Premiere",
-        steps: ["\u0E43\u0E19 Premiere: Window > Extensions > CatCut Bridge", "\u0E23\u0E2D\u0E08\u0E19 panel \u0E02\u0E36\u0E49\u0E19 connected (\u0E1B\u0E34\u0E14 panel \u0E44\u0E14\u0E49 \u0E41\u0E15\u0E48\u0E2B\u0E49\u0E32\u0E21\u0E1B\u0E34\u0E14 Premiere \u0E23\u0E30\u0E2B\u0E27\u0E48\u0E32\u0E07 CatCut \u0E17\u0E33\u0E07\u0E32\u0E19)"],
-        why: "Premiere \u0E40\u0E1B\u0E34\u0E14\u0E2D\u0E22\u0E39\u0E48\u0E41\u0E15\u0E48 bridge \u0E44\u0E21\u0E48\u0E40\u0E23\u0E34\u0E48\u0E21\u0E17\u0E33\u0E07\u0E32\u0E19\u0E40\u0E2D\u0E07 (\u0E1A\u0E32\u0E07 Premiere \u0E44\u0E21\u0E48\u0E2A\u0E48\u0E07\u0E2A\u0E31\u0E0D\u0E0D\u0E32\u0E13\u0E40\u0E23\u0E34\u0E48\u0E21\u0E43\u0E2B\u0E49 extension \u0E17\u0E35\u0E48\u0E0B\u0E48\u0E2D\u0E19\u0E2D\u0E22\u0E39\u0E48)",
-        frequency: "each-time",
+        title: "\u0E40\u0E1B\u0E34\u0E14 panel CatCut Bridge \u0E43\u0E19 Premiere \u0E41\u0E25\u0E49\u0E27\u0E27\u0E32\u0E07\u0E17\u0E34\u0E49\u0E07\u0E44\u0E27\u0E49",
+        steps: [
+          "\u0E43\u0E19 Premiere: Window > Extensions > CatCut Bridge",
+          "\u0E23\u0E2D\u0E08\u0E19 panel \u0E02\u0E36\u0E49\u0E19 connected \u0E41\u0E25\u0E49\u0E27\u0E27\u0E32\u0E07\u0E17\u0E34\u0E49\u0E07\u0E44\u0E27\u0E49\u0E40\u0E1B\u0E47\u0E19\u0E41\u0E17\u0E47\u0E1A\u0E43\u0E19 workspace (\u0E22\u0E48\u0E2D\u0E2B\u0E23\u0E37\u0E2D\u0E25\u0E32\u0E01\u0E44\u0E1B\u0E21\u0E38\u0E21\u0E44\u0E14\u0E49 \u0E41\u0E15\u0E48\u0E2D\u0E22\u0E48\u0E32\u0E01\u0E14\u0E1B\u0E34\u0E14 panel)",
+          "\u0E04\u0E23\u0E31\u0E49\u0E07\u0E15\u0E48\u0E2D\u0E44\u0E1B Premiere \u0E08\u0E30\u0E40\u0E1B\u0E34\u0E14 panel \u0E19\u0E35\u0E49\u0E40\u0E2D\u0E07\u0E1E\u0E23\u0E49\u0E2D\u0E21\u0E42\u0E1B\u0E23\u0E41\u0E01\u0E23\u0E21 \u0E44\u0E21\u0E48\u0E15\u0E49\u0E2D\u0E07\u0E17\u0E33\u0E0B\u0E49\u0E33"
+        ],
+        why: "Premiere \u0E40\u0E1B\u0E34\u0E14\u0E2D\u0E22\u0E39\u0E48\u0E41\u0E15\u0E48 bridge \u0E44\u0E21\u0E48\u0E40\u0E23\u0E34\u0E48\u0E21\u0E40\u0E2D\u0E07 \u0E17\u0E31\u0E49\u0E07\u0E17\u0E35\u0E48 CatCut \u0E40\u0E23\u0E35\u0E22\u0E01 Premiere \u0E02\u0E36\u0E49\u0E19\u0E21\u0E32\u0E14\u0E49\u0E32\u0E19\u0E2B\u0E19\u0E49\u0E32\u0E41\u0E25\u0E49\u0E27 (\u0E1A\u0E32\u0E07 Premiere \u0E44\u0E21\u0E48\u0E2A\u0E48\u0E07\u0E2A\u0E31\u0E0D\u0E0D\u0E32\u0E13\u0E40\u0E23\u0E34\u0E48\u0E21\u0E43\u0E2B\u0E49 extension \u0E17\u0E35\u0E48\u0E0B\u0E48\u0E2D\u0E19\u0E2D\u0E22\u0E39\u0E48) \u2014 panel \u0E17\u0E35\u0E48\u0E04\u0E49\u0E32\u0E07\u0E44\u0E27\u0E49\u0E43\u0E19 workspace \u0E40\u0E23\u0E34\u0E48\u0E21 bridge \u0E41\u0E17\u0E19\u0E44\u0E14\u0E49",
+        frequency: "once",
         keepOpen: true,
-        closeAfter: "\u0E40\u0E21\u0E37\u0E48\u0E2D CatCut \u0E41\u0E08\u0E49\u0E07\u0E27\u0E48\u0E32 Save \u0E41\u0E25\u0E49\u0E27",
+        closeAfter: "\u0E1B\u0E34\u0E14 Premiere \u0E44\u0E14\u0E49\u0E40\u0E21\u0E37\u0E48\u0E2D CatCut \u0E41\u0E08\u0E49\u0E07\u0E27\u0E48\u0E32 Save \u0E41\u0E25\u0E49\u0E27 (panel \u0E44\u0E21\u0E48\u0E15\u0E49\u0E2D\u0E07\u0E1B\u0E34\u0E14)",
         needsProject: false
       }),
       premiereDialog: (o2 = {}) => ({
         code: "premiere-dialog",
         app: "premiere",
-        title: "Premiere \u0E21\u0E35\u0E2B\u0E19\u0E49\u0E32\u0E15\u0E48\u0E32\u0E07\u0E23\u0E2D\u0E43\u0E2B\u0E49\u0E01\u0E14\u0E2D\u0E22\u0E39\u0E48",
+        title: o2["dialogs"] ? `Premiere \u0E21\u0E35\u0E2B\u0E19\u0E49\u0E32\u0E15\u0E48\u0E32\u0E07 "${o2["dialogs"]}" \u0E23\u0E2D\u0E43\u0E2B\u0E49\u0E01\u0E14\u0E2D\u0E22\u0E39\u0E48` : "Premiere \u0E2D\u0E32\u0E08\u0E21\u0E35\u0E2B\u0E19\u0E49\u0E32\u0E15\u0E48\u0E32\u0E07\u0E23\u0E2D\u0E43\u0E2B\u0E49\u0E01\u0E14\u0E2D\u0E22\u0E39\u0E48",
         steps: [
-          "\u0E2A\u0E25\u0E31\u0E1A\u0E44\u0E1B\u0E17\u0E35\u0E48 Premiere \u0E14\u0E39\u0E2B\u0E19\u0E49\u0E32\u0E15\u0E48\u0E32\u0E07\u0E17\u0E35\u0E48\u0E40\u0E14\u0E49\u0E07\u0E02\u0E36\u0E49\u0E19 (\u0E40\u0E0A\u0E48\u0E19 Import Files, Link Media, \u0E04\u0E33\u0E40\u0E15\u0E37\u0E2D\u0E19)",
-          "\u0E16\u0E49\u0E32\u0E40\u0E1B\u0E47\u0E19\u0E41\u0E16\u0E1A\u0E42\u0E2B\u0E25\u0E14\u0E17\u0E35\u0E48\u0E44\u0E21\u0E48\u0E02\u0E22\u0E31\u0E1A\u0E40\u0E01\u0E34\u0E19 1 \u0E19\u0E32\u0E17\u0E35 \u0E01\u0E14 Cancel; \u0E16\u0E49\u0E32\u0E40\u0E1B\u0E47\u0E19\u0E04\u0E33\u0E16\u0E32\u0E21 \u0E15\u0E2D\u0E1A\u0E15\u0E32\u0E21\u0E17\u0E35\u0E48\u0E15\u0E49\u0E2D\u0E07\u0E01\u0E32\u0E23",
-          "\u0E1A\u0E2D\u0E01 AI \u0E27\u0E48\u0E32\u0E01\u0E14\u0E2D\u0E30\u0E44\u0E23\u0E44\u0E1B \u2014 CatCut \u0E08\u0E30\u0E17\u0E33\u0E15\u0E48\u0E2D\u0E08\u0E32\u0E01\u0E08\u0E38\u0E14\u0E40\u0E14\u0E34\u0E21"
+          o2["dialogs"] ? `\u0E2A\u0E25\u0E31\u0E1A\u0E44\u0E1B\u0E17\u0E35\u0E48 Premiere \u0E2B\u0E19\u0E49\u0E32\u0E15\u0E48\u0E32\u0E07 "${o2["dialogs"]}"` : "\u0E2A\u0E25\u0E31\u0E1A\u0E44\u0E1B\u0E17\u0E35\u0E48 Premiere \u0E14\u0E39\u0E27\u0E48\u0E32\u0E21\u0E35\u0E2B\u0E19\u0E49\u0E32\u0E15\u0E48\u0E32\u0E07\u0E40\u0E14\u0E49\u0E07\u0E04\u0E49\u0E32\u0E07\u0E44\u0E2B\u0E21 (\u0E40\u0E0A\u0E48\u0E19 Import Files, Link Media, \u0E04\u0E33\u0E40\u0E15\u0E37\u0E2D\u0E19)",
+          "\u0E16\u0E49\u0E32\u0E40\u0E1B\u0E47\u0E19\u0E41\u0E16\u0E1A\u0E42\u0E2B\u0E25\u0E14\u0E17\u0E35\u0E48\u0E44\u0E21\u0E48\u0E02\u0E22\u0E31\u0E1A\u0E40\u0E01\u0E34\u0E19 1 \u0E19\u0E32\u0E17\u0E35 \u0E01\u0E14 Cancel; \u0E16\u0E49\u0E32\u0E40\u0E1B\u0E47\u0E19\u0E04\u0E33\u0E16\u0E32\u0E21 \u0E15\u0E2D\u0E1A\u0E15\u0E32\u0E21\u0E17\u0E35\u0E48\u0E15\u0E49\u0E2D\u0E07\u0E01\u0E32\u0E23; \u0E16\u0E49\u0E32\u0E44\u0E21\u0E48\u0E21\u0E35\u0E2B\u0E19\u0E49\u0E32\u0E15\u0E48\u0E32\u0E07\u0E2D\u0E30\u0E44\u0E23\u0E40\u0E25\u0E22 \u0E44\u0E21\u0E48\u0E15\u0E49\u0E2D\u0E07\u0E01\u0E14 \u0E23\u0E2D\u0E43\u0E2B\u0E49 Premiere \u0E17\u0E33\u0E07\u0E32\u0E19\u0E40\u0E2A\u0E23\u0E47\u0E08",
+          "\u0E1A\u0E2D\u0E01 AI \u0E27\u0E48\u0E32\u0E01\u0E14\u0E2D\u0E30\u0E44\u0E23\u0E44\u0E1B (\u0E2B\u0E23\u0E37\u0E2D\u0E44\u0E21\u0E48\u0E40\u0E08\u0E2D\u0E2B\u0E19\u0E49\u0E32\u0E15\u0E48\u0E32\u0E07) \u2014 CatCut \u0E08\u0E30\u0E17\u0E33\u0E15\u0E48\u0E2D\u0E08\u0E32\u0E01\u0E08\u0E38\u0E14\u0E40\u0E14\u0E34\u0E21"
         ],
-        why: `Premiere \u0E04\u0E49\u0E32\u0E07\u0E17\u0E35\u0E48\u0E04\u0E33\u0E2A\u0E31\u0E48\u0E07 ${o2["action"] ?? "?"} \u0E21\u0E32 ${o2["seconds"] ?? "?"} \u0E27\u0E34\u0E19\u0E32\u0E17\u0E35 \u0E23\u0E30\u0E2B\u0E27\u0E48\u0E32\u0E07\u0E21\u0E35\u0E2B\u0E19\u0E49\u0E32\u0E15\u0E48\u0E32\u0E07\u0E04\u0E49\u0E32\u0E07 Premiere \u0E23\u0E31\u0E1A\u0E04\u0E33\u0E2A\u0E31\u0E48\u0E07\u0E2D\u0E37\u0E48\u0E19\u0E44\u0E21\u0E48\u0E44\u0E14\u0E49`,
+        why: o2["dialogs"] ? `Premiere \u0E04\u0E49\u0E32\u0E07\u0E17\u0E35\u0E48\u0E04\u0E33\u0E2A\u0E31\u0E48\u0E07 ${o2["action"] ?? "?"} \u0E21\u0E32 ${o2["seconds"] ?? "?"} \u0E27\u0E34\u0E19\u0E32\u0E17\u0E35 \u0E40\u0E1E\u0E23\u0E32\u0E30\u0E2B\u0E19\u0E49\u0E32\u0E15\u0E48\u0E32\u0E07\u0E19\u0E35\u0E49\u0E23\u0E2D\u0E04\u0E33\u0E15\u0E2D\u0E1A \u0E23\u0E30\u0E2B\u0E27\u0E48\u0E32\u0E07\u0E19\u0E31\u0E49\u0E19 Premiere \u0E23\u0E31\u0E1A\u0E04\u0E33\u0E2A\u0E31\u0E48\u0E07\u0E2D\u0E37\u0E48\u0E19\u0E44\u0E21\u0E48\u0E44\u0E14\u0E49` : `Premiere \u0E17\u0E33\u0E04\u0E33\u0E2A\u0E31\u0E48\u0E07 ${o2["action"] ?? "?"} \u0E21\u0E32 ${o2["seconds"] ?? "?"} \u0E27\u0E34\u0E19\u0E32\u0E17\u0E35 \u0E41\u0E25\u0E30 CatCut \u0E14\u0E39\u0E2B\u0E19\u0E49\u0E32\u0E15\u0E48\u0E32\u0E07\u0E02\u0E2D\u0E07 Premiere \u0E44\u0E21\u0E48\u0E44\u0E14\u0E49 \u0E08\u0E36\u0E07\u0E41\u0E22\u0E01\u0E44\u0E21\u0E48\u0E2D\u0E2D\u0E01\u0E27\u0E48\u0E32\u0E21\u0E35\u0E2B\u0E19\u0E49\u0E32\u0E15\u0E48\u0E32\u0E07\u0E04\u0E49\u0E32\u0E07\u0E2B\u0E23\u0E37\u0E2D\u0E01\u0E33\u0E25\u0E31\u0E07\u0E40\u0E23\u0E19\u0E40\u0E14\u0E2D\u0E23\u0E4C`,
         frequency: "each-time",
         keepOpen: true,
         closeAfter: "\u0E40\u0E21\u0E37\u0E48\u0E2D CatCut \u0E41\u0E08\u0E49\u0E07\u0E27\u0E48\u0E32 Save \u0E41\u0E25\u0E49\u0E27",
@@ -28266,7 +28268,7 @@ var init_user_action = __esm({
         steps: [
           "\u0E2A\u0E25\u0E31\u0E1A\u0E44\u0E1B\u0E17\u0E35\u0E48 Premiere \u0E14\u0E39\u0E27\u0E48\u0E32\u0E21\u0E35\u0E2B\u0E19\u0E49\u0E32\u0E15\u0E48\u0E32\u0E07\u0E04\u0E49\u0E32\u0E07\u0E44\u0E2B\u0E21 (Sign in, \u0E2D\u0E31\u0E1B\u0E40\u0E14\u0E15, Recover, Locate Media)",
           "\u0E1C\u0E48\u0E32\u0E19\u0E2B\u0E19\u0E49\u0E32\u0E15\u0E48\u0E32\u0E07\u0E19\u0E31\u0E49\u0E19\u0E43\u0E2B\u0E49\u0E16\u0E36\u0E07\u0E2B\u0E19\u0E49\u0E32\u0E42\u0E1B\u0E23\u0E40\u0E08\u0E01\u0E15\u0E4C",
-          "\u0E16\u0E49\u0E32 Premiere \u0E40\u0E1B\u0E34\u0E14\u0E41\u0E25\u0E49\u0E27\u0E41\u0E15\u0E48\u0E22\u0E31\u0E07\u0E44\u0E21\u0E48\u0E15\u0E48\u0E2D: Window > Extensions > CatCut Bridge",
+          "\u0E16\u0E49\u0E32 Premiere \u0E40\u0E1B\u0E34\u0E14\u0E41\u0E25\u0E49\u0E27\u0E41\u0E15\u0E48\u0E22\u0E31\u0E07\u0E44\u0E21\u0E48\u0E15\u0E48\u0E2D: Window > Extensions > CatCut Bridge \u0E41\u0E25\u0E49\u0E27\u0E27\u0E32\u0E07 panel \u0E17\u0E34\u0E49\u0E07\u0E44\u0E27\u0E49\u0E43\u0E19 workspace (\u0E2D\u0E22\u0E48\u0E32\u0E01\u0E14\u0E1B\u0E34\u0E14) \u0E04\u0E23\u0E31\u0E49\u0E07\u0E15\u0E48\u0E2D\u0E44\u0E1B\u0E08\u0E30\u0E15\u0E48\u0E2D\u0E40\u0E2D\u0E07",
           "\u0E1A\u0E2D\u0E01 AI \u0E27\u0E48\u0E32\u0E40\u0E2A\u0E23\u0E47\u0E08\u0E41\u0E25\u0E49\u0E27"
         ],
         why: `CatCut \u0E2A\u0E31\u0E48\u0E07\u0E40\u0E1B\u0E34\u0E14 Premiere \u0E41\u0E25\u0E49\u0E27\u0E23\u0E2D ${o2["seconds"] ?? "?"} \u0E27\u0E34\u0E19\u0E32\u0E17\u0E35\u0E22\u0E31\u0E07\u0E44\u0E21\u0E48\u0E21\u0E35\u0E2A\u0E31\u0E0D\u0E0D\u0E32\u0E13\u0E08\u0E32\u0E01 bridge`,
@@ -35603,9 +35605,11 @@ __export(premiere_exports, {
   installBridge: () => installBridge,
   legacyQueueDir: () => legacyQueueDir,
   openPremiere: () => openPremiere,
+  parseWindowProbe: () => parseWindowProbe,
   premiereHost: () => premiereHost,
   stagePath: () => stagePath,
-  uninstallBridge: () => uninstallBridge
+  uninstallBridge: () => uninstallBridge,
+  winHelperScript: () => winHelperScript
 });
 import { spawn as nodeSpawn } from "node:child_process";
 import { existsSync as existsSync19 } from "node:fs";
@@ -35626,6 +35630,17 @@ function defaultQueueDir() {
 function cepExtensionsDir() {
   return join17(process.env["APPDATA"] ?? join17(os8.homedir(), "AppData", "Roaming"), "Adobe", "CEP", "extensions");
 }
+async function busyCause(host2) {
+  if (!host2?.windows) return { cause: "unknown", dialogs: [] };
+  const pids = await host2.running().catch(() => []);
+  if (!pids.length) return { cause: "unknown", dialogs: [] };
+  const w = await host2.windows(pids).catch(() => void 0);
+  if (!w) return { cause: "unknown", dialogs: [] };
+  return w.modal ? { cause: "dialog", dialogs: w.dialogs, hung: w.hung } : { cause: "working", dialogs: [], hung: w.hung };
+}
+function stillWorking(action, seconds, hung) {
+  return new Error(`Premiere \u0E22\u0E31\u0E07\u0E17\u0E33\u0E04\u0E33\u0E2A\u0E31\u0E48\u0E07 ${action} \u0E2D\u0E22\u0E39\u0E48 (${seconds} \u0E27\u0E34\u0E19\u0E32\u0E17\u0E35) \u0E44\u0E21\u0E48\u0E21\u0E35\u0E2B\u0E19\u0E49\u0E32\u0E15\u0E48\u0E32\u0E07\u0E04\u0E49\u0E32\u0E07 \u2014 \u0E21\u0E31\u0E01\u0E40\u0E1B\u0E47\u0E19\u0E01\u0E32\u0E23\u0E40\u0E23\u0E19\u0E40\u0E14\u0E2D\u0E23\u0E4C\u0E04\u0E2D\u0E21\u0E1B\u0E4C AE \u0E1C\u0E48\u0E32\u0E19 Dynamic Link \u0E44\u0E21\u0E48\u0E15\u0E49\u0E2D\u0E07\u0E43\u0E2B\u0E49\u0E1C\u0E39\u0E49\u0E43\u0E0A\u0E49\u0E01\u0E14\u0E2D\u0E30\u0E44\u0E23 \u0E23\u0E2D\u0E41\u0E25\u0E49\u0E27\u0E40\u0E23\u0E35\u0E22\u0E01\u0E43\u0E2B\u0E21\u0E48 (premiere_status \u0E14\u0E39\u0E04\u0E27\u0E32\u0E21\u0E04\u0E37\u0E1A\u0E2B\u0E19\u0E49\u0E32) / Premiere is still working on '${action}' (${seconds} s) with no dialog open${hung ? " (Windows shows it as not responding)" : ""}: probably rendering After Effects comps through Dynamic Link; wait and call again`);
+}
 function createPremiereClient(opts = {}) {
   const dirs = opts.queueDir ? [opts.queueDir] : [.../* @__PURE__ */ new Set([defaultQueueDir(), legacyQueueDir()])];
   let queueDir = dirs[0];
@@ -35633,6 +35648,13 @@ function createPremiereClient(opts = {}) {
   const pollMs = opts.pollMs ?? 100;
   const installDir = opts.installDir ?? join17(cepExtensionsDir(), BRIDGE_ID);
   let chain = Promise.resolve();
+  const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
+  function dialogCard(busy, b) {
+    return new UserActionError(
+      `Premiere has been busy with '${busy.action}' for ${busy.seconds} s${b.dialogs.length ? ` behind "${b.dialogs.join('", "')}"` : ""}`,
+      ACTIONS.premiereDialog({ action: busy.action, seconds: busy.seconds, ...b.dialogs.length ? { dialogs: b.dialogs.join('", "') } : {} })
+    );
+  }
   async function beatIn(dir) {
     try {
       const hb = JSON.parse((await readFile12(join17(dir, "bridge.json"), "utf8")).replace(/^﻿/, ""));
@@ -35664,13 +35686,22 @@ function createPremiereClient(opts = {}) {
     };
   }
   async function callOnce(action, args, timeoutMs) {
-    const st = await status();
+    let st = await status();
     if (!st.connected) {
       if (!st.installed) throw new UserActionError("Premiere bridge is not installed", ACTIONS.bridgeNotInstalled());
       throw new Error("Premiere is not connected: call premiere_open {project} (CatCut opens Premiere itself), or ready_check to see why / Premiere \u0E22\u0E31\u0E07\u0E44\u0E21\u0E48\u0E40\u0E0A\u0E37\u0E48\u0E2D\u0E21");
     }
-    if (st.busy && st.busy.seconds * 1e3 >= DIALOG_AFTER_MS) {
-      throw new UserActionError(`Premiere is still busy with '${st.busy.action}' (${st.busy.seconds} s)`, ACTIONS.premiereDialog({ action: st.busy.action, seconds: st.busy.seconds }));
+    const until = Date.now() + timeoutMs;
+    for (let probedAt2 = 0; st.busy && st.busy.seconds * 1e3 >= DIALOG_AFTER_MS; ) {
+      if (Date.now() - probedAt2 >= PROBE_EVERY_MS) {
+        probedAt2 = Date.now();
+        const b = await busyCause(opts.host);
+        if (b.cause !== "working") throw dialogCard(st.busy, b);
+      }
+      if (Date.now() > until) throw stillWorking(st.busy.action, st.busy.seconds);
+      await sleep(pollMs);
+      st = await status();
+      if (!st.connected) throw new Error(`Premiere stopped answering while busy with '${st.busy?.action ?? "?"}' / Premiere \u0E2B\u0E22\u0E38\u0E14\u0E15\u0E2D\u0E1A: ready_check`);
     }
     const id = `${Date.now().toString(36).padStart(9, "0")}-${randomUUID4().slice(0, 8)}`;
     const req = join17(queueDir, `${id}.req.json`);
@@ -35678,7 +35709,7 @@ function createPremiereClient(opts = {}) {
     await mkdir17(queueDir, { recursive: true });
     await writeFile13(`${req}.tmp`, JSON.stringify({ id, action, args, deadline: Date.now() + timeoutMs }), "utf8");
     await rename11(`${req}.tmp`, req);
-    const until = Date.now() + timeoutMs;
+    let probedAt = Date.now();
     for (; ; ) {
       let raw;
       try {
@@ -35698,11 +35729,20 @@ function createPremiereClient(opts = {}) {
         const withdrawn = await unlink3(req).then(() => true, () => false);
         const now = await status();
         if (now.busy && now.busy.seconds * 1e3 >= DIALOG_AFTER_MS) {
-          throw new UserActionError(`Premiere has been busy with '${now.busy.action}' for ${now.busy.seconds} s`, ACTIONS.premiereDialog({ action: now.busy.action, seconds: now.busy.seconds }));
+          const b = await busyCause(opts.host);
+          throw b.cause === "working" ? stillWorking(now.busy.action, now.busy.seconds, b.hung) : dialogCard(now.busy, b);
         }
         throw new Error(withdrawn ? `Premiere did not pick up '${action}' within ${Math.round(timeoutMs / 1e3)} s` : `Premiere is still working on '${action}' after ${Math.round(timeoutMs / 1e3)} s; check Premiere before retrying`);
       }
-      await new Promise((r) => setTimeout(r, pollMs));
+      if (opts.host?.windows && Date.now() - probedAt >= PROBE_EVERY_MS) {
+        probedAt = Date.now();
+        const now = await status();
+        if (now.busy && now.busy.seconds * 1e3 >= DIALOG_AFTER_MS) {
+          const b = await busyCause(opts.host);
+          if (b.cause === "dialog") throw dialogCard(now.busy, b);
+        }
+      }
+      await sleep(pollMs);
     }
   }
   return {
@@ -35725,8 +35765,39 @@ async function stagePath(client2, ext) {
   await mkdir17(dir, { recursive: true });
   return join17(dir, `${Date.now().toString(36)}-${randomUUID4().slice(0, 8)}${ext}`);
 }
+function winHelperScript(method, pids) {
+  const ids = pids.filter((p) => Number.isInteger(p) && p > 0).join(",");
+  return `$ErrorActionPreference='Stop'; [Console]::OutputEncoding=[Text.Encoding]::UTF8; Add-Type -TypeDefinition @'
+${WIN_HELPER}
+'@
+[CatCutWin]::${method}([uint32[]]@(${ids}))`;
+}
+function parseWindowProbe(stdout) {
+  const lines = stdout.split(/\r?\n/);
+  if (!lines.includes("END")) return void 0;
+  return { modal: lines.includes("MODAL"), hung: lines.includes("HUNG"), dialogs: lines.filter((l) => l.startsWith("DIALOG	")).map((l) => l.slice(7).trim()).filter(Boolean) };
+}
 function premiereHost(spawn2 = execa) {
+  const ps = (method, pids) => spawn2("powershell.exe", [
+    "-NoProfile",
+    "-NonInteractive",
+    "-ExecutionPolicy",
+    "Bypass",
+    "-EncodedCommand",
+    Buffer.from(winHelperScript(method, pids), "utf16le").toString("base64")
+  ], { reject: false, windowsHide: true, timeout: 3e4 });
   return {
+    async windows(pids) {
+      if (process.platform !== "win32" || !pids.length) return void 0;
+      const r = await ps("Probe", pids);
+      return r.exitCode === 0 ? parseWindowProbe(String(r.stdout ?? "")) : void 0;
+    },
+    async activate(pids) {
+      if (process.platform !== "win32" || !pids.length) return void 0;
+      const r = await ps("Activate", pids);
+      const out2 = String(r.stdout ?? "").trim();
+      return out2 === "ACTIVE" ? "active" : out2 === "TRIED" ? "tried" : out2 === "NOWINDOW" ? "no-window" : void 0;
+    },
     async running() {
       if (process.platform !== "win32") return [];
       const r = await spawn2("tasklist", ["/FO", "CSV", "/NH", "/FI", "IMAGENAME eq Adobe Premiere Pro.exe"], { reject: false, windowsHide: true, timeout: 15e3 });
@@ -35772,7 +35843,14 @@ async function diagnosePremiere(client2, host2, opts = {}) {
   }
   if (status.connected) {
     if (status.busy && status.busy.seconds * 1e3 >= DIALOG_AFTER_MS) {
-      return out2({ userAction: ACTIONS.premiereDialog({ action: status.busy.action, seconds: status.busy.seconds }), note: `Premiere busy with ${status.busy.action} for ${status.busy.seconds} s` });
+      const b = await busyCause(host2);
+      if (b.cause === "working") {
+        return out2({ ready: true, busy: true, note: `Premiere is working on ${status.busy.action} for ${status.busy.seconds} s, no dialog open (probably rendering After Effects comps): wait, nothing to click` });
+      }
+      return out2({
+        userAction: ACTIONS.premiereDialog({ action: status.busy.action, seconds: status.busy.seconds, ...b.dialogs.length ? { dialogs: b.dialogs.join('", "') } : {} }),
+        note: `Premiere busy with ${status.busy.action} for ${status.busy.seconds} s${b.cause === "dialog" ? ` behind a dialog${b.dialogs.length ? ` ("${b.dialogs.join('", "')}")` : ""}` : ""}`
+      });
     }
     const where = `Premiere ${status.premiere ?? "?"}, project ${status.project?.name ?? "none"}`;
     if (advice) return out2({ ready: true, limited: true, userAction: advice.userAction, note: `connected (${where}); ${advice.note}: newer premiere_* tools need the update` });
@@ -35800,10 +35878,19 @@ async function openPremiere(client2, host2, opts) {
       pid = host2.launch(opts.premiereExe, project2).pid;
       launched = true;
     }
-    const until2 = Date.now() + (launched ? waitMs : Math.min(waitMs, 3e4));
+    const started = Date.now();
+    const until2 = started + (launched ? waitMs : Math.min(waitMs, 3e4));
+    const after = opts.activateAfterMs ?? ACTIVATE_AFTER_MS;
+    const activateAt = launched ? [after, after * 3] : [0, after];
+    let activations = 0;
     for (; ; ) {
       const st = await client2.status();
       if (st.connected) break;
+      if (host2.activate && activations < activateAt.length && Date.now() - started >= activateAt[activations]) {
+        activations++;
+        const pids = await host2.running().catch(() => []);
+        if (pids.length) await host2.activate(pids).catch(() => void 0);
+      }
       if (Date.now() > until2) {
         if (launched) throw new UserActionError(`Premiere started but the bridge did not connect within ${Math.round(waitMs / 1e3)} s`, ACTIONS.premiereStartTimeout({ seconds: Math.round(waitMs / 1e3) }));
         throw new UserActionError("Premiere runs but the bridge does not answer", ACTIONS.bridgeNotStarted());
@@ -35861,7 +35948,7 @@ async function uninstallBridge(opts = {}) {
   await rm9(dest, { recursive: true, force: true });
   return dest;
 }
-var BRIDGE_ID, PROTOCOL, DIALOG_AFTER_MS, samePath5, CSXS_VERSIONS;
+var BRIDGE_ID, PROTOCOL, DIALOG_AFTER_MS, PROBE_EVERY_MS, WIN_HELPER, samePath5, ACTIVATE_AFTER_MS, CSXS_VERSIONS;
 var init_premiere = __esm({
   "src/engine/premiere.ts"() {
     "use strict";
@@ -35871,7 +35958,54 @@ var init_premiere = __esm({
     BRIDGE_ID = "com.catcut.bridge";
     PROTOCOL = 1;
     DIALOG_AFTER_MS = 45e3;
+    PROBE_EVERY_MS = 1e4;
+    WIN_HELPER = `
+using System; using System.Text; using System.Collections.Generic; using System.Runtime.InteropServices;
+public static class CatCutWin {
+  public delegate bool EnumProc(IntPtr h, IntPtr l);
+  [DllImport("user32.dll")] static extern bool EnumWindows(EnumProc f, IntPtr l);
+  [DllImport("user32.dll")] static extern uint GetWindowThreadProcessId(IntPtr h, out uint pid);
+  [DllImport("user32.dll")] static extern bool IsWindowVisible(IntPtr h);
+  [DllImport("user32.dll")] static extern bool IsWindowEnabled(IntPtr h);
+  [DllImport("user32.dll")] static extern bool IsHungAppWindow(IntPtr h);
+  [DllImport("user32.dll")] static extern bool IsIconic(IntPtr h);
+  [DllImport("user32.dll")] static extern IntPtr GetWindow(IntPtr h, uint cmd);
+  [DllImport("user32.dll")] static extern IntPtr GetForegroundWindow();
+  [DllImport("user32.dll")] static extern bool SetForegroundWindow(IntPtr h);
+  [DllImport("user32.dll")] static extern bool ShowWindow(IntPtr h, int cmd);
+  [DllImport("user32.dll")] static extern void SwitchToThisWindow(IntPtr h, bool alt);
+  [DllImport("user32.dll", CharSet = CharSet.Unicode)] static extern int GetWindowText(IntPtr h, StringBuilder s, int n);
+  static List<IntPtr> Of(uint[] pids) {
+    var all = new List<IntPtr>(); var set = new HashSet<uint>(pids);
+    EnumWindows((h, l) => { uint p; GetWindowThreadProcessId(h, out p); if (set.Contains(p) && IsWindowVisible(h)) all.Add(h); return true; }, IntPtr.Zero);
+    return all;
+  }
+  static bool Owned(IntPtr h) { return GetWindow(h, 4) != IntPtr.Zero; }
+  static string Title(IntPtr h) { var sb = new StringBuilder(512); GetWindowText(h, sb, 512); return sb.ToString().Replace('\\t', ' ').Replace('\\r', ' ').Replace('\\n', ' '); }
+  public static string Probe(uint[] pids) {
+    bool modal = false, hung = false; var dialogs = new List<string>();
+    foreach (var h in Of(pids)) {
+      if (!Owned(h)) { if (!IsWindowEnabled(h)) modal = true; if (IsHungAppWindow(h)) hung = true; }
+      else if (IsWindowEnabled(h)) { var t = Title(h); if (t.Length > 0) dialogs.Add(t); }
+    }
+    var sb = new StringBuilder();
+    if (modal) { sb.Append("MODAL\\n"); foreach (var d in dialogs) sb.Append("DIALOG\\t" + d + "\\n"); }
+    if (hung) sb.Append("HUNG\\n");
+    sb.Append("END\\n");
+    return sb.ToString();
+  }
+  public static string Activate(uint[] pids) {
+    foreach (var h in Of(pids)) {
+      if (Owned(h) || Title(h).Length == 0) continue;
+      if (IsIconic(h)) ShowWindow(h, 9);
+      if (!SetForegroundWindow(h) || GetForegroundWindow() != h) SwitchToThisWindow(h, true);
+      return GetForegroundWindow() == h ? "ACTIVE" : "TRIED";
+    }
+    return "NOWINDOW";
+  }
+}`;
     samePath5 = (a2, b) => resolve9(a2).toLowerCase() === resolve9(b).toLowerCase();
+    ACTIVATE_AFTER_MS = 2e4;
     CSXS_VERSIONS = [9, 10, 11, 12];
   }
 });
@@ -35881,7 +36015,7 @@ import { constants as constants9 } from "node:fs";
 import { copyFile as copyFile6, mkdir as mkdir18, readdir as readdir8, rm as rm10, stat as stat9 } from "node:fs/promises";
 import { basename as basename12, dirname as dirname9, extname as extname11, join as join18, relative as relative4, resolve as resolve10, sep as sep3 } from "node:path";
 function client(state) {
-  state.premiere ??= createPremiereClient();
+  state.premiere ??= createPremiereClient({ host: host(state) });
   return state.premiere;
 }
 function host(state) {
@@ -36212,12 +36346,12 @@ async function readiness(state, deps = {}) {
       ae.note += ` \xB7 AE Disk Cache ${gb} GB${gb >= AE_CACHE_WARN_GB ? " (\u0E25\u0E49\u0E32\u0E07\u0E44\u0E14\u0E49\u0E14\u0E49\u0E27\u0E22 ae_purge_cache \u0E2B\u0E23\u0E37\u0E2D Edit > Purge > All Memory & Disk Cache)" : ""}`;
     }
   }
-  state.premiere ??= createPremiereClient();
   state.premiereHost ??= premiereHost();
+  state.premiere ??= createPremiereClient({ host: state.premiereHost });
   const d = await diagnosePremiere(state.premiere, state.premiereHost, state.env.tools.premiereExe ? { premiereExe: state.env.tools.premiereExe } : {});
   if (d.userAction?.code === "premiere-not-found") apps.push({ app: "premiere", status: "optional", keepOpen: "never", note: "\u0E44\u0E21\u0E48\u0E1E\u0E1A Premiere: \u0E2A\u0E48\u0E07\u0E07\u0E32\u0E19\u0E40\u0E1B\u0E47\u0E19 XML \u0E44\u0E14\u0E49", userAction: act(d.userAction) });
   else if (d.userAction) apps.push({ app: "premiere", status: "action", keepOpen: d.userAction.keepOpen ? "while-working" : "catcut-opens-it", note: d.note, userAction: act(d.userAction) });
-  else apps.push({ app: "premiere", status: "ok", keepOpen: "catcut-opens-it", note: d.ready ? `\u0E40\u0E0A\u0E37\u0E48\u0E2D\u0E21\u0E2D\u0E22\u0E39\u0E48: ${d.status.project?.name ?? "\u0E22\u0E31\u0E07\u0E44\u0E21\u0E48\u0E21\u0E35\u0E42\u0E1B\u0E23\u0E40\u0E08\u0E01\u0E15\u0E4C"}` : "\u0E1B\u0E34\u0E14\u0E2D\u0E22\u0E39\u0E48 \u0E44\u0E21\u0E48\u0E40\u0E1B\u0E47\u0E19\u0E44\u0E23: CatCut \u0E40\u0E1B\u0E34\u0E14\u0E43\u0E2B\u0E49\u0E1E\u0E23\u0E49\u0E2D\u0E21\u0E42\u0E1B\u0E23\u0E40\u0E08\u0E01\u0E15\u0E4C\u0E40\u0E21\u0E37\u0E48\u0E2D\u0E15\u0E49\u0E2D\u0E07\u0E43\u0E0A\u0E49 \u0E41\u0E25\u0E49\u0E27\u0E1A\u0E2D\u0E01\u0E40\u0E21\u0E37\u0E48\u0E2D\u0E1B\u0E34\u0E14\u0E44\u0E14\u0E49" });
+  else apps.push({ app: "premiere", status: "ok", keepOpen: "catcut-opens-it", note: d.busy ? "\u0E40\u0E0A\u0E37\u0E48\u0E2D\u0E21\u0E2D\u0E22\u0E39\u0E48 \u0E01\u0E33\u0E25\u0E31\u0E07\u0E17\u0E33\u0E07\u0E32\u0E19 (\u0E21\u0E31\u0E01\u0E40\u0E1B\u0E47\u0E19\u0E01\u0E32\u0E23\u0E40\u0E23\u0E19\u0E40\u0E14\u0E2D\u0E23\u0E4C\u0E04\u0E2D\u0E21\u0E1B\u0E4C AE) \u0E44\u0E21\u0E48\u0E21\u0E35\u0E2B\u0E19\u0E49\u0E32\u0E15\u0E48\u0E32\u0E07\u0E04\u0E49\u0E32\u0E07 \u2014 \u0E23\u0E2D\u0E44\u0E14\u0E49 \u0E44\u0E21\u0E48\u0E15\u0E49\u0E2D\u0E07\u0E01\u0E14\u0E2D\u0E30\u0E44\u0E23" : d.ready ? `\u0E40\u0E0A\u0E37\u0E48\u0E2D\u0E21\u0E2D\u0E22\u0E39\u0E48: ${d.status.project?.name ?? "\u0E22\u0E31\u0E07\u0E44\u0E21\u0E48\u0E21\u0E35\u0E42\u0E1B\u0E23\u0E40\u0E08\u0E01\u0E15\u0E4C"}` : "\u0E1B\u0E34\u0E14\u0E2D\u0E22\u0E39\u0E48 \u0E44\u0E21\u0E48\u0E40\u0E1B\u0E47\u0E19\u0E44\u0E23: CatCut \u0E40\u0E1B\u0E34\u0E14\u0E43\u0E2B\u0E49\u0E1E\u0E23\u0E49\u0E2D\u0E21\u0E42\u0E1B\u0E23\u0E40\u0E08\u0E01\u0E15\u0E4C\u0E40\u0E21\u0E37\u0E48\u0E2D\u0E15\u0E49\u0E2D\u0E07\u0E43\u0E0A\u0E49 \u0E41\u0E25\u0E49\u0E27\u0E1A\u0E2D\u0E01\u0E40\u0E21\u0E37\u0E48\u0E2D\u0E1B\u0E34\u0E14\u0E44\u0E14\u0E49" });
   const freeGb = deps.freeGb ?? defaultFreeGb;
   const paths = [...new Set([state.project?.dir, os9.tmpdir()].filter((p) => !!p).map((p) => parse5(p).root.toUpperCase()))];
   for (const root of paths) {
@@ -36304,12 +36438,17 @@ function outDirFor(state, kind, seq) {
   const base = state.project ? join19(state.project.dir, "review", kind) : join19(process.env["LOCALAPPDATA"] ?? os10.tmpdir(), "CatCut", kind);
   return join19(base, `${seq.replace(/[<>:"/\\|?*\u0000-\u001f]/g, "_")}-${stampNow()}`);
 }
-var frameOrTc, clipSel, source, OP, seqArg, projectArg, timeoutArg, stampNow, PREMIERE_EDIT_TOOLS;
+function oldBridgeCard(errors) {
+  const op = errors.map((e) => /^unknown op: (\w+)/.exec(e)?.[1]).find(Boolean);
+  return op ? ACTIONS.bridgeUpdate({ installed: "\u0E40\u0E01\u0E48\u0E32", wanted: `\u0E43\u0E2B\u0E21\u0E48\u0E01\u0E27\u0E48\u0E32 (\u0E15\u0E49\u0E2D\u0E07\u0E43\u0E0A\u0E49 op ${op})` }) : void 0;
+}
+var frameOrTc, clipSel, source, keepTracks, OP, seqArg, projectArg, timeoutArg, stampNow, PREMIERE_EDIT_TOOLS;
 var init_tools_premiere_edit = __esm({
   "src/mcp/tools-premiere-edit.ts"() {
     "use strict";
     init_zod();
     init_aerender();
+    init_user_action();
     init_premiere();
     init_tools_premiere();
     init_tooldef();
@@ -36327,8 +36466,21 @@ var init_tools_premiere_edit = __esm({
       in: external_exports.number().int().min(0).optional().describe("source in, frames at sequence fps"),
       keepAudio: external_exports.boolean().optional().describe("keep the linked audio (default: dropped for comps and stills)")
     };
+    keepTracks = external_exports.array(external_exports.string().regex(/^[VAva]\d+$/)).optional().describe('tracks the ripple leaves as they are, e.g. ["A3"] for a music bed');
     OP = external_exports.discriminatedUnion("op", [
-      external_exports.object({ op: external_exports.literal("remove"), clip: clipSel, linked: external_exports.boolean().optional().describe("also remove its linked audio (default true)") }),
+      external_exports.object({
+        op: external_exports.literal("remove"),
+        clip: clipSel,
+        linked: external_exports.boolean().optional().describe("also remove its linked audio (default true; ignored with ripple)"),
+        ripple: external_exports.boolean().optional().describe("close the gap: everything after moves left on every track not in keepTracks (the cut gets shorter)"),
+        keepTracks
+      }),
+      external_exports.object({
+        op: external_exports.literal("ripple_delete"),
+        from: frameOrTc,
+        to: frameOrTc.describe("exclusive"),
+        keepTracks
+      }).describe("take frames [from, to) out of the whole cut and close the gap: clips inside go, edges are trimmed, later clips move left"),
       external_exports.object({ op: external_exports.literal("trim"), clip: clipSel, start: frameOrTc.optional(), end: frameOrTc.optional() }),
       external_exports.object({ op: external_exports.literal("move"), clip: clipSel, to: frameOrTc }),
       external_exports.object({ op: external_exports.literal("set_speed"), clip: clipSel, rate: external_exports.number().positive().describe("percent, e.g. 60"), interpolation: external_exports.enum(["optical-flow", "frame-blend", "frame-sampling"]).optional() }),
@@ -36381,7 +36533,7 @@ var init_tools_premiere_edit = __esm({
       }),
       tool({
         name: "premiere_edit",
-        description: "\u0E41\u0E01\u0E49\u0E04\u0E25\u0E34\u0E1B\u0E43\u0E19 sequence \u0E40\u0E14\u0E34\u0E21\u0E02\u0E2D\u0E07 editor (\u0E44\u0E21\u0E48\u0E2A\u0E23\u0E49\u0E32\u0E07 sequence \u0E43\u0E2B\u0E21\u0E48): remove, trim, move, set_speed, overwrite (\u0E44\u0E1F\u0E25\u0E4C\u0E2B\u0E23\u0E37\u0E2D AE comp), replace_media, relink, rename, set_motion, add/remove_effect, set_effect_param. \u0E17\u0E38\u0E01 op \u0E23\u0E30\u0E1A\u0E38\u0E04\u0E25\u0E34\u0E1B\u0E14\u0E49\u0E27\u0E22 track+start+end(+name) \u0E15\u0E32\u0E21\u0E17\u0E35\u0E48\u0E40\u0E1B\u0E47\u0E19\u0E2D\u0E22\u0E39\u0E48\u0E15\u0E2D\u0E19\u0E19\u0E35\u0E49 (\u0E14\u0E39 premiere_timeline_get) \u0E16\u0E49\u0E32\u0E04\u0E25\u0E34\u0E1B\u0E02\u0E22\u0E31\u0E1A\u0E44\u0E1B\u0E41\u0E25\u0E49\u0E27\u0E08\u0E30\u0E44\u0E21\u0E48\u0E41\u0E01\u0E49\u0E2D\u0E30\u0E44\u0E23\u0E40\u0E25\u0E22. \u0E04\u0E48\u0E32\u0E40\u0E23\u0E34\u0E48\u0E21\u0E15\u0E49\u0E19 dry run; apply: true \u0E08\u0E30 Save \u0E2A\u0E16\u0E32\u0E19\u0E30\u0E1B\u0E31\u0E08\u0E08\u0E38\u0E1A\u0E31\u0E19\u0E40\u0E1B\u0E47\u0E19\u0E08\u0E38\u0E14\u0E22\u0E49\u0E2D\u0E19\u0E01\u0E25\u0E31\u0E1A\u0E01\u0E48\u0E2D\u0E19 \u0E41\u0E25\u0E49\u0E27\u0E41\u0E01\u0E49 \u0E41\u0E25\u0E49\u0E27\u0E15\u0E23\u0E27\u0E08\u0E27\u0E48\u0E32\u0E04\u0E25\u0E34\u0E1B\u0E2D\u0E37\u0E48\u0E19\u0E44\u0E21\u0E48\u0E40\u0E1B\u0E25\u0E35\u0E48\u0E22\u0E19; Save \u0E1C\u0E25\u0E41\u0E01\u0E49\u0E40\u0E21\u0E37\u0E48\u0E2D save: true; \u0E22\u0E49\u0E2D\u0E19\u0E14\u0E49\u0E27\u0E22 premiere_undo_last. Ops run in order: a later op names its clip where the earlier ops left it. \xB7 Edit the editor's sequence in place, guarded.",
+        description: "\u0E41\u0E01\u0E49\u0E04\u0E25\u0E34\u0E1B\u0E43\u0E19 sequence \u0E40\u0E14\u0E34\u0E21\u0E02\u0E2D\u0E07 editor (\u0E44\u0E21\u0E48\u0E2A\u0E23\u0E49\u0E32\u0E07 sequence \u0E43\u0E2B\u0E21\u0E48): remove (ripple: true = \u0E25\u0E1A\u0E41\u0E25\u0E49\u0E27\u0E40\u0E25\u0E37\u0E48\u0E2D\u0E19\u0E0A\u0E48\u0E27\u0E07\u0E16\u0E31\u0E14\u0E44\u0E1B\u0E21\u0E32\u0E0A\u0E34\u0E14), ripple_delete (\u0E15\u0E31\u0E14\u0E0A\u0E48\u0E27\u0E07\u0E40\u0E27\u0E25\u0E32\u0E2D\u0E2D\u0E01\u0E17\u0E31\u0E49\u0E07\u0E40\u0E23\u0E37\u0E48\u0E2D\u0E07\u0E41\u0E25\u0E49\u0E27\u0E0A\u0E34\u0E14), trim, move, set_speed, overwrite (\u0E44\u0E1F\u0E25\u0E4C\u0E2B\u0E23\u0E37\u0E2D AE comp), replace_media, relink, rename, set_motion, add/remove_effect, set_effect_param. \u0E17\u0E38\u0E01 op \u0E23\u0E30\u0E1A\u0E38\u0E04\u0E25\u0E34\u0E1B\u0E14\u0E49\u0E27\u0E22 track+start+end(+name) \u0E15\u0E32\u0E21\u0E17\u0E35\u0E48\u0E40\u0E1B\u0E47\u0E19\u0E2D\u0E22\u0E39\u0E48\u0E15\u0E2D\u0E19\u0E19\u0E35\u0E49 (\u0E14\u0E39 premiere_timeline_get) \u0E16\u0E49\u0E32\u0E04\u0E25\u0E34\u0E1B\u0E02\u0E22\u0E31\u0E1A\u0E44\u0E1B\u0E41\u0E25\u0E49\u0E27\u0E08\u0E30\u0E44\u0E21\u0E48\u0E41\u0E01\u0E49\u0E2D\u0E30\u0E44\u0E23\u0E40\u0E25\u0E22. \u0E04\u0E48\u0E32\u0E40\u0E23\u0E34\u0E48\u0E21\u0E15\u0E49\u0E19 dry run; apply: true \u0E08\u0E30 Save \u0E2A\u0E16\u0E32\u0E19\u0E30\u0E1B\u0E31\u0E08\u0E08\u0E38\u0E1A\u0E31\u0E19\u0E40\u0E1B\u0E47\u0E19\u0E08\u0E38\u0E14\u0E22\u0E49\u0E2D\u0E19\u0E01\u0E25\u0E31\u0E1A\u0E01\u0E48\u0E2D\u0E19 \u0E41\u0E25\u0E49\u0E27\u0E41\u0E01\u0E49 \u0E41\u0E25\u0E49\u0E27\u0E15\u0E23\u0E27\u0E08\u0E27\u0E48\u0E32\u0E04\u0E25\u0E34\u0E1B\u0E2D\u0E37\u0E48\u0E19\u0E44\u0E21\u0E48\u0E40\u0E1B\u0E25\u0E35\u0E48\u0E22\u0E19; Save \u0E1C\u0E25\u0E41\u0E01\u0E49\u0E40\u0E21\u0E37\u0E48\u0E2D save: true; \u0E22\u0E49\u0E2D\u0E19\u0E14\u0E49\u0E27\u0E22 premiere_undo_last. Ops run in order: a later op names its clip where the earlier ops left it. \xB7 Edit the editor's sequence in place, guarded.",
         input: {
           project: projectArg,
           sequence: seqArg,
@@ -36398,15 +36550,19 @@ var init_tools_premiere_edit = __esm({
           const args = { expectProject: project2.path, sequence: a2.sequence, ops };
           if (a2.apply !== true) {
             const r2 = await c3.call("edit", { ...args, apply: false }, { timeoutMs });
+            const update2 = oldBridgeCard(r2.problems.map((p) => p.error));
+            if (update2) throw needsUser("Premiere bridge is older than these ops", update2, { problems: r2.problems });
             return { ...r2, ok: r2.problems.length === 0, dryRun: true, hint: r2.problems.length ? "\u0E41\u0E01\u0E49 op \u0E17\u0E35\u0E48\u0E21\u0E35\u0E1B\u0E31\u0E0D\u0E2B\u0E32\u0E01\u0E48\u0E2D\u0E19 (\u0E14\u0E39 problems) / fix the problems first" : "\u0E15\u0E23\u0E27\u0E08\u0E41\u0E1C\u0E19\u0E41\u0E25\u0E49\u0E27\u0E40\u0E23\u0E35\u0E22\u0E01\u0E0B\u0E49\u0E33\u0E14\u0E49\u0E27\u0E22 apply: true / review, then apply: true" };
           }
           const backup = await checkpoint(state, project2, timeoutMs);
           const r = await c3.call("edit", { ...args, apply: true, save: a2.save === true }, { timeoutMs });
+          const update = r.failed ? oldBridgeCard([r.failed.error]) : void 0;
           const clean = !r.failed && r.untouchedChanged.length === 0;
           return {
             ...r,
             ok: clean,
             backup,
+            ...update ? { userAction: card(update), relay: RELAY } : {},
             ...clean ? {} : { warning: r.failed ? `op ${r.failed.op} \u0E25\u0E49\u0E21: ${r.failed.error} \u2014 op \u0E01\u0E48\u0E2D\u0E19\u0E2B\u0E19\u0E49\u0E32\u0E16\u0E39\u0E01\u0E43\u0E0A\u0E49\u0E44\u0E1B\u0E41\u0E25\u0E49\u0E27 \u0E44\u0E21\u0E48\u0E44\u0E14\u0E49 Save / op failed; earlier ops applied, not saved` : "\u0E04\u0E25\u0E34\u0E1B\u0E17\u0E35\u0E48\u0E44\u0E21\u0E48\u0E44\u0E14\u0E49\u0E2A\u0E31\u0E48\u0E07\u0E40\u0E1B\u0E25\u0E35\u0E48\u0E22\u0E19\u0E44\u0E1B \u2014 \u0E44\u0E21\u0E48\u0E44\u0E14\u0E49 Save / clips outside the ops changed; not saved", undo: "premiere_undo_last \u0E04\u0E37\u0E19\u0E2A\u0E16\u0E32\u0E19\u0E30\u0E01\u0E48\u0E2D\u0E19\u0E41\u0E01\u0E49\u0E17\u0E31\u0E49\u0E07\u0E2B\u0E21\u0E14 / restores the checkpoint" },
             closeHint: closeHint(state, r.saved)
           };
