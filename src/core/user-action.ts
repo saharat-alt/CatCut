@@ -106,19 +106,25 @@ export const ACTIONS = {
     frequency: 'after-update', keepOpen: false, closeAfter: 'ปิดได้ทันทีหลัง Save', needsProject: false,
   }),
   bridgeNotStarted: (): UserAction => ({
-    code: 'bridge-not-started', app: 'premiere', title: 'เปิด panel CatCut Bridge ใน Premiere',
-    steps: ['ใน Premiere: Window > Extensions > CatCut Bridge', 'รอจน panel ขึ้น connected (ปิด panel ได้ แต่ห้ามปิด Premiere ระหว่าง CatCut ทำงาน)'],
-    why: 'Premiere เปิดอยู่แต่ bridge ไม่เริ่มทำงานเอง (บาง Premiere ไม่ส่งสัญญาณเริ่มให้ extension ที่ซ่อนอยู่)',
-    frequency: 'each-time', keepOpen: true, closeAfter: 'เมื่อ CatCut แจ้งว่า Save แล้ว', needsProject: false,
+    code: 'bridge-not-started', app: 'premiere', title: 'เปิด panel CatCut Bridge ใน Premiere แล้ววางทิ้งไว้',
+    steps: [
+      'ใน Premiere: Window > Extensions > CatCut Bridge',
+      'รอจน panel ขึ้น connected แล้ววางทิ้งไว้เป็นแท็บใน workspace (ย่อหรือลากไปมุมได้ แต่อย่ากดปิด panel)',
+      'ครั้งต่อไป Premiere จะเปิด panel นี้เองพร้อมโปรแกรม ไม่ต้องทำซ้ำ',
+    ],
+    why: 'Premiere เปิดอยู่แต่ bridge ไม่เริ่มเอง ทั้งที่ CatCut เรียก Premiere ขึ้นมาด้านหน้าแล้ว (บาง Premiere ไม่ส่งสัญญาณเริ่มให้ extension ที่ซ่อนอยู่) — panel ที่ค้างไว้ใน workspace เริ่ม bridge แทนได้',
+    frequency: 'once', keepOpen: true, closeAfter: 'ปิด Premiere ได้เมื่อ CatCut แจ้งว่า Save แล้ว (panel ไม่ต้องปิด)', needsProject: false,
   }),
   premiereDialog: (o: Opts = {}): UserAction => ({
-    code: 'premiere-dialog', app: 'premiere', title: 'Premiere มีหน้าต่างรอให้กดอยู่',
+    code: 'premiere-dialog', app: 'premiere', title: o['dialogs'] ? `Premiere มีหน้าต่าง "${o['dialogs']}" รอให้กดอยู่` : 'Premiere อาจมีหน้าต่างรอให้กดอยู่',
     steps: [
-      'สลับไปที่ Premiere ดูหน้าต่างที่เด้งขึ้น (เช่น Import Files, Link Media, คำเตือน)',
-      'ถ้าเป็นแถบโหลดที่ไม่ขยับเกิน 1 นาที กด Cancel; ถ้าเป็นคำถาม ตอบตามที่ต้องการ',
-      'บอก AI ว่ากดอะไรไป — CatCut จะทำต่อจากจุดเดิม',
+      o['dialogs'] ? `สลับไปที่ Premiere หน้าต่าง "${o['dialogs']}"` : 'สลับไปที่ Premiere ดูว่ามีหน้าต่างเด้งค้างไหม (เช่น Import Files, Link Media, คำเตือน)',
+      'ถ้าเป็นแถบโหลดที่ไม่ขยับเกิน 1 นาที กด Cancel; ถ้าเป็นคำถาม ตอบตามที่ต้องการ; ถ้าไม่มีหน้าต่างอะไรเลย ไม่ต้องกด รอให้ Premiere ทำงานเสร็จ',
+      'บอก AI ว่ากดอะไรไป (หรือไม่เจอหน้าต่าง) — CatCut จะทำต่อจากจุดเดิม',
     ],
-    why: `Premiere ค้างที่คำสั่ง ${o['action'] ?? '?'} มา ${o['seconds'] ?? '?'} วินาที ระหว่างมีหน้าต่างค้าง Premiere รับคำสั่งอื่นไม่ได้`,
+    why: o['dialogs']
+      ? `Premiere ค้างที่คำสั่ง ${o['action'] ?? '?'} มา ${o['seconds'] ?? '?'} วินาที เพราะหน้าต่างนี้รอคำตอบ ระหว่างนั้น Premiere รับคำสั่งอื่นไม่ได้`
+      : `Premiere ทำคำสั่ง ${o['action'] ?? '?'} มา ${o['seconds'] ?? '?'} วินาที และ CatCut ดูหน้าต่างของ Premiere ไม่ได้ จึงแยกไม่ออกว่ามีหน้าต่างค้างหรือกำลังเรนเดอร์`,
     frequency: 'each-time', keepOpen: true, closeAfter: 'เมื่อ CatCut แจ้งว่า Save แล้ว', needsProject: false,
   }),
   premiereNeedsProject: (o: Opts = {}): UserAction => ({
@@ -132,7 +138,7 @@ export const ACTIONS = {
     steps: [
       'สลับไปที่ Premiere ดูว่ามีหน้าต่างค้างไหม (Sign in, อัปเดต, Recover, Locate Media)',
       'ผ่านหน้าต่างนั้นให้ถึงหน้าโปรเจกต์',
-      'ถ้า Premiere เปิดแล้วแต่ยังไม่ต่อ: Window > Extensions > CatCut Bridge',
+      'ถ้า Premiere เปิดแล้วแต่ยังไม่ต่อ: Window > Extensions > CatCut Bridge แล้ววาง panel ทิ้งไว้ใน workspace (อย่ากดปิด) ครั้งต่อไปจะต่อเอง',
       'บอก AI ว่าเสร็จแล้ว',
     ],
     why: `CatCut สั่งเปิด Premiere แล้วรอ ${o['seconds'] ?? '?'} วินาทียังไม่มีสัญญาณจาก bridge`,

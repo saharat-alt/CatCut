@@ -12,10 +12,12 @@ import os from 'node:os';
 import { basename, dirname, join, resolve } from 'node:path';
 import { z } from 'zod';
 import { uniqueOutputPath } from '../engine/aerender.js';
+import type { UserAction } from '../core/types.js';
+import { ACTIONS, card } from '../core/user-action.js';
 import { stagePath, type PremiereProjectRef, type PremiereSequenceRef } from '../engine/premiere.js';
 import type { AppState } from './state.js';
 import { client, closeHint, ensureProject } from './tools-premiere.js';
-import { tool, ToolError, type ToolDef } from './tooldef.js';
+import { needsUser, RELAY, tool, ToolError, type ToolDef } from './tooldef.js';
 
 const frameOrTc = z.union([z.number().int().min(0), z.string().regex(/^\d{1,2}:\d{2}:\d{2}[:;]\d{2}$/)]);
 const clipSel = z.object({
@@ -31,8 +33,15 @@ const source = {
   in: z.number().int().min(0).optional().describe('source in, frames at sequence fps'),
   keepAudio: z.boolean().optional().describe('keep the linked audio (default: dropped for comps and stills)'),
 };
+const keepTracks = z.array(z.string().regex(/^[VAva]\d+$/)).optional().describe('tracks the ripple leaves as they are, e.g. ["A3"] for a music bed');
 const OP = z.discriminatedUnion('op', [
-  z.object({ op: z.literal('remove'), clip: clipSel, linked: z.boolean().optional().describe('also remove its linked audio (default true)') }),
+  z.object({
+    op: z.literal('remove'), clip: clipSel, linked: z.boolean().optional().describe('also remove its linked audio (default true; ignored with ripple)'),
+    ripple: z.boolean().optional().describe('close the gap: everything after moves left on every track not in keepTracks (the cut gets shorter)'), keepTracks,
+  }),
+  z.object({
+    op: z.literal('ripple_delete'), from: frameOrTc, to: frameOrTc.describe('exclusive'), keepTracks,
+  }).describe('take frames [from, to) out of the whole cut and close the gap: clips inside go, edges are trimmed, later clips move left'),
   z.object({ op: z.literal('trim'), clip: clipSel, start: frameOrTc.optional(), end: frameOrTc.optional() }),
   z.object({ op: z.literal('move'), clip: clipSel, to: frameOrTc }),
   z.object({ op: z.literal('set_speed'), clip: clipSel, rate: z.number().positive().describe('percent, e.g. 60'), interpolation: z.enum(['optical-flow', 'frame-blend', 'frame-sampling']).optional() }),
@@ -104,6 +113,12 @@ function outDirFor(state: AppState, kind: string, seq: string): string {
   return join(base, `${seq.replace(/[<>:"/\\|?*\u0000-\u001f]/g, '_')}-${stampNow()}`);
 }
 
+/** An installed host.jsx older than an op: the update card (host.jsx reloads by itself, no restart). */
+function oldBridgeCard(errors: string[]): UserAction | undefined {
+  const op = errors.map((e) => /^unknown op: (\w+)/.exec(e)?.[1]).find(Boolean);
+  return op ? ACTIONS.bridgeUpdate({ installed: 'เก่า', wanted: `ใหม่กว่า (ต้องใช้ op ${op})` }) : undefined;
+}
+
 export const PREMIERE_EDIT_TOOLS: ToolDef[] = [
   tool({
     name: 'premiere_timeline_get',
@@ -127,7 +142,7 @@ export const PREMIERE_EDIT_TOOLS: ToolDef[] = [
 
   tool({
     name: 'premiere_edit',
-    description: 'แก้คลิปใน sequence เดิมของ editor (ไม่สร้าง sequence ใหม่): remove, trim, move, set_speed, overwrite (ไฟล์หรือ AE comp), replace_media, relink, rename, set_motion, add/remove_effect, set_effect_param. '
+    description: 'แก้คลิปใน sequence เดิมของ editor (ไม่สร้าง sequence ใหม่): remove (ripple: true = ลบแล้วเลื่อนช่วงถัดไปมาชิด), ripple_delete (ตัดช่วงเวลาออกทั้งเรื่องแล้วชิด), trim, move, set_speed, overwrite (ไฟล์หรือ AE comp), replace_media, relink, rename, set_motion, add/remove_effect, set_effect_param. '
       + 'ทุก op ระบุคลิปด้วย track+start+end(+name) ตามที่เป็นอยู่ตอนนี้ (ดู premiere_timeline_get) ถ้าคลิปขยับไปแล้วจะไม่แก้อะไรเลย. ค่าเริ่มต้น dry run; apply: true จะ Save สถานะปัจจุบันเป็นจุดย้อนกลับก่อน แล้วแก้ แล้วตรวจว่าคลิปอื่นไม่เปลี่ยน; Save ผลแก้เมื่อ save: true; ย้อนด้วย premiere_undo_last. '
       + 'Ops run in order: a later op names its clip where the earlier ops left it. · Edit the editor\'s sequence in place, guarded.',
     input: {
@@ -144,13 +159,16 @@ export const PREMIERE_EDIT_TOOLS: ToolDef[] = [
       const args = { expectProject: project.path, sequence: a.sequence, ops };
       if (a.apply !== true) {
         const r = await c.call<{ plan: unknown[]; problems: Array<{ op: number; error: string }> }>('edit', { ...args, apply: false }, { timeoutMs });
+        const update = oldBridgeCard(r.problems.map((p) => p.error));
+        if (update) throw needsUser('Premiere bridge is older than these ops', update, { problems: r.problems });
         return { ...r, ok: r.problems.length === 0, dryRun: true, hint: r.problems.length ? 'แก้ op ที่มีปัญหาก่อน (ดู problems) / fix the problems first' : 'ตรวจแผนแล้วเรียกซ้ำด้วย apply: true / review, then apply: true' };
       }
       const backup = await checkpoint(state, project, timeoutMs);
       const r = await c.call<{ results: unknown[]; failed: { op: number; error: string } | null; untouchedChanged: unknown[]; saved: boolean; sequence: PremiereSequenceRef }>('edit', { ...args, apply: true, save: a.save === true }, { timeoutMs });
+      const update = r.failed ? oldBridgeCard([r.failed.error]) : undefined;
       const clean = !r.failed && r.untouchedChanged.length === 0;
       return {
-        ...r, ok: clean, backup,
+        ...r, ok: clean, backup, ...(update ? { userAction: card(update), relay: RELAY } : {}),
         ...(clean ? {} : { warning: r.failed ? `op ${r.failed.op} ล้ม: ${r.failed.error} — op ก่อนหน้าถูกใช้ไปแล้ว ไม่ได้ Save / op failed; earlier ops applied, not saved` : 'คลิปที่ไม่ได้สั่งเปลี่ยนไป — ไม่ได้ Save / clips outside the ops changed; not saved', undo: 'premiere_undo_last คืนสถานะก่อนแก้ทั้งหมด / restores the checkpoint' }),
         closeHint: closeHint(state, r.saved),
       };

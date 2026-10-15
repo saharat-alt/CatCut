@@ -483,3 +483,21 @@ web search / ดูคลิปสอน (skill `watch`) → สกัดเป�
 ### 14.4 ยังต้องลองกับโปรแกรมจริง (ทดสอบแบบจำลองแล้วเท่านั้น)
 - Premiere 2026: เปิดโปรเจกต์จาก command line แล้ว bridge auto-start, `app.quit()`, QE `setSpeed` + `setTimeInterpolationType(2)` (Codex ใช้ได้จริงในงานนี้), hot-reload `$.evalFile`
 - AE 26.5: ข้อความ error ตอนยังไม่ Sign in (ใช้ "ไม่มี result + ปิดเร็ว" เป็นสัญญาณ)
+
+## 15. ฟีดแบครอบ 2 (ทรานสคริปต์ Codex 13–15 ต.ค. 2026: CSR v36, Thai Agri Foods D2, company final)
+
+### 15.1 ปัญหา → สาเหตุ → ที่แก้ (รอบนี้ ข้อ 1–4)
+| # | ที่ผู้ใช้เจอ | สาเหตุ | แก้ |
+|---|---|---|---|
+| 1 | CatCut ไม่ยอมเขียนในโฟลเดอร์งาน CSR ("protected path") | `BUILTIN_PROTECTED` ฝังโฟลเดอร์งานไว้ในโค้ด — กฎตอนพัฒนาหลุดเข้าตัวโปรแกรม | ตัวโปรแกรมไม่ล็อกอะไรเอง ใช้ `EDITMCP_PROTECTED_PATHS` เท่านั้น; ตอนรันเทสต์ vitest ตั้งค่านี้ให้ (กฎ CLAUDE.md ยังอยู่) |
+| 2 | การ์ด "Premiere มีหน้าต่างรอให้กด" ขึ้นราว 10 ครั้ง ทั้งที่ไม่มีหน้าต่าง | busy ≥ 45 วินาที = การ์ดเสมอ แต่ที่จริง Premiere กำลังเรนเดอร์คอมป์ AE ผ่าน Dynamic Link | อ่านหน้าต่างของ Premiere (Win32: main window ถูก disable = มี modal) — มีหน้าต่าง: การ์ดพร้อมชื่อหน้าต่าง; ไม่มี: รอต่อ / error ธรรมดา "กำลังทำงาน ไม่ต้องกดอะไร"; อ่านไม่ได้: การ์ดแบบบอกว่าแยกไม่ออก |
+| 3 | ต้องเปิด Window > Extensions > CatCut Bridge แทบทุกครั้งที่เปิด Premiere | bridge แบบซ่อนเริ่มตอน ApplicationActivate ซึ่งไม่เกิดถ้า Premiere ไม่ได้อยู่หน้าสุด (CatCut เปิดจากเบื้องหลัง) และการ์ดเดิมบอกให้ "ปิด panel ได้" | `openPremiere` เรียกหน้าต่าง Premiere ขึ้นหน้า (SetForegroundWindow, ไม่จำลองการกด) สูงสุด 2 ครั้งก่อนขอให้คนทำ; การ์ดบอกให้วาง panel ทิ้งไว้ใน workspace ไม่ต้องปิด (ทำครั้งเดียว) |
+| 4 | ลบช็อตแล้วเวลารวมไม่ลด / AI ยืดช็อตอื่นมาเติม / ท้ายดำตอน export | `premiere_edit` ไม่มี ripple | `remove {ripple: true}` และ `ripple_delete {from, to, keepTracks}`: ลบในช่วง, ตัดขอบ, เลื่อนทุกแทร็กที่เหลือมาชิด (เรียงจากต้นไปท้ายข้ามแทร็ก กันคลิป linked ที่ Premiere ลากไปด้วยชนกัน), ปฏิเสธถ้าจะตัดกลางคลิปที่คร่อมทั้งช่วง (เช่นเพลง) เว้นแต่อยู่ใน keepTracks, รายงาน `tail` เมื่อเสียงยาวเกินภาพ; host.jsx เก่าที่ไม่รู้จัก op ได้การ์ด bridge-update (ไม่ต้องรีสตาร์ท) |
+
+### 15.2 ค้างไว้รอบถัดไป (จาก §15 ในทรานสคริปต์)
+คอมป์ AE ใน Premiere พรีวิวไม่ขึ้น (รวม AEP ต่อ sequence / เรนเดอร์ alpha แล้วเก็บ AEP), การ์ดแยก "ต้องรอคน" กับ "แค่แจ้ง", ตัววัดสีก่อน–หลัง, รีวิว + กฎของงานที่อยู่ใน Premiere อย่างเดียว, ย้ายไฟล์ไม่ใช้ไปโฟลเดอร์ `_READY_TO_DELETE`
+
+### 15.3 ยังต้องลองกับโปรแกรมจริง
+- Premiere 2026: SetForegroundWindow/SwitchToThisWindow จาก process เบื้องหลังทำให้เกิด ApplicationActivate จริงไหม; panel ที่ค้างใน workspace เปิดเองตอนเริ่มโปรแกรมไหม
+- main window ถูก disable ระหว่าง modal (Link Media, Import progress) และไม่ถูก disable ระหว่างเรนเดอร์ Dynamic Link
+- `TrackItem.move` ลากเสียง linked ไปด้วยหรือไม่ (โค้ดรับได้ทั้งสองแบบ)

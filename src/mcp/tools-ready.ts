@@ -69,12 +69,12 @@ export async function readiness(state: AppState, deps: ReadinessDeps = {}): Prom
   }
 
   // Premiere: CatCut opens it when a premiere_* tool needs it
-  state.premiere ??= createPremiereClient();
   state.premiereHost ??= premiereHost();
+  state.premiere ??= createPremiereClient({ host: state.premiereHost });
   const d = await diagnosePremiere(state.premiere, state.premiereHost, state.env.tools.premiereExe ? { premiereExe: state.env.tools.premiereExe } : {});
   if (d.userAction?.code === 'premiere-not-found') apps.push({ app: 'premiere', status: 'optional', keepOpen: 'never', note: 'ไม่พบ Premiere: ส่งงานเป็น XML ได้', userAction: act(d.userAction) });
   else if (d.userAction) apps.push({ app: 'premiere', status: 'action', keepOpen: d.userAction.keepOpen ? 'while-working' : 'catcut-opens-it', note: d.note, userAction: act(d.userAction) });
-  else apps.push({ app: 'premiere', status: 'ok', keepOpen: 'catcut-opens-it', note: d.ready ? `เชื่อมอยู่: ${d.status.project?.name ?? 'ยังไม่มีโปรเจกต์'}` : 'ปิดอยู่ ไม่เป็นไร: CatCut เปิดให้พร้อมโปรเจกต์เมื่อต้องใช้ แล้วบอกเมื่อปิดได้' });
+  else apps.push({ app: 'premiere', status: 'ok', keepOpen: 'catcut-opens-it', note: d.busy ? 'เชื่อมอยู่ กำลังทำงาน (มักเป็นการเรนเดอร์คอมป์ AE) ไม่มีหน้าต่างค้าง — รอได้ ไม่ต้องกดอะไร' : d.ready ? `เชื่อมอยู่: ${d.status.project?.name ?? 'ยังไม่มีโปรเจกต์'}` : 'ปิดอยู่ ไม่เป็นไร: CatCut เปิดให้พร้อมโปรเจกต์เมื่อต้องใช้ แล้วบอกเมื่อปิดได้' });
 
   // disk: the project drive and the temp drive
   const freeGb = deps.freeGb ?? defaultFreeGb;

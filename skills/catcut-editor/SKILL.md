@@ -17,6 +17,8 @@ CatCut builds video headlessly: AE comps render with aerender, ffmpeg stitches c
 
 ## Editing the editor's Premiere sequence in place
 - Client notes on a sequence the editor works in ("cut this shot 1 s", "swap the footage", "regrade this shot", "remove the frame") go through `premiere_edit` in **that** sequence. Never push a new sequence (`premiere_push`) for a revision.
+- Taking a shot or a stretch out closes the gap: `remove {ripple: true}` or `ripple_delete {from, to}`. The cut gets shorter by what was removed. Never stretch or retime the other shots to keep the old length unless the user asks. Put a music bed that must keep playing in `keepTracks` and fix the `tail` the result reports.
+- A Premiere call that takes long with no dialog open is Premiere rendering (often After Effects comps through Dynamic Link): wait and call again. Only a `premiere-dialog` card means the user has something to click.
 - Always read first with `premiere_timeline_get`, and use `premiere_clip_effects` for colour or effect values. Each op names its clip exactly as it is now: `{track, start, end, name}`.
 - Run without `apply` first and show the user the plan. Fix any `problems`, because a clip the editor moved is refused on purpose. Then run `apply: true`. Add `save: true` only when the user wants it saved.
 - If the result has `failed` or `untouchedChanged`, say so plainly and offer `premiere_undo_last`. The checkpoint was saved right before the edit.

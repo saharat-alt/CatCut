@@ -273,12 +273,105 @@ var catcut_dispatch = (function () {
         return out;
     }
 
+    function allTracks(s) {
+        var out = [], kinds = [["V", s.videoTracks], ["A", s.audioTracks]];
+        for (var k = 0; k < kinds.length; k++) for (var t = 0; t < kinds[k][1].numTracks; t++) out.push({ kind: kinds[k][0], index: t, name: kinds[k][0] + (t + 1), track: kinds[k][1][t] });
+        return out;
+    }
+    /** The clip of node on track tr that starts and ends exactly there now, or null. */
+    function clipAt(tr, node, start, end, fps) {
+        for (var n = 0; n < tr.track.clips.numItems; n++) {
+            var c = tr.track.clips[n];
+            if (nodeOf(c) === node && fr(c.start, fps) === start && fr(c.end, fps) === end) return c;
+        }
+        return null;
+    }
+    /**
+     * Ripple delete of frames [from, to): on every track not in keep, clips inside go, clips across an
+     * edge are trimmed to it, later clips move left by to - from, so the cut gets shorter (an editor's
+     * "take it out and close the gap"). A clip spanning the whole range would lose its middle: refused
+     * unless its track is kept (a music bed usually is).
+     */
+    function ripple(s, from, to, keep, fps, apply, touched) {
+        if (!(to > from)) throw new Error("ripple: to must be after from");
+        var d = to - from, keepSet = {}, i, k, tracks = allTracks(s), items = [], spans = [], ends = { picture: 0, all: 0 };
+        for (i = 0; i < (keep || []).length; i++) { var kp = parseTrack(keep[i]); keepSet[kp.kind + (kp.index + 1)] = true; }
+        for (i = 0; i < tracks.length; i++) {
+            var tr = tracks[i];
+            for (var n = 0; n < tr.track.clips.numItems; n++) {
+                var c = tr.track.clips[n], info = clipInfo(c, tr.name, n, fps), cs = info.start, ce = info.end, it = null;
+                if (keepSet[tr.name] || ce <= from) it = null;
+                else if (cs >= to) it = { kind: "shift", start: cs - d, end: ce - d };
+                else if (cs >= from && ce <= to) it = { kind: "remove" };
+                else if (cs < from && ce > to) { spans.push(info.name + " on " + tr.name + " " + cs + "-" + ce); continue; }
+                else if (cs < from) it = { kind: "trim-end", start: cs, end: from };
+                else it = { kind: "trim-head", start: from, end: ce - d, "in": info["in"] + Math.round((to - cs) * (info.speed || 1)) };
+                var nowEnd = it ? (it.kind === "remove" ? 0 : it.end) : ce;
+                if (nowEnd > ends.all) ends.all = nowEnd;
+                if (tr.kind === "V" && nowEnd > ends.picture) ends.picture = nowEnd;
+                if (it) { it.clip = info; it.tr = tr; items.push(it); }
+            }
+        }
+        if (spans.length) throw new Error("ripple " + from + "-" + to + " would cut the middle out of " + spans.join(", ") + "; pass those tracks in keepTracks (they stay as they are) or trim them first; nothing changed");
+        for (i = 0; i < items.length; i++) touched.push(keyOf(items[i].clip));
+        var summary = function () {
+            var out = { remove: [], trim: [], shift: 0 };
+            for (var j = 0; j < items.length; j++) {
+                var x = items[j], label = x.clip.track + " " + x.clip.name + " " + x.clip.start + "-" + x.clip.end;
+                if (x.kind === "remove") out.remove.push(label); else if (x.kind === "shift") out.shift++; else out.trim.push(label + " -> " + x.start + "-" + (x.kind === "trim-head" ? x.end + d : x.end));
+            }
+            var tail = ends.all > ends.picture ? { tail: "sound runs " + (ends.all - ends.picture) + " frames past the last picture (black at the end of an export): trim it or set the export out point" } : {};
+            var r = { from: from, to: to, removedFrames: d, removed: out.remove, trimmed: out.trim, shifted: out.shift, keptTracks: keep || [], pictureEnd: ends.picture, end: ends.all };
+            for (var t in tail) if (tail.hasOwnProperty(t)) r[t] = tail[t];
+            return r;
+        };
+        if (!apply) return summary();
+        // 1. clips inside the range go; 2. edges are trimmed; 3. everything after moves left, earliest
+        // first across all tracks, so a linked partner Premiere drags along never lands on a clip that
+        // has not moved yet. A clip already where it belongs (moved with its partner) is left alone.
+        for (i = 0; i < items.length; i++) {
+            var x = items[i], c0 = clipAt(x.tr, x.clip.nodeId, x.clip.start, x.clip.end, fps);
+            if (x.kind === "remove") { if (c0) c0.remove(false, false); continue; }
+            if (x.kind === "trim-end") { if (c0) c0.end = time(from, fps); continue; }
+            if (x.kind === "trim-head" && c0) { c0.inPoint = time(x["in"], fps); c0.start = time(to, fps); }
+        }
+        var moves = [];
+        for (i = 0; i < items.length; i++) if (items[i].kind === "shift" || items[i].kind === "trim-head") moves.push(items[i]);
+        var startNow = function (p) { return p.kind === "shift" ? p.clip.start : to; };
+        moves.sort(function (p, q) { return startNow(p) - startNow(q); });
+        for (i = 0; i < moves.length; i++) {
+            var m = moves[i], curStart = startNow(m), curEnd = m.end + d;
+            var cm = clipAt(m.tr, m.clip.nodeId, curStart, curEnd, fps);
+            if (cm) cm.move(time(-d, fps));
+            else if (!clipAt(m.tr, m.clip.nodeId, m.start, m.end, fps)) throw new Error("ripple lost " + m.clip.name + " on " + m.tr.name + " (expected at " + curStart + "-" + curEnd + ")");
+        }
+        // every planned clip is where the plan put it
+        for (i = 0; i < items.length; i++) {
+            var y = items[i];
+            if (y.kind === "remove") { if (clipAt(y.tr, y.clip.nodeId, y.clip.start, y.clip.end, fps)) throw new Error("ripple did not remove " + y.clip.name + " on " + y.tr.name); continue; }
+            var cy = clipAt(y.tr, y.clip.nodeId, y.start, y.end, fps);
+            if (!cy) throw new Error("ripple left " + y.clip.name + " on " + y.tr.name + " away from " + y.start + "-" + y.end);
+            touched.push(keyOf(clipInfo(cy, y.tr.name, 0, fps)));
+        }
+        return summary();
+    }
+
     /** One edit op. Dry run: check preconditions, say what would happen. Apply: do it and verify. */
     function runOp(s, op, fps, apply, touched) {
         var t, c, hit, info, before, i;
         switch (op.op) {
+            case "ripple_delete": {
+                var r = ripple(s, frameArg(op.from, fps), frameArg(op.to, fps), op.keepTracks, fps, apply, touched);
+                r.op = "ripple_delete";
+                return r;
+            }
             case "remove": {
                 hit = findClip(s, op.clip, fps); c = hit.clip; info = clipInfo(c, hit.track.name, hit.index, fps);
+                if (op.ripple === true) {
+                    var rr = ripple(s, info.start, info.end, op.keepTracks, fps, apply, touched);
+                    rr.op = "remove"; rr.clip = info; rr.ripple = true;
+                    return rr;
+                }
                 var linked = hit.track.kind === "V" && op.linked !== false ? linkedAudio(s, c, fps) : [];
                 touched.push(keyOf(info));
                 for (i = 0; i < linked.length; i++) touched.push(keyOf(clipInfo(linked[i].clip, linked[i].track, 0, fps)));
