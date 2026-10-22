@@ -45,6 +45,26 @@ export const ACTIONS = {
         why: `CatCut สั่ง AE แบบไม่มีหน้าต่าง แต่ AE ปิดตัวก่อนรันงาน${o['detail'] ? ` (${o['detail']})` : ''} — มักเกิดเมื่อยังไม่ได้ Sign in หรือหลังอัปเดต AE แล้วมีหน้าต่างแรกค้าง`,
         frequency: 'after-update', keepOpen: false, closeAfter: 'ทันทีที่เห็นหน้าจอหลักของ AE', needsProject: false,
     }),
+    aeHeadlessFailed: (o = {}) => ({
+        code: 'ae-headless-failed', app: 'after-effects', title: 'After Effects แบบไม่มีหน้าต่างเปิดไม่ขึ้น (GPU / log)',
+        steps: [
+            'เปิด After Effects ตามปกติหนึ่งครั้ง รอจนเห็นหน้าจอหลัก (ถ้ามีกล่องเตือนเรื่อง GPU หรือ crash ให้กด OK)',
+            'บอก AI ว่า "เปิด AE แล้ว" — ถ้าครั้งต่อไปยังล้ม ให้บอก AI ว่าใช้ AE ที่เปิดอยู่ได้ (ae_live_run) แล้วเปิด AE ค้างไว้',
+            'ถ้า AE ขึ้นกล่องข้อความระหว่างงาน ปิดกล่องนั้นแล้วบอกข้อความในกล่องให้ AI',
+        ],
+        why: `AE ปิดตัวก่อนเริ่มงานแบบไม่มีหน้าต่าง${o['detail'] ? ` (${o['detail']})` : ''} — มักเป็น "GPU sanity test failed" หรือเขียน log ไม่ได้ ไม่ใช่เรื่อง Sign in หรือ Allow Scripts`,
+        frequency: 'each-time', keepOpen: false, closeAfter: 'ทันทีที่เห็นหน้าจอหลักของ AE (ถ้าจะใช้ AE ที่เปิดอยู่ ให้เปิดค้างไว้)', needsProject: false,
+    }),
+    aeModalOpen: (o = {}) => ({
+        code: 'ae-modal-open', app: 'after-effects', title: 'After Effects มีกล่องข้อความค้างอยู่',
+        steps: [
+            'สลับไปที่ After Effects ดูกล่องข้อความหรือหน้าต่างที่ค้าง (เช่น Save As, Missing fonts, Missing footage)',
+            'อ่านข้อความแล้วตอบหรือปิดกล่องนั้น',
+            'บอก AI ข้อความที่เห็นและสิ่งที่กด — CatCut จะทำต่อจากจุดเดิม',
+        ],
+        why: `AE รันสคริปต์ไม่ได้ขณะมีกล่องข้อความรอคำตอบ${o['detail'] ? ` (${o['detail']})` : ''}`,
+        frequency: 'each-time', keepOpen: true, closeAfter: 'เมื่อ CatCut แจ้งว่า Save แล้ว', needsProject: false,
+    }),
     aeAllowScripts: () => ({
         code: 'ae-allow-scripts', app: 'after-effects', title: 'อนุญาตให้สคริปต์เขียนไฟล์ใน After Effects',
         steps: [

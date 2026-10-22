@@ -94,7 +94,17 @@ function fakePremiere(projectPath: string, o: { linkedMoves?: boolean } = {}) {
   });
   const tracks = (lists: Clip[][], kind: 'V' | 'A') => { const o: Record<string, unknown> = { numTracks: lists.length }; lists.forEach((l, i) => { o[i] = trackObj(l, kind, i); }); return o; };
   let inOut = { in: -400000, out: -400000 };
+  // sequence markers: Premiere's linked-list style API; colours as indexes
+  const markerList: Array<{ start: { seconds: number }; end: { seconds: number }; name: string; comments: string; color: number }> = [];
+  const markerObj = (m: (typeof markerList)[number]) => Object.assign(m, { getColorByIndex: () => m.color, setColorByIndex: (c: number) => { m.color = c; } });
+  const markers = {
+    getFirstMarker: () => markerList[0],
+    getNextMarker: (m: (typeof markerList)[number]) => markerList[markerList.indexOf(m) + 1],
+    createMarker: (s: number) => { const m = markerObj({ start: { seconds: s }, end: { seconds: s }, name: '', comments: '', color: 0 }); markerList.push(m); return m; },
+    deleteMarker: (m: (typeof markerList)[number]) => { const i = markerList.indexOf(m); if (i < 0) return false; markerList.splice(i, 1); return true; },
+  };
   const seq = {
+    markers,
     name: 'EDIT', sequenceID: 'seq-1', end: String(Math.round(20 * 254016000000)),
     getSettings: () => ({ videoFrameRate: { seconds: 1 / FPS }, videoDisplayFormat: 101, videoFrameWidth: 1920, videoFrameHeight: 1080 }),
     get videoTracks() { return tracks(video, 'V'); }, get audioTracks() { return tracks(audio, 'A'); },
@@ -362,6 +372,33 @@ describe('premiere_edit / premiere_undo_last tools', () => {
       : real(script)));
     const r = await call('premiere_edit', { project: projectPath, ops: [{ op: 'ripple_delete', from: 0, to: 10 }] });
     expect(r).toMatchObject({ isError: true, data: { userAction: { code: 'bridge-update', why: expect.stringContaining('ripple_delete') } } });
+  });
+
+  it('premiere_markers: dry run shows the plan, apply clears the old red ones only and adds the new set', async () => {
+    const { projectPath, prem, call } = await live();
+    const mk = (prem.ctx as unknown as { __x?: unknown }) && undefined; void mk;
+    const seed = await call('premiere_markers', { project: projectPath, apply: true, add: [
+      { at: 10, name: 'old red', color: 'red' }, { at: 60, name: 'blue note', color: 'blue' }, { at: '00:00:04:00', name: 'old red 2', color: 'red', dur: 5 },
+    ] });
+    expect(seed.data).toMatchObject({ ok: true, added: 3, removed: 0, total: 3 });
+    const dry = await call('premiere_markers', { project: projectPath, clear: { colors: ['red'] }, add: [{ at: 30, name: 'ใหม่ ปรับครอป', comment: 'crop' }] });
+    expect(dry.data).toMatchObject({ ok: true, dryRun: true, existing: 3, willRemove: [{ frame: 10, color: 1 }, { frame: 100, end: 105, color: 1 }], willAdd: [{ frame: 30, color: 1, name: 'ใหม่ ปรับครอป' }] });
+    const done = await call('premiere_markers', { project: projectPath, apply: true, clear: { colors: ['red'] }, add: [{ at: 30, name: 'ใหม่ ปรับครอป' }] });
+    expect(done.data).toMatchObject({ ok: true, removed: 2, added: 1, total: 2 });
+    const after = await call('premiere_markers', { project: projectPath });
+    expect(after.data['markers'].map((m: { name: string; color: number }) => [m.name, m.color])).toEqual([['blue note', 6], ['ใหม่ ปรับครอป', 1]]);
+    const noCriteria = await call('premiere_markers', { project: projectPath, apply: true, clear: {} });
+    expect(noCriteria).toMatchObject({ isError: true, data: { error: expect.stringMatching(/needs all, colors or nameContains/) } });
+  });
+
+  it('premiere_frames fetches long ranges in batches of 40 and keeps every frame', async () => {
+    const { projectPath, prem, call } = await live();
+    const seen: number[] = [];
+    const real = prem.evalScript.getMockImplementation()!;
+    prem.evalScript.mockImplementation(async (script: string) => { if (script.includes('"frames"')) seen.push(1); return real(script); });
+    const r = await call('premiere_frames', { project: projectPath, from: 0, to: 100 });
+    expect(r.data['frames']).toHaveLength(100);
+    expect(seen.length).toBe(3);
   });
 
   it('premiere_place_ae_comp is a guarded overwrite (dry run first)', async () => {

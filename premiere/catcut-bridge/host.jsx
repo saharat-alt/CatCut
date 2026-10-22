@@ -653,6 +653,9 @@ var catcut_dispatch = (function () {
             requireProject(a);
             var s = findSequence(a.sequence), fps = seqFps(s), list = a.frames || [], out = [], i;
             if (!list.length && a.from !== undefined) for (i = frameArg(a.from, fps); i < frameArg(a.to, fps); i += a.step || 1) list.push(i);
+            var total = list.length;
+            // skip/take: a long range is fetched in small batches so one stuck frame never holds the queue for minutes
+            if (a.take) list = list.slice(a.skip || 0, (a.skip || 0) + a.take);
             if (!list.length || list.length > 300) throw new Error("frames: 1 to 300 frames per call");
             app.project.openSequence(s.sequenceID);
             app.enableQE();
@@ -663,7 +666,7 @@ var catcut_dispatch = (function () {
                 if (!new File(base + ".png").exists) throw new Error("Premiere wrote no frame for " + tcOf(f, fps));
                 out.push({ frame: f, tc: tcOf(f, fps), file: base + ".png" });
             }
-            return { sequence: { name: s.name, id: s.sequenceID }, frames: out };
+            return { sequence: { name: s.name, id: s.sequenceID }, frames: out, total: total };
         },
         exportRange: function (a) {
             requireProject(a);
@@ -676,6 +679,53 @@ var catcut_dispatch = (function () {
             finally { if (oldIn >= 0) s.setInPoint(oldIn); else s.clearInPoint(); if (oldOut >= 0) s.setOutPoint(oldOut); else s.clearOutPoint(); }
             if (!new File(a.path).exists) throw new Error("Premiere exported nothing (" + r + ")");
             return { sequence: { name: s.name, id: s.sequenceID }, path: a.path, from: from, to: to };
+        },
+        /**
+         * Sequence markers: list them, clear some (by colour index / name text / all) and add new ones,
+         * as one step. a.apply !== true is a dry run (what would go, what would come). Colour index:
+         * 0 green, 1 red, 2 purple, 3 orange, 4 yellow, 5 white, 6 blue, 7 cyan.
+         */
+        markers: function (a) {
+            requireProject(a);
+            var s = findSequence(a.sequence), fps = seqFps(s), mk = s.markers, i, m, all = [], out = [], gone = [], keep = {};
+            function colorOf(x) { try { return x.getColorByIndex(); } catch (e) { return null; } }
+            function describe(x) { return { frame: fr(x.start, fps), end: fr(x.end, fps), name: String(x.name), comments: String(x.comments || ""), color: colorOf(x) }; }
+            for (m = mk.getFirstMarker(); m; m = mk.getNextMarker(m)) all.push(m);
+            var clear = a.clear || null;
+            if (clear) {
+                var colors = clear.colors || null, text = clear.nameContains ? String(clear.nameContains).toLowerCase() : null;
+                if (clear.all !== true && !colors && !text) throw new Error("markers.clear needs all, colors or nameContains");
+                for (i = 0; i < all.length; i++) {
+                    var hit = clear.all === true, d = describe(all[i]), j;
+                    if (!hit && colors) for (j = 0; j < colors.length; j++) if (d.color === colors[j]) hit = true;
+                    if (!hit && text && (d.name.toLowerCase().split(text).length > 1 || d.comments.toLowerCase().split(text).length > 1)) hit = true;
+                    if (hit) gone.push({ marker: all[i], info: d });
+                }
+            }
+            var add = a.add || [], plan = [];
+            for (i = 0; i < add.length; i++) {
+                var at = frameArg(add[i].at, fps), dur = add[i].dur || 0, col = add[i].color === undefined ? 1 : add[i].color;
+                if (!(at >= 0)) throw new Error("markers.add[" + i + "] needs at (frame or timecode)");
+                if (!(col >= 0 && col <= 7)) throw new Error("markers.add[" + i + "].color is 0-7");
+                plan.push({ frame: at, end: at + dur, name: String(add[i].name || ""), comments: String(add[i].comment || ""), color: col });
+            }
+            var removed = [];
+            for (i = 0; i < gone.length; i++) removed.push(gone[i].info);
+            if (a.apply !== true) {
+                for (i = 0; i < all.length; i++) out.push(describe(all[i]));
+                return { sequence: { name: s.name, id: s.sequenceID }, dryRun: true, existing: out.length, markers: out.slice(0, 300), willRemove: removed, willAdd: plan };
+            }
+            for (i = 0; i < gone.length; i++) if (!mk.deleteMarker(gone[i].marker)) throw new Error("Premiere refused to delete the marker at frame " + gone[i].info.frame);
+            for (i = 0; i < plan.length; i++) {
+                var nm = mk.createMarker(plan[i].frame / fps);
+                nm.name = plan[i].name; nm.comments = plan[i].comments;
+                if (plan[i].end > plan[i].frame) nm.end = time(plan[i].end, fps);
+                try { nm.setColorByIndex(plan[i].color, 0); } catch (e2) { throw new Error("Premiere could not set the marker colour (needs a Premiere with Marker.setColorByIndex)"); }
+            }
+            var after = 0;
+            for (m = mk.getFirstMarker(); m; m = mk.getNextMarker(m)) after++;
+            if (a.save === true) saveProject();
+            return { sequence: { name: s.name, id: s.sequenceID }, dryRun: false, removed: removed.length, added: plan.length, total: after, saved: a.save === true };
         },
         aeRun: function (a) {
             if (typeof BridgeTalk === "undefined") throw new Error("BridgeTalk is not available in this Premiere");

@@ -36,7 +36,9 @@ export interface ReadinessDeps {
   freeGb?: (path: string) => Promise<number | undefined>;
 }
 
-const LOW_DISK_GB = 20;
+/** Below this the person must act (CatCut itself stops under 5 GB); up to WARN_DISK_GB it is only a note, work goes on. */
+const LOW_DISK_GB = 8;
+const WARN_DISK_GB = 20;
 const AE_CACHE_WARN_GB = 10;
 
 async function defaultFreeGb(path: string): Promise<number | undefined> {
@@ -84,7 +86,7 @@ export async function readiness(state: AppState, deps: ReadinessDeps = {}): Prom
     if (gb === undefined) continue;
     const r = Math.round(gb * 10) / 10;
     if (gb < LOW_DISK_GB) apps.push({ app: 'disk', status: 'action', keepOpen: 'never', note: `${root} เหลือ ${r} GB`, userAction: act(ACTIONS.diskLow({ drive: root, freeGb: r })) });
-    else apps.push({ app: 'disk', status: 'ok', keepOpen: 'never', note: `${root} เหลือ ${r} GB` });
+    else apps.push({ app: 'disk', status: 'ok', keepOpen: 'never', note: `${root} เหลือ ${r} GB${gb < WARN_DISK_GB ? ' (พอใช้ ทำงานต่อได้ — ล้างแคช AE เมื่อสะดวก ไม่ต้องหยุดรอ)' : ''}` });
   }
 
   const name: Record<UserAction['app'], string> = { ffmpeg: 'ffmpeg', 'after-effects': 'After Effects', premiere: 'Premiere Pro', disk: 'ดิสก์', catcut: 'CatCut' };

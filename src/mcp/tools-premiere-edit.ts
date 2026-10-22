@@ -63,6 +63,9 @@ const OP = z.discriminatedUnion('op', [
 ]);
 type Op = z.infer<typeof OP>;
 
+const FRAMES_PER_CALL = 40;
+const MARKER_COLORS = ['green', 'red', 'purple', 'orange', 'yellow', 'white', 'blue', 'cyan'] as const;
+const MARKER_COLOR = z.union([z.enum(MARKER_COLORS), z.number().int().min(0).max(7)]);
 const seqArg = z.string().optional().describe('sequence name or id (default: the active one)');
 const projectArg = z.string().describe('full path of the .prproj (opened when needed) or the open project name');
 const timeoutArg = z.number().int().min(10).max(3600).optional().describe('seconds to wait for Premiere (default 180)');
@@ -176,6 +179,35 @@ export const PREMIERE_EDIT_TOOLS: ToolDef[] = [
   }),
 
   tool({
+    name: 'premiere_markers',
+    description: 'มาร์กเกอร์ของ sequence ใน Premiere: อ่าน / ลบชุดเก่า (clear: สี, ข้อความในชื่อ, หรือทั้งหมด) / เพิ่มชุดใหม่ (at เฟรมหรือ timecode, name, comment สั้น ๆ, color) ในคำสั่งเดียว — ใช้ทำ "มาร์กจุดที่แก้ให้ผู้ใช้ไปเช็ก". ค่าเริ่มต้น dry run (แสดงว่าจะลบ/เพิ่มอะไร); apply: true จึงแก้ (มาร์กเกอร์สีอื่นที่ไม่ได้ระบุไม่ถูกแตะ, คลิปไม่ถูกแตะ); save: true เพื่อ Save · '
+      + 'Read, clear (by colour / name text / all) and add sequence markers in one step; dry run unless apply. Colours: green red purple orange yellow white blue cyan.',
+    input: {
+      project: projectArg, sequence: seqArg,
+      clear: z.object({
+        colors: z.array(MARKER_COLOR).optional(), nameContains: z.string().min(1).optional(), all: z.boolean().optional(),
+      }).optional().describe('which existing markers go; nothing is cleared without this'),
+      add: z.array(z.object({
+        at: frameOrTc, dur: z.number().int().min(0).optional().describe('frames (default 0 = a point)'),
+        name: z.string(), comment: z.string().optional(), color: MARKER_COLOR.optional().describe('default red'),
+      })).max(500).optional(),
+      apply: z.boolean().optional(), save: z.boolean().optional(), timeoutSec: timeoutArg,
+    },
+    handler: async (a, state) => {
+      const { project } = await ensureProject(state, a.project);
+      const idx = (c: z.infer<typeof MARKER_COLOR>): number => (typeof c === 'number' ? c : MARKER_COLORS.indexOf(c));
+      const args = {
+        expectProject: project.path, sequence: a.sequence, apply: a.apply === true, save: a.save === true,
+        ...(a.clear ? { clear: { ...(a.clear.colors ? { colors: a.clear.colors.map(idx) } : {}), ...(a.clear.nameContains ? { nameContains: a.clear.nameContains } : {}), ...(a.clear.all ? { all: true } : {}) } } : {}),
+        ...(a.add ? { add: a.add.map((m) => ({ at: m.at, dur: m.dur ?? 0, name: m.name, comment: m.comment ?? '', color: m.color === undefined ? 1 : idx(m.color) })) } : {}),
+      };
+      // an older bridge without this action gets the update card from the client
+      const r = await client(state).call<Record<string, unknown>>('markers', args, { timeoutMs: (a.timeoutSec ?? 180) * 1000 });
+      return { ...r, ok: true, ...(a.apply === true ? { closeHint: closeHint(state, r['saved'] === true) } : { hint: 'ตรวจแผนแล้วเรียกซ้ำด้วย apply: true / review, then apply: true' }) };
+    },
+  }),
+
+  tool({
     name: 'premiere_undo_last',
     description: 'ย้อนการแก้ครั้งล่าสุดของ premiere_edit: ปิดโปรเจกต์โดยไม่ Save, คืนไฟล์ .prproj จากจุดย้อนกลับ, เปิดใหม่ (สำเนาฉบับก่อนย้อนเก็บไว้ด้วย) · Restore the last premiere_edit checkpoint',
     input: { project: z.string().describe('full path of the .prproj'), timeoutSec: timeoutArg },
@@ -218,7 +250,7 @@ export const PREMIERE_EDIT_TOOLS: ToolDef[] = [
 
   tool({
     name: 'premiere_frames',
-    description: 'ดึงเฟรมจาก sequence ใน Premiere จริงเป็น PNG (ตรวจสี/กรอบ/ข้อความตามที่ editor เห็น) ไม่เกิน 300 เฟรมต่อครั้ง ลงโฟลเดอร์ใหม่ใน review/premiere-frames · PNG frames rendered by Premiere',
+    description: 'ดึงเฟรมจาก sequence ใน Premiere จริงเป็น PNG (ตรวจสี/กรอบ/ข้อความตามที่ editor เห็น) ไม่เกิน 300 เฟรมต่อคำสั่ง (ดึงทีละ 40 เฟรม แต่ละชุดมีเวลารอของตัวเอง) ลงโฟลเดอร์ใหม่ใน review/premiere-frames · PNG frames rendered by Premiere',
     input: {
       project: projectArg, sequence: seqArg, frames: z.array(frameOrTc).max(300).optional(),
       from: frameOrTc.optional(), to: frameOrTc.optional(), step: z.number().int().min(1).optional(), timeoutSec: timeoutArg,
@@ -230,18 +262,27 @@ export const PREMIERE_EDIT_TOOLS: ToolDef[] = [
       const stage = (await stagePath(c, '')).replace(/[\\/][^\\/]*$/, (m) => `${m}-frames`);
       await mkdir(stage, { recursive: true });
       try {
-        const r = await c.call<{ sequence: PremiereSequenceRef; frames: Array<{ frame: number; tc: string; file: string }> }>('frames', {
-          expectProject: project.path, sequence: a.sequence, dir: stage.replace(/\\/g, '/'), prefix: 'f', frames: a.frames, from: a.from, to: a.to, step: a.step,
-        }, { timeoutMs: (a.timeoutSec ?? 300) * 1000 });
-        const dir = outDirFor(state, 'premiere-frames', r.sequence.name);
-        await mkdir(dir, { recursive: true });
-        const frames = [];
-        for (const f of r.frames) {
-          const dest = join(dir, `${String(f.frame).padStart(6, '0')}_${f.tc.replace(/:/g, '-')}.png`);
-          await copyFile(f.file, dest, constants.COPYFILE_EXCL);
-          frames.push({ ...f, file: dest });
+        // small batches, each with its own wait: a stuck frame shows up in minutes, not after 300 frames
+        type Shot = { frame: number; tc: string; file: string };
+        let dir: string | undefined; let sequence: PremiereSequenceRef | undefined;
+        const frames: Shot[] = [];
+        for (let skip = 0, chunk = 0; ; skip += FRAMES_PER_CALL, chunk++) {
+          const r = await c.call<{ sequence: PremiereSequenceRef; frames: Shot[]; total?: number }>('frames', {
+            expectProject: project.path, sequence: a.sequence, dir: stage.replace(/\\/g, '/'), prefix: `f${chunk}_`, frames: a.frames, from: a.from, to: a.to, step: a.step,
+            skip, take: FRAMES_PER_CALL,
+          }, { timeoutMs: (a.timeoutSec ?? 120) * 1000 });
+          sequence = r.sequence;
+          dir ??= outDirFor(state, 'premiere-frames', r.sequence.name);
+          await mkdir(dir, { recursive: true });
+          for (const f of r.frames) {
+            const dest = join(dir, `${String(f.frame).padStart(6, '0')}_${f.tc.replace(/:/g, '-')}.png`);
+            await copyFile(f.file, dest, constants.COPYFILE_EXCL);
+            frames.push({ ...f, file: dest });
+          }
+          // an older bridge ignores skip/take and answered everything at once
+          if (r.total === undefined || skip + FRAMES_PER_CALL >= r.total || r.frames.length >= r.total) break;
         }
-        return { ok: true, sequence: r.sequence, dir, frames };
+        return { ok: true, sequence, dir, frames };
       } finally { await rm(stage, { recursive: true, force: true }); }
     },
   }),
@@ -284,7 +325,13 @@ export const PREMIERE_EDIT_TOOLS: ToolDef[] = [
       const st = await client(state).status();
       if (!st.connected) throw new ToolError('ae_live_run ส่งผ่าน Premiere: เปิด Premiere ก่อน (premiere_open) / needs the Premiere bridge');
       const t = a.timeoutSec ?? 120;
-      return client(state).call('aeRun', { file: resolve(a.jsxPath), ...(a.aep ? { aep: resolve(a.aep) } : {}), timeoutSec: t }, { timeoutMs: (t + 30) * 1000 });
+      try {
+        return await client(state).call('aeRun', { file: resolve(a.jsxPath), ...(a.aep ? { aep: resolve(a.aep) } : {}), timeoutSec: t }, { timeoutMs: (t + 30) * 1000 });
+      } catch (e) {
+        const msg = e instanceof Error ? e.message : String(e);
+        if (/modal dialog/i.test(msg)) throw needsUser(msg, ACTIONS.aeModalOpen({ detail: 'Cannot run a script while a modal dialog is waiting for response' }));
+        throw e;
+      }
     },
   }),
 ];

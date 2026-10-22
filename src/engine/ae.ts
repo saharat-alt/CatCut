@@ -107,6 +107,9 @@ function guiWindows(procs: AeProcess[]): AeProcess[] {
   return procs.filter((p) => p.title && !/^n\/a$/i.test(p.title.trim()));
 }
 
+/** AE quit at startup for a reason that is neither sign-in nor Allow Scripts (seen on field machines). */
+const AE_STARTUP_FAILURE = /GPU\d*\b.*sanity|sanity test|InitializeFileLogging/i;
+
 export function createAeBackend(tools: ToolPaths, opts: AeOptions = {}): HeadlessAeBackend {
   const spawn = opts.spawn ?? execa;
   const runner = fileURLToPath(new URL('../../jsx/runner.jsx', import.meta.url));
@@ -129,6 +132,7 @@ export function createAeBackend(tools: ToolPaths, opts: AeOptions = {}): Headles
     const detail = `AfterFX ${action}: exit ${exitCode ?? '?'}, no result${stderr.trim() ? `: ${stderr.trim()}` : ''}`;
     const pref = await scriptingPref();
     if (pref.allowed === false) return new UserActionError(detail, ACTIONS.aeAllowScripts());
+    if (AE_STARTUP_FAILURE.test(stderr)) return new UserActionError(detail, ACTIONS.aeHeadlessFailed({ detail: stderr.trim().slice(-120) }));
     return new UserActionError(detail, ACTIONS.aeFirstRun({ detail: `exit ${exitCode ?? '?'}` }));
   }
 
@@ -157,7 +161,7 @@ export function createAeBackend(tools: ToolPaths, opts: AeOptions = {}): Headles
       const report = await readFile(resultPath, 'utf8').catch(() => undefined);
       // No result at all: the runner never got to write one (scripts may not write files, or AE quit
       // at a first-run screen). Both need the person, so say which one instead of a raw error.
-      if (report === undefined) throw await noResult(action, output.exitCode, String(output.stderr ?? '').slice(-500));
+      if (report === undefined) throw await noResult(action, output.exitCode, `${String(output.stderr ?? '')}\n${String(output.stdout ?? '')}`.trim().slice(-500));
       if (output.exitCode !== 0) throw new Error(`AfterFX failed (${output.exitCode}): ${report}`);
       const result = JSON.parse(report.replace(/^\uFEFF/, '')) as Result<T>;
       if (result.ok !== true) {

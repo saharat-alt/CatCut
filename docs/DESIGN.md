@@ -501,3 +501,22 @@ web search / ดูคลิปสอน (skill `watch`) → สกัดเป�
 - Premiere 2026: SetForegroundWindow/SwitchToThisWindow จาก process เบื้องหลังทำให้เกิด ApplicationActivate จริงไหม; panel ที่ค้างใน workspace เปิดเองตอนเริ่มโปรแกรมไหม
 - main window ถูก disable ระหว่าง modal (Link Media, Import progress) และไม่ถูก disable ระหว่างเรนเดอร์ Dynamic Link
 - `TrackItem.move` ลากเสียง linked ไปด้วยหรือไม่ (โค้ดรับได้ทั้งสองแบบ)
+
+## 16. ฟีดแบครอบ 3 (ทรานสคริปต์ 5 ชุดของ Codex + เซสชัน Claude Code "วิดีโอล่าสุด", 16–22 ต.ค. 2026: CSR D4/D5, Thai Agri Foods D4/D5) → CatCut 0.5.0
+
+### 16.1 ปัญหา → สาเหตุ → ที่แก้ (0.5.0)
+| # | ที่ผู้ใช้เจอ | สาเหตุ | แก้ |
+|---|---|---|---|
+| 1 | AE แบบไม่มีหน้าต่างล้มซ้ำ (`GPU3 failed sanity test`, `InitializeFileLogging failed`) แต่การ์ดบอกให้ "Sign in" | `noResult` แยกแค่ Allow Scripts กับ first-run | การ์ด `ae-headless-failed` (ดูจาก stderr+stdout ของ AE; Allow Scripts ปิดยังชนะ) บอกให้เปิด AE ปกติหนึ่งครั้งแล้วค่อยใช้ `ae_live_run` เมื่อผู้ใช้สั่ง |
+| 2 | "Cannot run a script while a modal dialog…" ต้องไล่ให้ผู้ใช้ปิดกล่อง AE 15+ ครั้ง | error ดิบจาก BridgeTalk | `ae_live_run` แปลงเป็นการ์ด `ae-modal-open` (ขอข้อความในกล่อง อย่าส่งสคริปต์ซ้ำ) |
+| 3 | เอเจนต์หยุดรอทุกครั้งที่ ready_check เตือนดิสก์ C: 12–19 GB | ทุกค่าต่ำกว่า 20 GB เป็น `userAction` | ต่ำกว่า 8 GB เท่านั้นที่เป็นการ์ด; 8–20 GB เป็นแค่หมายเหตุ ("ทำงานต่อได้") ; build ยังหยุดที่ 5 GB |
+| 4 | `premiere_frames` ดึงทุกเฟรมของช่วง 2 วินาทีค้าง 600 วินาที คิว bridge ถูกบล็อกต่อเป็นสิบนาที | ส่งทั้งช่วงในคำสั่งเดียว รอรวดเดียว | ดึงทีละ 40 เฟรม (`skip`/`take` ใน host.jsx, `total` ในผลลัพธ์) แต่ละชุดมี timeout 120 วินาทีของตัวเอง; bridge เก่าที่ไม่รู้จัก skip/take ตอบรวดเดียวก็ยังใช้ได้ |
+| 5 | ไม่มีเครื่องมือลบมาร์กเกอร์แดงเก่า + ใส่ชุดใหม่พร้อมโน้ตสั้น (ขอ 3 รอบ ต้องเขียนสคริปต์เอง) | ไม่มี action markers | `premiere_markers`: dry run → `apply`; `clear` ด้วยสี/ข้อความ/ทั้งหมด (ไม่ระบุ = ไม่ลบอะไร), `add` เป็นชุดเดียว, ไม่แตะคลิปและมาร์กเกอร์สีอื่น; bridge 0.4.0 |
+| 6 | แก้เกินคอมเมนต์, "คืนเหมือนเดิม" ไม่ครบ (ครอปกลับแต่ช่วงฟุตไม่กลับ), "เพิ่ม" แต่เวลารวมเท่าเดิม, ปนคอมเมนต์เก่า, อ้างว่า "สมูธ/ชัด" จากภาพนิ่ง | ไม่มีกติกาใน skill | หัวข้อใหม่ "Client comments" ใน `skills/catcut-editor/SKILL.md` |
+
+### 16.2 ค้างไว้รอบถัดไป
+ย้าย transition / วาง export ไว้บน V2 เป็นเลเยอร์เทียบ / export คอมป์ AE เดี่ยวเป็นเครื่องมือเดียว / ตัวตรวจเฟรมซ้ำ (Time Remap) และความคมจริงของการ์ดที่ขยาย (`comp-lint`) / ยกเลิกคำสั่งที่ค้างใน bridge (ExtendScript ฆ่า evalScript ที่รันอยู่ไม่ได้ ต้องปิด Premiere) / ล้างแคช AE ตอนดิสก์ใกล้เต็มโดยขอ OK ครั้งเดียว
+
+### 16.3 ยังต้องลองกับโปรแกรมจริง
+- `Marker.setColorByIndex` / `getColorByIndex` / `deleteMarker` ใน Premiere 2026 (ทดสอบกับ object จำลองเท่านั้น)
+- ข้อความ stderr/stdout จริงของ `AfterFX -m -noui` ตอน GPU sanity test ล้ม (regex ตั้งจากข้อความในทรานสคริปต์)

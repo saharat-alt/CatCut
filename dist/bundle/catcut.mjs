@@ -28142,6 +28142,36 @@ var init_user_action = __esm({
         closeAfter: "\u0E17\u0E31\u0E19\u0E17\u0E35\u0E17\u0E35\u0E48\u0E40\u0E2B\u0E47\u0E19\u0E2B\u0E19\u0E49\u0E32\u0E08\u0E2D\u0E2B\u0E25\u0E31\u0E01\u0E02\u0E2D\u0E07 AE",
         needsProject: false
       }),
+      aeHeadlessFailed: (o2 = {}) => ({
+        code: "ae-headless-failed",
+        app: "after-effects",
+        title: "After Effects \u0E41\u0E1A\u0E1A\u0E44\u0E21\u0E48\u0E21\u0E35\u0E2B\u0E19\u0E49\u0E32\u0E15\u0E48\u0E32\u0E07\u0E40\u0E1B\u0E34\u0E14\u0E44\u0E21\u0E48\u0E02\u0E36\u0E49\u0E19 (GPU / log)",
+        steps: [
+          "\u0E40\u0E1B\u0E34\u0E14 After Effects \u0E15\u0E32\u0E21\u0E1B\u0E01\u0E15\u0E34\u0E2B\u0E19\u0E36\u0E48\u0E07\u0E04\u0E23\u0E31\u0E49\u0E07 \u0E23\u0E2D\u0E08\u0E19\u0E40\u0E2B\u0E47\u0E19\u0E2B\u0E19\u0E49\u0E32\u0E08\u0E2D\u0E2B\u0E25\u0E31\u0E01 (\u0E16\u0E49\u0E32\u0E21\u0E35\u0E01\u0E25\u0E48\u0E2D\u0E07\u0E40\u0E15\u0E37\u0E2D\u0E19\u0E40\u0E23\u0E37\u0E48\u0E2D\u0E07 GPU \u0E2B\u0E23\u0E37\u0E2D crash \u0E43\u0E2B\u0E49\u0E01\u0E14 OK)",
+          '\u0E1A\u0E2D\u0E01 AI \u0E27\u0E48\u0E32 "\u0E40\u0E1B\u0E34\u0E14 AE \u0E41\u0E25\u0E49\u0E27" \u2014 \u0E16\u0E49\u0E32\u0E04\u0E23\u0E31\u0E49\u0E07\u0E15\u0E48\u0E2D\u0E44\u0E1B\u0E22\u0E31\u0E07\u0E25\u0E49\u0E21 \u0E43\u0E2B\u0E49\u0E1A\u0E2D\u0E01 AI \u0E27\u0E48\u0E32\u0E43\u0E0A\u0E49 AE \u0E17\u0E35\u0E48\u0E40\u0E1B\u0E34\u0E14\u0E2D\u0E22\u0E39\u0E48\u0E44\u0E14\u0E49 (ae_live_run) \u0E41\u0E25\u0E49\u0E27\u0E40\u0E1B\u0E34\u0E14 AE \u0E04\u0E49\u0E32\u0E07\u0E44\u0E27\u0E49',
+          "\u0E16\u0E49\u0E32 AE \u0E02\u0E36\u0E49\u0E19\u0E01\u0E25\u0E48\u0E2D\u0E07\u0E02\u0E49\u0E2D\u0E04\u0E27\u0E32\u0E21\u0E23\u0E30\u0E2B\u0E27\u0E48\u0E32\u0E07\u0E07\u0E32\u0E19 \u0E1B\u0E34\u0E14\u0E01\u0E25\u0E48\u0E2D\u0E07\u0E19\u0E31\u0E49\u0E19\u0E41\u0E25\u0E49\u0E27\u0E1A\u0E2D\u0E01\u0E02\u0E49\u0E2D\u0E04\u0E27\u0E32\u0E21\u0E43\u0E19\u0E01\u0E25\u0E48\u0E2D\u0E07\u0E43\u0E2B\u0E49 AI"
+        ],
+        why: `AE \u0E1B\u0E34\u0E14\u0E15\u0E31\u0E27\u0E01\u0E48\u0E2D\u0E19\u0E40\u0E23\u0E34\u0E48\u0E21\u0E07\u0E32\u0E19\u0E41\u0E1A\u0E1A\u0E44\u0E21\u0E48\u0E21\u0E35\u0E2B\u0E19\u0E49\u0E32\u0E15\u0E48\u0E32\u0E07${o2["detail"] ? ` (${o2["detail"]})` : ""} \u2014 \u0E21\u0E31\u0E01\u0E40\u0E1B\u0E47\u0E19 "GPU sanity test failed" \u0E2B\u0E23\u0E37\u0E2D\u0E40\u0E02\u0E35\u0E22\u0E19 log \u0E44\u0E21\u0E48\u0E44\u0E14\u0E49 \u0E44\u0E21\u0E48\u0E43\u0E0A\u0E48\u0E40\u0E23\u0E37\u0E48\u0E2D\u0E07 Sign in \u0E2B\u0E23\u0E37\u0E2D Allow Scripts`,
+        frequency: "each-time",
+        keepOpen: false,
+        closeAfter: "\u0E17\u0E31\u0E19\u0E17\u0E35\u0E17\u0E35\u0E48\u0E40\u0E2B\u0E47\u0E19\u0E2B\u0E19\u0E49\u0E32\u0E08\u0E2D\u0E2B\u0E25\u0E31\u0E01\u0E02\u0E2D\u0E07 AE (\u0E16\u0E49\u0E32\u0E08\u0E30\u0E43\u0E0A\u0E49 AE \u0E17\u0E35\u0E48\u0E40\u0E1B\u0E34\u0E14\u0E2D\u0E22\u0E39\u0E48 \u0E43\u0E2B\u0E49\u0E40\u0E1B\u0E34\u0E14\u0E04\u0E49\u0E32\u0E07\u0E44\u0E27\u0E49)",
+        needsProject: false
+      }),
+      aeModalOpen: (o2 = {}) => ({
+        code: "ae-modal-open",
+        app: "after-effects",
+        title: "After Effects \u0E21\u0E35\u0E01\u0E25\u0E48\u0E2D\u0E07\u0E02\u0E49\u0E2D\u0E04\u0E27\u0E32\u0E21\u0E04\u0E49\u0E32\u0E07\u0E2D\u0E22\u0E39\u0E48",
+        steps: [
+          "\u0E2A\u0E25\u0E31\u0E1A\u0E44\u0E1B\u0E17\u0E35\u0E48 After Effects \u0E14\u0E39\u0E01\u0E25\u0E48\u0E2D\u0E07\u0E02\u0E49\u0E2D\u0E04\u0E27\u0E32\u0E21\u0E2B\u0E23\u0E37\u0E2D\u0E2B\u0E19\u0E49\u0E32\u0E15\u0E48\u0E32\u0E07\u0E17\u0E35\u0E48\u0E04\u0E49\u0E32\u0E07 (\u0E40\u0E0A\u0E48\u0E19 Save As, Missing fonts, Missing footage)",
+          "\u0E2D\u0E48\u0E32\u0E19\u0E02\u0E49\u0E2D\u0E04\u0E27\u0E32\u0E21\u0E41\u0E25\u0E49\u0E27\u0E15\u0E2D\u0E1A\u0E2B\u0E23\u0E37\u0E2D\u0E1B\u0E34\u0E14\u0E01\u0E25\u0E48\u0E2D\u0E07\u0E19\u0E31\u0E49\u0E19",
+          "\u0E1A\u0E2D\u0E01 AI \u0E02\u0E49\u0E2D\u0E04\u0E27\u0E32\u0E21\u0E17\u0E35\u0E48\u0E40\u0E2B\u0E47\u0E19\u0E41\u0E25\u0E30\u0E2A\u0E34\u0E48\u0E07\u0E17\u0E35\u0E48\u0E01\u0E14 \u2014 CatCut \u0E08\u0E30\u0E17\u0E33\u0E15\u0E48\u0E2D\u0E08\u0E32\u0E01\u0E08\u0E38\u0E14\u0E40\u0E14\u0E34\u0E21"
+        ],
+        why: `AE \u0E23\u0E31\u0E19\u0E2A\u0E04\u0E23\u0E34\u0E1B\u0E15\u0E4C\u0E44\u0E21\u0E48\u0E44\u0E14\u0E49\u0E02\u0E13\u0E30\u0E21\u0E35\u0E01\u0E25\u0E48\u0E2D\u0E07\u0E02\u0E49\u0E2D\u0E04\u0E27\u0E32\u0E21\u0E23\u0E2D\u0E04\u0E33\u0E15\u0E2D\u0E1A${o2["detail"] ? ` (${o2["detail"]})` : ""}`,
+        frequency: "each-time",
+        keepOpen: true,
+        closeAfter: "\u0E40\u0E21\u0E37\u0E48\u0E2D CatCut \u0E41\u0E08\u0E49\u0E07\u0E27\u0E48\u0E32 Save \u0E41\u0E25\u0E49\u0E27",
+        needsProject: false
+      }),
       aeAllowScripts: () => ({
         code: "ae-allow-scripts",
         app: "after-effects",
@@ -29368,6 +29398,7 @@ function createAeBackend(tools, opts = {}) {
     const detail = `AfterFX ${action}: exit ${exitCode ?? "?"}, no result${stderr.trim() ? `: ${stderr.trim()}` : ""}`;
     const pref = await scriptingPref();
     if (pref.allowed === false) return new UserActionError(detail, ACTIONS.aeAllowScripts());
+    if (AE_STARTUP_FAILURE.test(stderr)) return new UserActionError(detail, ACTIONS.aeHeadlessFailed({ detail: stderr.trim().slice(-120) }));
     return new UserActionError(detail, ACTIONS.aeFirstRun({ detail: `exit ${exitCode ?? "?"}` }));
   }
   async function run6(action, payload = {}) {
@@ -29400,7 +29431,8 @@ $.evalFile(new File(${JSON.stringify(runner)}));
       }
       if (timedOut) throw new Error(`AfterFX ${action} timed out after ${timeoutMs} ms (process tree killed)`);
       const report2 = await readFile4(resultPath, "utf8").catch(() => void 0);
-      if (report2 === void 0) throw await noResult(action, output.exitCode, String(output.stderr ?? "").slice(-500));
+      if (report2 === void 0) throw await noResult(action, output.exitCode, `${String(output.stderr ?? "")}
+${String(output.stdout ?? "")}`.trim().slice(-500));
       if (output.exitCode !== 0) throw new Error(`AfterFX failed (${output.exitCode}): ${report2}`);
       const result = JSON.parse(report2.replace(/^\uFEFF/, ""));
       if (result.ok !== true) {
@@ -29713,7 +29745,7 @@ function scanMockComp(c3, warnings = []) {
   }
   return out2;
 }
-var queue, THAI_RE, REPLACEABLE_RE, PNG_1X1, MockAeBackend;
+var queue, AE_STARTUP_FAILURE, THAI_RE, REPLACEABLE_RE, PNG_1X1, MockAeBackend;
 var init_ae = __esm({
   "src/engine/ae.ts"() {
     "use strict";
@@ -29723,6 +29755,7 @@ var init_ae = __esm({
     init_housekeeping();
     init_aerender();
     queue = Promise.resolve();
+    AE_STARTUP_FAILURE = /GPU\d*\b.*sanity|sanity test|InitializeFileLogging/i;
     THAI_RE = new RegExp("\\p{Script=Thai}", "u");
     REPLACEABLE_RE = /placeholder|replace|drop|insert|your|media|image|photo|picture|video|footage|logo|screen|ใส่|แทน|รูป|ภาพ|วิดีโอ|โลโก้/i;
     PNG_1X1 = "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChwGA60e6kgAAAABJRU5ErkJggg==";
@@ -36359,7 +36392,7 @@ async function readiness(state, deps = {}) {
     if (gb === void 0) continue;
     const r = Math.round(gb * 10) / 10;
     if (gb < LOW_DISK_GB) apps.push({ app: "disk", status: "action", keepOpen: "never", note: `${root} \u0E40\u0E2B\u0E25\u0E37\u0E2D ${r} GB`, userAction: act(ACTIONS.diskLow({ drive: root, freeGb: r })) });
-    else apps.push({ app: "disk", status: "ok", keepOpen: "never", note: `${root} \u0E40\u0E2B\u0E25\u0E37\u0E2D ${r} GB` });
+    else apps.push({ app: "disk", status: "ok", keepOpen: "never", note: `${root} \u0E40\u0E2B\u0E25\u0E37\u0E2D ${r} GB${gb < WARN_DISK_GB ? " (\u0E1E\u0E2D\u0E43\u0E0A\u0E49 \u0E17\u0E33\u0E07\u0E32\u0E19\u0E15\u0E48\u0E2D\u0E44\u0E14\u0E49 \u2014 \u0E25\u0E49\u0E32\u0E07\u0E41\u0E04\u0E0A AE \u0E40\u0E21\u0E37\u0E48\u0E2D\u0E2A\u0E30\u0E14\u0E27\u0E01 \u0E44\u0E21\u0E48\u0E15\u0E49\u0E2D\u0E07\u0E2B\u0E22\u0E38\u0E14\u0E23\u0E2D)" : ""}` });
   }
   const name = { ffmpeg: "ffmpeg", "after-effects": "After Effects", premiere: "Premiere Pro", disk: "\u0E14\u0E34\u0E2A\u0E01\u0E4C", catcut: "CatCut" };
   const keep = { never: "\u0E44\u0E21\u0E48\u0E15\u0E49\u0E2D\u0E07\u0E40\u0E1B\u0E34\u0E14", "catcut-opens-it": "CatCut \u0E40\u0E1B\u0E34\u0E14\u0E43\u0E2B\u0E49\u0E40\u0E2D\u0E07\u0E40\u0E21\u0E37\u0E48\u0E2D\u0E43\u0E0A\u0E49", "while-working": "\u0E40\u0E1B\u0E34\u0E14\u0E44\u0E27\u0E49\u0E23\u0E30\u0E2B\u0E27\u0E48\u0E32\u0E07 CatCut \u0E17\u0E33\u0E07\u0E32\u0E19" };
@@ -36373,7 +36406,7 @@ async function readiness(state, deps = {}) {
   ].join("\n");
   return { ready: todo.length === 0, apps, say };
 }
-var LOW_DISK_GB, AE_CACHE_WARN_GB, READY_TOOLS;
+var LOW_DISK_GB, WARN_DISK_GB, AE_CACHE_WARN_GB, READY_TOOLS;
 var init_tools_ready = __esm({
   "src/mcp/tools-ready.ts"() {
     "use strict";
@@ -36381,7 +36414,8 @@ var init_tools_ready = __esm({
     init_housekeeping();
     init_premiere();
     init_tooldef();
-    LOW_DISK_GB = 20;
+    LOW_DISK_GB = 8;
+    WARN_DISK_GB = 20;
     AE_CACHE_WARN_GB = 10;
     READY_TOOLS = [
       tool({
@@ -36442,7 +36476,7 @@ function oldBridgeCard(errors) {
   const op = errors.map((e) => /^unknown op: (\w+)/.exec(e)?.[1]).find(Boolean);
   return op ? ACTIONS.bridgeUpdate({ installed: "\u0E40\u0E01\u0E48\u0E32", wanted: `\u0E43\u0E2B\u0E21\u0E48\u0E01\u0E27\u0E48\u0E32 (\u0E15\u0E49\u0E2D\u0E07\u0E43\u0E0A\u0E49 op ${op})` }) : void 0;
 }
-var frameOrTc, clipSel, source, keepTracks, OP, seqArg, projectArg, timeoutArg, stampNow, PREMIERE_EDIT_TOOLS;
+var frameOrTc, clipSel, source, keepTracks, OP, FRAMES_PER_CALL, MARKER_COLORS, MARKER_COLOR, seqArg, projectArg, timeoutArg, stampNow, PREMIERE_EDIT_TOOLS;
 var init_tools_premiere_edit = __esm({
   "src/mcp/tools-premiere-edit.ts"() {
     "use strict";
@@ -36508,6 +36542,9 @@ var init_tools_premiere_edit = __esm({
         keys: external_exports.array(external_exports.object({ seconds: external_exports.number(), value: external_exports.unknown() })).optional().describe("keyframes in the times premiere_clip_effects reports")
       })
     ]);
+    FRAMES_PER_CALL = 40;
+    MARKER_COLORS = ["green", "red", "purple", "orange", "yellow", "white", "blue", "cyan"];
+    MARKER_COLOR = external_exports.union([external_exports.enum(MARKER_COLORS), external_exports.number().int().min(0).max(7)]);
     seqArg = external_exports.string().optional().describe("sequence name or id (default: the active one)");
     projectArg = external_exports.string().describe("full path of the .prproj (opened when needed) or the open project name");
     timeoutArg = external_exports.number().int().min(10).max(3600).optional().describe("seconds to wait for Premiere (default 180)");
@@ -36569,6 +36606,43 @@ var init_tools_premiere_edit = __esm({
         }
       }),
       tool({
+        name: "premiere_markers",
+        description: '\u0E21\u0E32\u0E23\u0E4C\u0E01\u0E40\u0E01\u0E2D\u0E23\u0E4C\u0E02\u0E2D\u0E07 sequence \u0E43\u0E19 Premiere: \u0E2D\u0E48\u0E32\u0E19 / \u0E25\u0E1A\u0E0A\u0E38\u0E14\u0E40\u0E01\u0E48\u0E32 (clear: \u0E2A\u0E35, \u0E02\u0E49\u0E2D\u0E04\u0E27\u0E32\u0E21\u0E43\u0E19\u0E0A\u0E37\u0E48\u0E2D, \u0E2B\u0E23\u0E37\u0E2D\u0E17\u0E31\u0E49\u0E07\u0E2B\u0E21\u0E14) / \u0E40\u0E1E\u0E34\u0E48\u0E21\u0E0A\u0E38\u0E14\u0E43\u0E2B\u0E21\u0E48 (at \u0E40\u0E1F\u0E23\u0E21\u0E2B\u0E23\u0E37\u0E2D timecode, name, comment \u0E2A\u0E31\u0E49\u0E19 \u0E46, color) \u0E43\u0E19\u0E04\u0E33\u0E2A\u0E31\u0E48\u0E07\u0E40\u0E14\u0E35\u0E22\u0E27 \u2014 \u0E43\u0E0A\u0E49\u0E17\u0E33 "\u0E21\u0E32\u0E23\u0E4C\u0E01\u0E08\u0E38\u0E14\u0E17\u0E35\u0E48\u0E41\u0E01\u0E49\u0E43\u0E2B\u0E49\u0E1C\u0E39\u0E49\u0E43\u0E0A\u0E49\u0E44\u0E1B\u0E40\u0E0A\u0E47\u0E01". \u0E04\u0E48\u0E32\u0E40\u0E23\u0E34\u0E48\u0E21\u0E15\u0E49\u0E19 dry run (\u0E41\u0E2A\u0E14\u0E07\u0E27\u0E48\u0E32\u0E08\u0E30\u0E25\u0E1A/\u0E40\u0E1E\u0E34\u0E48\u0E21\u0E2D\u0E30\u0E44\u0E23); apply: true \u0E08\u0E36\u0E07\u0E41\u0E01\u0E49 (\u0E21\u0E32\u0E23\u0E4C\u0E01\u0E40\u0E01\u0E2D\u0E23\u0E4C\u0E2A\u0E35\u0E2D\u0E37\u0E48\u0E19\u0E17\u0E35\u0E48\u0E44\u0E21\u0E48\u0E44\u0E14\u0E49\u0E23\u0E30\u0E1A\u0E38\u0E44\u0E21\u0E48\u0E16\u0E39\u0E01\u0E41\u0E15\u0E30, \u0E04\u0E25\u0E34\u0E1B\u0E44\u0E21\u0E48\u0E16\u0E39\u0E01\u0E41\u0E15\u0E30); save: true \u0E40\u0E1E\u0E37\u0E48\u0E2D Save \xB7 Read, clear (by colour / name text / all) and add sequence markers in one step; dry run unless apply. Colours: green red purple orange yellow white blue cyan.',
+        input: {
+          project: projectArg,
+          sequence: seqArg,
+          clear: external_exports.object({
+            colors: external_exports.array(MARKER_COLOR).optional(),
+            nameContains: external_exports.string().min(1).optional(),
+            all: external_exports.boolean().optional()
+          }).optional().describe("which existing markers go; nothing is cleared without this"),
+          add: external_exports.array(external_exports.object({
+            at: frameOrTc,
+            dur: external_exports.number().int().min(0).optional().describe("frames (default 0 = a point)"),
+            name: external_exports.string(),
+            comment: external_exports.string().optional(),
+            color: MARKER_COLOR.optional().describe("default red")
+          })).max(500).optional(),
+          apply: external_exports.boolean().optional(),
+          save: external_exports.boolean().optional(),
+          timeoutSec: timeoutArg
+        },
+        handler: async (a2, state) => {
+          const { project: project2 } = await ensureProject(state, a2.project);
+          const idx = (c3) => typeof c3 === "number" ? c3 : MARKER_COLORS.indexOf(c3);
+          const args = {
+            expectProject: project2.path,
+            sequence: a2.sequence,
+            apply: a2.apply === true,
+            save: a2.save === true,
+            ...a2.clear ? { clear: { ...a2.clear.colors ? { colors: a2.clear.colors.map(idx) } : {}, ...a2.clear.nameContains ? { nameContains: a2.clear.nameContains } : {}, ...a2.clear.all ? { all: true } : {} } } : {},
+            ...a2.add ? { add: a2.add.map((m) => ({ at: m.at, dur: m.dur ?? 0, name: m.name, comment: m.comment ?? "", color: m.color === void 0 ? 1 : idx(m.color) })) } : {}
+          };
+          const r = await client(state).call("markers", args, { timeoutMs: (a2.timeoutSec ?? 180) * 1e3 });
+          return { ...r, ok: true, ...a2.apply === true ? { closeHint: closeHint(state, r["saved"] === true) } : { hint: "\u0E15\u0E23\u0E27\u0E08\u0E41\u0E1C\u0E19\u0E41\u0E25\u0E49\u0E27\u0E40\u0E23\u0E35\u0E22\u0E01\u0E0B\u0E49\u0E33\u0E14\u0E49\u0E27\u0E22 apply: true / review, then apply: true" } };
+        }
+      }),
+      tool({
         name: "premiere_undo_last",
         description: "\u0E22\u0E49\u0E2D\u0E19\u0E01\u0E32\u0E23\u0E41\u0E01\u0E49\u0E04\u0E23\u0E31\u0E49\u0E07\u0E25\u0E48\u0E32\u0E2A\u0E38\u0E14\u0E02\u0E2D\u0E07 premiere_edit: \u0E1B\u0E34\u0E14\u0E42\u0E1B\u0E23\u0E40\u0E08\u0E01\u0E15\u0E4C\u0E42\u0E14\u0E22\u0E44\u0E21\u0E48 Save, \u0E04\u0E37\u0E19\u0E44\u0E1F\u0E25\u0E4C .prproj \u0E08\u0E32\u0E01\u0E08\u0E38\u0E14\u0E22\u0E49\u0E2D\u0E19\u0E01\u0E25\u0E31\u0E1A, \u0E40\u0E1B\u0E34\u0E14\u0E43\u0E2B\u0E21\u0E48 (\u0E2A\u0E33\u0E40\u0E19\u0E32\u0E09\u0E1A\u0E31\u0E1A\u0E01\u0E48\u0E2D\u0E19\u0E22\u0E49\u0E2D\u0E19\u0E40\u0E01\u0E47\u0E1A\u0E44\u0E27\u0E49\u0E14\u0E49\u0E27\u0E22) \xB7 Restore the last premiere_edit checkpoint",
         input: { project: external_exports.string().describe("full path of the .prproj"), timeoutSec: timeoutArg },
@@ -36621,7 +36695,7 @@ var init_tools_premiere_edit = __esm({
       }),
       tool({
         name: "premiere_frames",
-        description: "\u0E14\u0E36\u0E07\u0E40\u0E1F\u0E23\u0E21\u0E08\u0E32\u0E01 sequence \u0E43\u0E19 Premiere \u0E08\u0E23\u0E34\u0E07\u0E40\u0E1B\u0E47\u0E19 PNG (\u0E15\u0E23\u0E27\u0E08\u0E2A\u0E35/\u0E01\u0E23\u0E2D\u0E1A/\u0E02\u0E49\u0E2D\u0E04\u0E27\u0E32\u0E21\u0E15\u0E32\u0E21\u0E17\u0E35\u0E48 editor \u0E40\u0E2B\u0E47\u0E19) \u0E44\u0E21\u0E48\u0E40\u0E01\u0E34\u0E19 300 \u0E40\u0E1F\u0E23\u0E21\u0E15\u0E48\u0E2D\u0E04\u0E23\u0E31\u0E49\u0E07 \u0E25\u0E07\u0E42\u0E1F\u0E25\u0E40\u0E14\u0E2D\u0E23\u0E4C\u0E43\u0E2B\u0E21\u0E48\u0E43\u0E19 review/premiere-frames \xB7 PNG frames rendered by Premiere",
+        description: "\u0E14\u0E36\u0E07\u0E40\u0E1F\u0E23\u0E21\u0E08\u0E32\u0E01 sequence \u0E43\u0E19 Premiere \u0E08\u0E23\u0E34\u0E07\u0E40\u0E1B\u0E47\u0E19 PNG (\u0E15\u0E23\u0E27\u0E08\u0E2A\u0E35/\u0E01\u0E23\u0E2D\u0E1A/\u0E02\u0E49\u0E2D\u0E04\u0E27\u0E32\u0E21\u0E15\u0E32\u0E21\u0E17\u0E35\u0E48 editor \u0E40\u0E2B\u0E47\u0E19) \u0E44\u0E21\u0E48\u0E40\u0E01\u0E34\u0E19 300 \u0E40\u0E1F\u0E23\u0E21\u0E15\u0E48\u0E2D\u0E04\u0E33\u0E2A\u0E31\u0E48\u0E07 (\u0E14\u0E36\u0E07\u0E17\u0E35\u0E25\u0E30 40 \u0E40\u0E1F\u0E23\u0E21 \u0E41\u0E15\u0E48\u0E25\u0E30\u0E0A\u0E38\u0E14\u0E21\u0E35\u0E40\u0E27\u0E25\u0E32\u0E23\u0E2D\u0E02\u0E2D\u0E07\u0E15\u0E31\u0E27\u0E40\u0E2D\u0E07) \u0E25\u0E07\u0E42\u0E1F\u0E25\u0E40\u0E14\u0E2D\u0E23\u0E4C\u0E43\u0E2B\u0E21\u0E48\u0E43\u0E19 review/premiere-frames \xB7 PNG frames rendered by Premiere",
         input: {
           project: projectArg,
           sequence: seqArg,
@@ -36638,25 +36712,33 @@ var init_tools_premiere_edit = __esm({
           const stage = (await stagePath(c3, "")).replace(/[\\/][^\\/]*$/, (m) => `${m}-frames`);
           await mkdir19(stage, { recursive: true });
           try {
-            const r = await c3.call("frames", {
-              expectProject: project2.path,
-              sequence: a2.sequence,
-              dir: stage.replace(/\\/g, "/"),
-              prefix: "f",
-              frames: a2.frames,
-              from: a2.from,
-              to: a2.to,
-              step: a2.step
-            }, { timeoutMs: (a2.timeoutSec ?? 300) * 1e3 });
-            const dir = outDirFor(state, "premiere-frames", r.sequence.name);
-            await mkdir19(dir, { recursive: true });
+            let dir;
+            let sequence;
             const frames3 = [];
-            for (const f of r.frames) {
-              const dest = join19(dir, `${String(f.frame).padStart(6, "0")}_${f.tc.replace(/:/g, "-")}.png`);
-              await copyFile7(f.file, dest, constants10.COPYFILE_EXCL);
-              frames3.push({ ...f, file: dest });
+            for (let skip = 0, chunk = 0; ; skip += FRAMES_PER_CALL, chunk++) {
+              const r = await c3.call("frames", {
+                expectProject: project2.path,
+                sequence: a2.sequence,
+                dir: stage.replace(/\\/g, "/"),
+                prefix: `f${chunk}_`,
+                frames: a2.frames,
+                from: a2.from,
+                to: a2.to,
+                step: a2.step,
+                skip,
+                take: FRAMES_PER_CALL
+              }, { timeoutMs: (a2.timeoutSec ?? 120) * 1e3 });
+              sequence = r.sequence;
+              dir ??= outDirFor(state, "premiere-frames", r.sequence.name);
+              await mkdir19(dir, { recursive: true });
+              for (const f of r.frames) {
+                const dest = join19(dir, `${String(f.frame).padStart(6, "0")}_${f.tc.replace(/:/g, "-")}.png`);
+                await copyFile7(f.file, dest, constants10.COPYFILE_EXCL);
+                frames3.push({ ...f, file: dest });
+              }
+              if (r.total === void 0 || skip + FRAMES_PER_CALL >= r.total || r.frames.length >= r.total) break;
             }
-            return { ok: true, sequence: r.sequence, dir, frames: frames3 };
+            return { ok: true, sequence, dir, frames: frames3 };
           } finally {
             await rm11(stage, { recursive: true, force: true });
           }
@@ -36711,7 +36793,13 @@ var init_tools_premiere_edit = __esm({
           const st = await client(state).status();
           if (!st.connected) throw new ToolError("ae_live_run \u0E2A\u0E48\u0E07\u0E1C\u0E48\u0E32\u0E19 Premiere: \u0E40\u0E1B\u0E34\u0E14 Premiere \u0E01\u0E48\u0E2D\u0E19 (premiere_open) / needs the Premiere bridge");
           const t = a2.timeoutSec ?? 120;
-          return client(state).call("aeRun", { file: resolve11(a2.jsxPath), ...a2.aep ? { aep: resolve11(a2.aep) } : {}, timeoutSec: t }, { timeoutMs: (t + 30) * 1e3 });
+          try {
+            return await client(state).call("aeRun", { file: resolve11(a2.jsxPath), ...a2.aep ? { aep: resolve11(a2.aep) } : {}, timeoutSec: t }, { timeoutMs: (t + 30) * 1e3 });
+          } catch (e) {
+            const msg = e instanceof Error ? e.message : String(e);
+            if (/modal dialog/i.test(msg)) throw needsUser(msg, ACTIONS.aeModalOpen({ detail: "Cannot run a script while a modal dialog is waiting for response" }));
+            throw e;
+          }
         }
       })
     ];
@@ -48173,7 +48261,7 @@ var StdioServerTransport = class {
 // src/mcp/server.ts
 init_state();
 init_tools2();
-var SERVER_INFO = { name: "catcut", version: "0.4.0" };
+var SERVER_INFO = { name: "catcut", version: "0.5.0" };
 var INSTRUCTIONS = [
   "CatCut \u{1F43E}: headless video editing (After Effects headless + aerender + ffmpeg). \u0E17\u0E38\u0E01\u0E40\u0E27\u0E25\u0E32\u0E40\u0E1B\u0E47\u0E19\u0E40\u0E1F\u0E23\u0E21\u0E17\u0E35\u0E48 fps \u0E02\u0E2D\u0E07\u0E42\u0E1B\u0E23\u0E40\u0E08\u0E01\u0E15\u0E4C (\u0E44\u0E21\u0E48\u0E43\u0E0A\u0E48\u0E27\u0E34\u0E19\u0E32\u0E17\u0E35).",
   "Flow: doctor \u2192 project_new/project_open \u2192 asset_add \u2192 timeline_set (or timeline_edit / audio_add) \u2192 build (returns job id; call job_wait {id}) \u2192 deliver \u2192 export_premiere_xml.",
