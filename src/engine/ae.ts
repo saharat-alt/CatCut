@@ -136,7 +136,16 @@ export function createAeBackend(tools: ToolPaths, opts: AeOptions = {}): Headles
     return new UserActionError(detail, ACTIONS.aeFirstRun({ detail: `exit ${exitCode ?? '?'}` }));
   }
 
+  /** A startup failure (GPU sanity / log) is often gone on the next launch; one retry before asking the person. */
   async function run<T>(action: string, payload: Record<string, unknown> = {}): Promise<Result<T>> {
+    try { return await runOnce<T>(action, payload); } catch (e) {
+      if (!(e instanceof UserActionError) || e.userAction.code !== 'ae-headless-failed') throw e;
+      await new Promise((r) => setTimeout(r, opts.retryDelayMs ?? 5000));
+      return runOnce<T>(action, payload);
+    }
+  }
+
+  async function runOnce<T>(action: string, payload: Record<string, unknown> = {}): Promise<Result<T>> {
     if (!tools.afterfx) throw new UserActionError('AfterFX not found; install After Effects or set EDITMCP_AE_DIR', ACTIONS.aeNotFound());
     const minRam = opts.minFreeRamGb ?? 0.75;
     if (os.freemem() / 2 ** 30 < minRam) throw new Error(`not enough free RAM for After Effects (need ${minRam} GB)`);

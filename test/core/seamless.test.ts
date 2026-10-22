@@ -66,7 +66,7 @@ describe('After Effects failures that need the person', () => {
       return { exitCode: 0, stdout: '', stderr: o.stderr ?? '' }; // AE quit without running the script: no result
     });
     const scriptingPref = async () => (o.prefs === false ? {} : { prefsFile: 'p.txt', aeVersion: '26.5', ...(o.allowed !== undefined ? { allowed: o.allowed } : {}) });
-    return createAeBackend({ ffmpeg: 'ffmpeg', ffprobe: 'ffprobe', afterfx: 'AfterFX.com' }, { spawn: spawn as unknown as SpawnFn, minFreeRamGb: 0, listProcesses: async () => [], scriptingPref });
+    return createAeBackend({ ffmpeg: 'ffmpeg', ffprobe: 'ffprobe', afterfx: 'AfterFX.com' }, { spawn: spawn as unknown as SpawnFn, minFreeRamGb: 0, retryDelayMs: 1, listProcesses: async () => [], scriptingPref });
   }
   const codeOf = async (p: Promise<unknown>) => ((await p.catch((e: unknown) => e)) as UserActionError).userAction?.code;
 
@@ -80,6 +80,23 @@ describe('After Effects failures that need the person', () => {
     expect(await codeOf((await backend({ allowed: true, stderr: 'GPU3 failed (previous) sanity test' })).version())).toBe('ae-headless-failed');
     expect(await codeOf((await backend({ allowed: true, stderr: 'InitializeFileLogging failed' })).version())).toBe('ae-headless-failed');
     expect(await codeOf((await backend({ allowed: false, stderr: 'GPU3 failed sanity test' })).version())).toBe('ae-allow-scripts');
+  });
+
+  it('a startup failure is retried once before the card (second launch may pass)', async () => {
+    let n = 0;
+    const spawn = vi.fn(async (_b: string, args: string[]) => {
+      n++;
+      if (n > 1) {
+        const launcher = await readFile(args[3]!, 'utf8');
+        const job = JSON.parse(await readFile(JSON.parse(/var EDITMCP_JOB = (.*);/.exec(launcher)![1]!), 'utf8')) as { result: string };
+        await writeFile(job.result, JSON.stringify({ ok: true, data: { version: '26.5' } }));
+        return { exitCode: 0, stdout: '', stderr: '' };
+      }
+      return { exitCode: 0, stdout: '', stderr: 'GPU3 failed (previous) sanity test' };
+    });
+    const b = createAeBackend({ ffmpeg: 'ffmpeg', ffprobe: 'ffprobe', afterfx: 'AfterFX.com' }, { spawn: spawn as unknown as SpawnFn, minFreeRamGb: 0, retryDelayMs: 1, listProcesses: async () => [], scriptingPref: async () => ({ prefsFile: 'p', allowed: true }) });
+    await b.version().catch(() => undefined);
+    expect(n).toBe(2);
   });
 
   it('"cannot write" from the runner maps to the card only when the pref really is off', async () => {

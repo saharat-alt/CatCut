@@ -29402,6 +29402,15 @@ function createAeBackend(tools, opts = {}) {
     return new UserActionError(detail, ACTIONS.aeFirstRun({ detail: `exit ${exitCode ?? "?"}` }));
   }
   async function run6(action, payload = {}) {
+    try {
+      return await runOnce(action, payload);
+    } catch (e) {
+      if (!(e instanceof UserActionError) || e.userAction.code !== "ae-headless-failed") throw e;
+      await new Promise((r) => setTimeout(r, opts.retryDelayMs ?? 5e3));
+      return runOnce(action, payload);
+    }
+  }
+  async function runOnce(action, payload = {}) {
     if (!tools.afterfx) throw new UserActionError("AfterFX not found; install After Effects or set EDITMCP_AE_DIR", ACTIONS.aeNotFound());
     const minRam = opts.minFreeRamGb ?? 0.75;
     if (os4.freemem() / 2 ** 30 < minRam) throw new Error(`not enough free RAM for After Effects (need ${minRam} GB)`);
@@ -48261,7 +48270,7 @@ var StdioServerTransport = class {
 // src/mcp/server.ts
 init_state();
 init_tools2();
-var SERVER_INFO = { name: "catcut", version: "0.5.0" };
+var SERVER_INFO = { name: "catcut", version: "0.5.1" };
 var INSTRUCTIONS = [
   "CatCut \u{1F43E}: headless video editing (After Effects headless + aerender + ffmpeg). \u0E17\u0E38\u0E01\u0E40\u0E27\u0E25\u0E32\u0E40\u0E1B\u0E47\u0E19\u0E40\u0E1F\u0E23\u0E21\u0E17\u0E35\u0E48 fps \u0E02\u0E2D\u0E07\u0E42\u0E1B\u0E23\u0E40\u0E08\u0E01\u0E15\u0E4C (\u0E44\u0E21\u0E48\u0E43\u0E0A\u0E48\u0E27\u0E34\u0E19\u0E32\u0E17\u0E35).",
   "Flow: doctor \u2192 project_new/project_open \u2192 asset_add \u2192 timeline_set (or timeline_edit / audio_add) \u2192 build (returns job id; call job_wait {id}) \u2192 deliver \u2192 export_premiere_xml.",
